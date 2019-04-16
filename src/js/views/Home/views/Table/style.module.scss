@@ -1,0 +1,39 @@
+.home-table {
+  position: relative;
+  height: 100%;
+
+  &:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    height: 1px;
+    width: 100%;
+    background-color: $gray-white;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    height: 50%;
+  }
+
+  &__column {
+    display: flex;
+    // flex-wrap: wrap;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    height: 100%;
+    width: 50%;
+  }
+
+  &__title {
+    // align-self: flex-end;
+    // justify-self: end;
+    // margin-top: 50px;
+    font-size: 12px;
+    font-weight: 400;
+  }
+}
