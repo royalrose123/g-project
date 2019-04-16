@@ -1,0 +1,13 @@
+.home-menu-link {
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: $gray-white;
+  border-bottom: 2px solid transparent;
+
+  &--active {
+    color: $color-secondary;
+    border-color: $color-secondary;
+  }
+}

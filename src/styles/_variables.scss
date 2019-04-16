@@ -1,15 +1,14 @@
-//
 // Color
-//
+// ---
 
 // basic
 $color-primary-dark                   : rgb(000, 128, 226); // TEMP
 $color-primary                        : rgb(017, 139, 248); // #118bf8
 $color-primary-light                  : rgb(105, 155, 208); // #699bd0
 // $color-secondary-dark                 : rgb(000, 000, 000); //
-$color-secondary                      : rgb(045, 077, 166); // #2d4da6
+$color-secondary                      : rgb(179, 143, 088); // #b38f58
 // $color-secondary-light                : rgb(000, 000, 000); //
-$color-third-dark                     : rgb(031, 038, 053); // #1f2635
+$color-third-dark                     : rgb(018, 035, 051); // #122333
 $color-third                          : rgb(047, 059, 082); // #2f3b52
 // $color-third-light                    : rgb(000, 000, 000); //
 // $color-third-dark                     : rgb(000, 000, 000); //
@@ -28,9 +27,8 @@ $gray-lightest                        : rgb(245, 245, 245); // #f5f5f5
 $gray-white                           : rgb(255, 255, 255); // #ffffff
 
 
-//
 // Texting
-//
+// ---
 
 $font-family                          : "system", "-apple-system", "PingFang-TC", "Segoe UI", "Microsoft JhengHei",
                                         "Roboto", "Oxygen", "Fira Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
@@ -40,3 +38,10 @@ $font-size-lg                         : 18px;
 $font-size-md                         : 16px;
 $font-size-sm                         : 14px;
 $font-size-xs                         : 12px;
+
+
+// Layout
+// ---
+$header-padding                       : 0 70px;
+$header-width                         : 100%;
+$header-height                        : 60px;
