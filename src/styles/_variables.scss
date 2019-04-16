@@ -1,0 +1,42 @@
+//
+// Color
+//
+
+// basic
+$color-primary-dark                   : rgb(000, 128, 226); // TEMP
+$color-primary                        : rgb(017, 139, 248); // #118bf8
+$color-primary-light                  : rgb(105, 155, 208); // #699bd0
+// $color-secondary-dark                 : rgb(000, 000, 000); //
+$color-secondary                      : rgb(045, 077, 166); // #2d4da6
+// $color-secondary-light                : rgb(000, 000, 000); //
+$color-third-dark                     : rgb(031, 038, 053); // #1f2635
+$color-third                          : rgb(047, 059, 082); // #2f3b52
+// $color-third-light                    : rgb(000, 000, 000); //
+// $color-third-dark                     : rgb(000, 000, 000); //
+$color-fourth                          : rgb(245, 166, 035); // #f5a623
+// $color-third-light                    : rgb(000, 000, 000); //
+
+// gray
+$gray-black                           : rgb(000, 000, 000); // #000000
+$gray-darkest                         : rgb(051, 051, 051); // #333333
+$gray-darker                          : rgb(102, 102, 102); // #666666
+$gray-dark                            : rgb(153, 153, 153); // #999999
+$gray                                 : rgb(170, 170, 170); // #aaaaaa
+$gray-light                           : rgb(204, 204, 204); // #cccccc
+$gray-lighter                         : rgb(238, 238, 238); // #eeeeee
+$gray-lightest                        : rgb(245, 245, 245); // #f5f5f5
+$gray-white                           : rgb(255, 255, 255); // #ffffff
+
+
+//
+// Texting
+//
+
+$font-family                          : "system", "-apple-system", "PingFang-TC", "Segoe UI", "Microsoft JhengHei",
+                                        "Roboto", "Oxygen", "Fira Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
+
+$font-size-xl                         : 20px;
+$font-size-lg                         : 18px;
+$font-size-md                         : 16px;
+$font-size-sm                         : 14px;
+$font-size-xs                         : 12px;

@@ -1,0 +1,23 @@
+{
+  // See http://go.microsoft.com/fwlink/?LinkId=827846
+  // for the documentation about the extensions.json format
+  "recommendations": [
+    // ENVIRONMENT
+    // icons
+    "robertohuertasm.vscode-icons",
+    // debugger
+    "msjsdiag.debugger-for-chrome",
+
+    // DEVELOPMENT
+    // sass highlighting, autocomplete, snippets
+    "robinbentley.sass-indented",
+    // eslint
+    "dbaeumer.vscode-eslint",
+    // prettier
+    "esbenp.prettier-vscode",
+    // react snippets
+    "xabikos.reactsnippets",
+    // auto rename tag
+    "formulahendry.auto-rename-tag"
+  ]
+}

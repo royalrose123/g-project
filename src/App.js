@@ -1,28 +1,18 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from 'react'
+import { Switch, Route, Redirect, withRouter } from 'react-router-dom'
+import { hot } from 'react-hot-loader'
+import Loadable from 'react-loadable'
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+const loading = () => null
+const Home = Loadable({ loader: () => import('./js/views/Home'), loading })
+
+function App (props) {
+  return (
+    <Switch>
+      <Route strict sensitive path='/home' component={Home} />
+      <Redirect push from='/' to='/home' />
+    </Switch>
+  )
 }
 
-export default App;
+export default hot(module)(withRouter(App))

@@ -1,0 +1,52 @@
+{
+  // workbench
+  "workbench.iconTheme": "vscode-icons",
+
+  // editor
+  "editor.renderWhitespace": "all",
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+
+  // files
+  "files.associations": {
+    "*.js": "javascriptreact"
+  },
+  // let linter not to lint these files
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/tmp": true,
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/dist": true,
+    "**/.svg": true
+  },
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    "**/tmp/**": true,
+    "**/bower_components/**": true,
+    "**/dist/**": true
+  },
+
+  // emmet
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  },
+
+  // eslint and prettier
+  "eslint.autoFixOnSave": true,
+
+  // javascript
+  "javascript.format.enable": false, // for prettier
+  "javascript.implicitProjectConfig.experimentalDecorators": true, // for decorator
+
+  // prettier
+  "prettier.eslintIntegration": true, // format code by eslint with prettier
+  "prettier.stylelintIntegration": true,
+  "prettier.printWidth": 150
+}
