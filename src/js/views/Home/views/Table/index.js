@@ -3,6 +3,7 @@ import React from 'react'
 import classnames from 'classnames/bind'
 
 // Components
+import Recognized from './components/Recognized'
 import Seated from './components/Seated'
 import Standing from './components/Standing'
 
@@ -29,7 +30,9 @@ function Table (props) {
           <h2 className={cx('home-table__title')}>Standing</h2>
         </div>
       </div>
-      <div className={cx('home-table__row')}>slick</div>
+      <div className={cx('home-table__row')}>
+        <Recognized />
+      </div>
     </div>
   )
 }

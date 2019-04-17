@@ -1,0 +1,44 @@
+.home-table-recognized-person {
+  padding: 0 40px;
+
+  &__title {
+    padding: 8px 0;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: $font-size-xs;
+
+    &[data-is-member="true"] {
+      color: $gray-white;
+      background-color: #36d98d;
+
+      &:before {
+        content: "Member";
+        margin-right: 3px;
+      }
+    }
+
+    &[data-is-member="false"] {
+      color: $gray-black;
+      background-color: $gray-white;
+
+      &:before {
+        content: "Random";
+        margin-right: 3px;
+      }
+    }
+  }
+
+  &__image {
+  }
+
+  &__action {
+    margin-top: 15px;
+    padding: 12px 0;
+    display: block;
+    width: 100%;
+    color: $gray-white;
+    text-transform: uppercase;
+    font-size: $font-size-xs;
+    background-color: $color-fourth-dark;
+  }
+}
