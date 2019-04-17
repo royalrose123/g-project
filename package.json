@@ -1,6 +1,6 @@
 {
-  "name": "facial-recognition-fe",
-  "description": "Genting facial recognition service front-end part.",
+  "name": "baccarat-fe",
+  "description": "Genting baccarat gaming service front-end part.",
   "version": "0.1.0",
   "private": true,
   "scripts": {
