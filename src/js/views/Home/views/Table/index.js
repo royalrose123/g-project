@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 // import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
@@ -18,11 +18,20 @@ const cx = classnames.bind(styles)
 export const propTypes = {}
 
 function Table (props) {
+  const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
+
+  // Seat
+  const onSeatSelect = (event, index) => (selectedSeatIndex === index ? setSelectedSeatIndex(null) : setSelectedSeatIndex(index))
+
+  // Recognized
+  const isClockable = selectedSeatIndex !== null
+  const onClockIn = (event, person) => console.log(person)
+
   return (
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
-          <Seated />
+          <Seated selectedIndex={selectedSeatIndex} onSeatSelect={onSeatSelect} />
           <h2 className={cx('home-table__title')}>Seated</h2>
         </div>
         <div className={cx('home-table__column')}>
@@ -31,7 +40,7 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Recognized />
+        <Recognized isClockable={isClockable} onClockIn={onClockIn} />
       </div>
     </div>
   )

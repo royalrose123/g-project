@@ -13,6 +13,7 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  selectedIndex: PropTypes.number,
   onSeatSelect: PropTypes.func,
 }
 
@@ -21,14 +22,20 @@ export const defaultProps = {
 }
 
 function Seated (props) {
-  const { onSeatSelect } = props
+  const { selectedIndex, onSeatSelect } = props
 
   const count = 7
 
   return (
     <div className={cx('home-table-seated')}>
       {new Array(count).fill().map((empty, index) => (
-        <button key={index} type='button' className={cx('home-table-seated__seat')} onClick={event => onSeatSelect(event, index)}>
+        <button
+          key={index}
+          type='button'
+          className={cx('home-table-seated__seat')}
+          onClick={event => onSeatSelect(event, index)}
+          data-is-selected={index === selectedIndex}
+        >
           {index + 1}
         </button>
       ))}

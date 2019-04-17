@@ -1,5 +1,5 @@
-import React, { useRef } from 'react'
-// import PropTypes from 'prop-types'
+import React from 'react'
+import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 
@@ -14,7 +14,10 @@ import styles from './style.module.scss'
 // Variables / Functions
 const cx = classnames.bind(styles)
 
-export const propTypes = {}
+export const propTypes = {
+  isClockable: PropTypes.bool,
+  onClockIn: PropTypes.func,
+}
 
 const persons = [
   {
@@ -30,12 +33,7 @@ const persons = [
 ]
 
 function Recognized (props) {
-  // isClockable
-  // onClockIn
-
-  const aaa = useRef()
-
-  console.log('aaa', aaa)
+  const { isClockable, onClockIn } = props
 
   return (
     <div className={cx('home-table-recognized')}>
@@ -44,15 +42,12 @@ function Recognized (props) {
         withoutControls
         heightMode='current'
         edgeEasing='easeBackOut'
-        // framePadding='0 20px'
-        // cellSpacing={40}
         slideWidth='200px'
         slidesToScroll='auto'
         speed={800}
-        ref={aaa}
       >
         {[...persons, ...persons, ...persons, ...persons, ...persons, ...persons].map((person, index) => (
-          <Person key={index} person={person} isClockable />
+          <Person key={index} person={person} isClockable={isClockable} onClockIn={onClockIn} />
         ))}
       </Carousel>
     </div>
