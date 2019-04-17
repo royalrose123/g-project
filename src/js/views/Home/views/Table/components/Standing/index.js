@@ -27,13 +27,11 @@ function Standing (props) {
 
   return (
     <div className={cx('home-table-standing')}>
-      <div className={cx('home-table-standing__plan')}>
-        {new Array(count).fill().map((empty, index) => (
-          <button key={index} type='button' className={cx('home-table-standing__place')} onClick={event => onPlaceSelect(event, index)}>
-            <img src='https://fakeimg.pl/28' alt='' />
-          </button>
-        ))}
-      </div>
+      {new Array(count).fill().map((empty, index) => (
+        <button key={index} type='button' className={cx('home-table-standing__place')} onClick={event => onPlaceSelect(event, index)}>
+          <img src='https://fakeimg.pl/28' alt='' />
+        </button>
+      ))}
     </div>
   )
 }

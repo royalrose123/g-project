@@ -5,17 +5,15 @@ $place-row: 4;
 $place-column: 7;
 
 .home-table-standing {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // align-items: center;
 
-  &__plan {
-    display: flex;
-    flex-wrap: wrap;
-    width: ($place-size + $place-margin * 2) * $place-column;
-    height: ($place-size + $place-margin * 2) * $place-row;
-  }
+  display: flex;
+  flex-wrap: wrap;
+  width: ($place-size + $place-margin * 2) * $place-column;
+  height: ($place-size + $place-margin * 2) * $place-row;
 
   &__place {
     margin: $place-margin;

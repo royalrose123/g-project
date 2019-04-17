@@ -6,19 +6,17 @@ $desk-width: 510px / 2;
 $desk-height: 180px / 2;
 
 .home-table-seated {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  // display: flex;
+  // flex-direction: column;
+  // justify-content: center;
+  // align-items: center;
 
-  &__plan {
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: flex-end;
-    width: $seat-size * 2 + $seat-distance-horizontal * 2 + $desk-width;
-    height: $seat-size + $seat-distance-vertical + $desk-height;
-  }
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  width: $seat-size * 2 + $seat-distance-horizontal * 2 + $desk-width;
+  height: $seat-size + $seat-distance-vertical + $desk-height;
 
   &__seat {
     position: absolute;

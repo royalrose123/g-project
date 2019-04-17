@@ -27,14 +27,12 @@ function Seated (props) {
 
   return (
     <div className={cx('home-table-seated')}>
-      <div className={cx('home-table-seated__plan')}>
-        {new Array(count).fill().map((empty, index) => (
-          <button key={index} type='button' className={cx('home-table-seated__seat')} onClick={event => onSeatSelect(event, index)}>
-            {index + 1}
-          </button>
-        ))}
-        <div className={cx('home-table-seated__desk')} />
-      </div>
+      {new Array(count).fill().map((empty, index) => (
+        <button key={index} type='button' className={cx('home-table-seated__seat')} onClick={event => onSeatSelect(event, index)}>
+          {index + 1}
+        </button>
+      ))}
+      <div className={cx('home-table-seated__desk')} />
     </div>
   )
 }
