@@ -2,10 +2,7 @@
   position: relative;
   flex-shrink: 0;
   padding: 15px 60px 15px 24px; // padding-right: close button width
-  color: #ffffff;
-  font-size: $font-size-xl;
-  font-weight: 500;
-  background-color: $color-primary;
+  border-bottom: 1px solid $gray-light;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
 }
