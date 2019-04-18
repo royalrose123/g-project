@@ -9,6 +9,7 @@
   box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
 
   &__close-button {
+    z-index: 1;
     position: absolute;
     padding: 23px;
     top: 0;

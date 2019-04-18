@@ -1,32 +1,60 @@
 .home-table-recognized-person {
   &__title {
     padding: 8px 0;
-    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     text-transform: uppercase;
     font-size: $font-size-xs;
 
     &[data-is-member="true"] {
-      color: $gray-white;
-      background-color: #36d98d;
-
-      &:before {
-        content: "Member";
-        margin-right: 3px;
-      }
+      color: $gray-black;
+      background-color: $gray-white;
     }
 
     &[data-is-member="false"] {
-      color: $gray-black;
-      background-color: $gray-white;
-
-      &:before {
-        content: "Random";
-        margin-right: 3px;
-      }
+      color: $gray-white;
+      background-color: $color-secondary;
     }
   }
 
-  &__image {
+  &__title-icon {
+    margin-right: 6px;
+    width: 20px;
+    height: 13.5px;
+
+    &[data-rank="green"] {
+      color: #36d98d;
+    }
+
+    &[data-rank="gold"] {
+      color: #f4c039;
+    }
+
+    &[data-rank="platnum"] {
+      color: #64cce3;
+    }
+
+    &[data-rank="silver"] {
+      color: #aabac6;
+    }
+  }
+
+  &__image-wrapper {
+    position: relative;
+  }
+
+  &__name {
+    padding: 8px 10px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    text-align: center;
+    line-height: 1.1875;
+    color: $gray-white;
+    background-image: linear-gradient(180deg, rgba($gray-black, 0), rgba($gray-black, 0.5));
+    @include full-fill;
   }
 
   &__action {

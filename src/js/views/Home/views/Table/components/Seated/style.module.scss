@@ -36,7 +36,7 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(3) {
       top: 0;
-      left: $seat-distance-horizontal * 2.75;
+      left: $seat-distance-horizontal * 2.25;
       transform: translateX(100%);
     }
 
@@ -46,7 +46,7 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(5) {
       top: 0;
-      right: $seat-distance-horizontal * 2.75;
+      right: $seat-distance-horizontal * 2.25;
       transform: translateX(-100%);
     }
 

@@ -23,8 +23,8 @@ function Table (props) {
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
   const [isModalOpened, setIsModalOpened] = useState(false)
 
-  const seated = { seatSize: '40px' }
-  const standing = { row: 3, column: 7, placeSize: '40px', placeMargin: '10px' }
+  const seated = { seatSize: '51px' }
+  const standing = { row: 3, column: 6, placeSize: '51px', placeMargin: '12px' }
   useDeepCompareEffect(() => {
     document.documentElement.style.setProperty('--seated-seat-size', seated.seatSize)
 
