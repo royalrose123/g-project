@@ -1,0 +1,8 @@
+.modal {
+  z-index: 1;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  @include full-fill(fixed);
+}

@@ -1,0 +1,26 @@
+.modal-content {
+  z-index: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 526px;
+  background-color: #fff;
+  border-radius: 6px;
+  box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
+
+  &__close-button {
+    z-index: 1;
+    position: absolute;
+    padding: 23px;
+    top: 0;
+    right: 0;
+    color: #ffffff;
+    font-size: 0;
+  }
+
+  &__loading-overlay {
+    border-radius: 6px;
+    background-color: rgba(255, 255, 255, 0.6);
+    @include full-fill;
+  }
+}

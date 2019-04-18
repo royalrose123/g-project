@@ -3,6 +3,7 @@ import React, { useState } from 'react'
 import classnames from 'classnames/bind'
 
 // Components
+import Modal from '../../../../components/Modal'
 import Recognized from './components/Recognized'
 import Seated from './components/Seated'
 import Standing from './components/Standing'
@@ -20,6 +21,7 @@ export const propTypes = {}
 
 function Table (props) {
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
+  const [isModalOpened, setIsModalOpened] = useState(false)
 
   const seated = { seatSize: '40px' }
   const standing = { row: 3, column: 7, placeSize: '40px', placeMargin: '10px' }
@@ -37,10 +39,18 @@ function Table (props) {
 
   // Recognized
   const isClockable = selectedSeatIndex !== null
-  const onClockIn = (event, person) => console.log(person)
+  const onClockIn = (event, person) => {
+    console.log('onClockIn')
+    setIsModalOpened(true)
+  }
 
   return (
     <div className={cx('home-table')}>
+      <Modal isOpened={isModalOpened} onClose={event => setIsModalOpened(false)}>
+        <Modal.Header>header</Modal.Header>
+        <Modal.Body>body</Modal.Body>
+        <Modal.Footer>footer</Modal.Footer>
+      </Modal>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
           <Seated selectedIndex={selectedSeatIndex} onSeatSelect={onSeatSelect} />
