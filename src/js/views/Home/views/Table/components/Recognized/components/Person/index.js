@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
 // Components
+import Button from '../../../../../../../../components/Button'
 
 // Lib MISC
 
@@ -32,14 +33,15 @@ function Person (props) {
         #{serialNumber}
       </div>
       <img className={cx('home-table-recognized-person__image')} src={avatar} alt='serialNumber' />
-      <button
+      <Button
+        isBlock
         className={cx('home-table-recognized-person__action')}
         type='button'
         onClick={event => onClockIn(event, person)}
         disabled={!isClockable}
       >
         Clock-In
-      </button>
+      </Button>
     </div>
   )
 }
