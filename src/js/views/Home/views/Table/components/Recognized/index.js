@@ -42,12 +42,14 @@ function Recognized (props) {
         withoutControls
         heightMode='current'
         edgeEasing='easeBackOut'
-        slideWidth='200px'
         slidesToScroll='auto'
+        slideWidth='160px'
         speed={800}
       >
         {[...persons, ...persons, ...persons, ...persons, ...persons, ...persons].map((person, index) => (
-          <Person key={index} person={person} isClockable={isClockable} onClockIn={onClockIn} />
+          <div key={index} className={cx('home-table-recognized__person-wrapper')}>
+            <Person person={person} isClockable={isClockable} onClockIn={onClockIn} />
+          </div>
         ))}
       </Carousel>
     </div>

@@ -20,9 +20,9 @@ const Settings = Loadable({ loader: () => import('./views/Settings'), loading })
 const Table = Loadable({ loader: () => import('./views/Table'), loading })
 
 const navigations = [
-  { path: 'table', name: 'Table', component: Table },
-  { path: 'camera', name: 'Camera', component: Camera },
-  { path: 'settings', name: 'Settings', component: Settings },
+  { path: 'table', name: 'Table', icon: 'https://fakeimg.pl/30x18', component: Table },
+  { path: 'camera', name: 'Camera', icon: 'https://fakeimg.pl/30x18', component: Camera },
+  { path: 'settings', name: 'Settings', icon: 'https://fakeimg.pl/30x18', component: Settings },
 ]
 
 const defaultNavigation = navigations[0]
@@ -39,9 +39,12 @@ function Home (props) {
       <Layout.Header>
         <Clock />
         <Menu>
-          {navigations.map(({ path, name }, index) => (
+          {navigations.map(({ path, name, icon }, index) => (
             <Menu.Item key={index}>
-              <Menu.Link to={`${match.url}/${path}`}>{name}</Menu.Link>
+              <Menu.Link to={`${match.url}/${path}`}>
+                <img src={icon} alt={name} style={{ marginRight: '5px' }} />
+                {name}
+              </Menu.Link>
             </Menu.Item>
           ))}
         </Menu>

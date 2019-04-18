@@ -1,19 +1,13 @@
-$place-size: 40px;
-$place-margin: 10px;
-
-$place-row: 4;
-$place-column: 7;
-
 .home-table-standing {
   display: flex;
   flex-wrap: wrap;
-  width: ($place-size + $place-margin * 2) * $place-column;
-  height: ($place-size + $place-margin * 2) * $place-row;
+  width: calc((#{var(--standing-place-size)} + #{var(--standing-place-margin)} * 2) * #{var(--standing-column)});
+  height: calc((#{var(--standing-place-size)} + #{var(--standing-place-margin)} * 2) * #{var(--standing-row)});
 
   &__place {
-    margin: $place-margin;
+    margin: var(--standing-place-margin);
     padding: 5px;
     border: 1px solid $gray-white;
-    @include size($place-size);
+    @include size(var(--standing-place-size));
   }
 }

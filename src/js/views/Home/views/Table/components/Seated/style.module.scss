@@ -1,4 +1,3 @@
-$seat-size: 80px / 2;
 $seat-distance-horizontal: 40px / 2;
 $seat-distance-vertical: 50px / 2;
 
@@ -10,14 +9,14 @@ $desk-height: 180px / 2;
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  width: $seat-size * 2 + $seat-distance-horizontal * 2 + $desk-width;
-  height: $seat-size + $seat-distance-vertical + $desk-height;
+  width: calc(#{var(--seated-seat-size)} * 2 + #{$seat-distance-horizontal} * 2 + #{$desk-width});
+  height: calc(#{var(--seated-seat-size)} + #{$seat-distance-vertical} + #{$desk-height});
 
   &__seat {
     position: absolute;
     color: $gray-white;
     border: 1px solid $gray-white;
-    @include size($seat-size);
+    @include size(var(--seated-seat-size));
 
     &[data-is-selected="true"] {
       color: $gray-black;
@@ -26,7 +25,8 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(1) {
       left: 0;
-      bottom: -$seat-size / 2 + $desk-height / 2;
+      bottom: $desk-height / 2;
+      transform: translateY(50%);
     }
 
     &:nth-of-type(2) {
@@ -36,7 +36,8 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(3) {
       top: 0;
-      left: $seat-distance-horizontal * 2.75 + $seat-size;
+      left: $seat-distance-horizontal * 2.75;
+      transform: translateX(100%);
     }
 
     &:nth-of-type(4) {
@@ -45,7 +46,8 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(5) {
       top: 0;
-      right: $seat-distance-horizontal * 2.75 + $seat-size;
+      right: $seat-distance-horizontal * 2.75;
+      transform: translateX(-100%);
     }
 
     &:nth-of-type(6) {
@@ -55,7 +57,8 @@ $desk-height: 180px / 2;
 
     &:nth-of-type(7) {
       right: 0;
-      bottom: -$seat-size / 2 + $desk-height / 2;
+      bottom: $desk-height / 2;
+      transform: translateY(50%);
     }
   }
 

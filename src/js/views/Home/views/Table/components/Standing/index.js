@@ -13,6 +13,8 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  row: PropTypes.number.isRequired,
+  column: PropTypes.number.isRequired,
   onPlaceSelect: PropTypes.func,
 }
 
@@ -21,9 +23,9 @@ export const defaultProps = {
 }
 
 function Standing (props) {
-  const { onPlaceSelect } = props
+  const { row, column, onPlaceSelect } = props
 
-  const count = 28
+  const count = row * column
 
   return (
     <div className={cx('home-table-standing')}>

@@ -15,6 +15,7 @@ function checkDependencies (deps) {
     throw new Error('useDeepCompareEffect should not be used with dependencies that are all primitive values. Use React.useEffect instead.')
   }
 }
+
 function useDeepCompareEffect (callback, dependencies) {
   if (process.env.NODE_ENV !== 'production') {
     checkDependencies(dependencies)
