@@ -1,4 +1,11 @@
 .home-clock {
+  display: flex;
+  align-items: center;
   color: $gray-white;
   font-weight: 300;
+
+  &__text {
+    margin-left: 16px;
+    font-size: $font-size-sm;
+  }
 }
