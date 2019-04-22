@@ -1,8 +1,12 @@
 .modal-header {
   position: relative;
   flex-shrink: 0;
-  padding: 15px 60px 15px 24px; // padding-right: close button width
+  padding: 24px;
+  text-align: center;
+  line-height: 1.1875;
+  font-size: $font-size-lg;
+  font-weight: 500;
   border-bottom: 1px solid $gray-light;
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
 }

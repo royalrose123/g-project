@@ -11,6 +11,7 @@
   border-width: 1px;
   border-style: solid;
   overflow: hidden;
+  letter-spacing: 2px;
   transition: all 200ms $transition-mode;
 
   &[data-is-rounded="true"] {
@@ -46,7 +47,7 @@
   }
 
   &[data-size="md"] {
-    width: 96px;
+    width: 400px;
   }
 
   &[data-size="lg"] {

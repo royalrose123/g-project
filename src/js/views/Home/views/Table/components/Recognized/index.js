@@ -4,7 +4,7 @@ import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 
 // Components
-import Person from './components/Person'
+import Person, { propTypes as PersonPropTypes } from '../Person'
 
 // Lib MISC
 
@@ -15,53 +15,17 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  persons: PropTypes.arrayOf(PersonPropTypes.person),
   isClockable: PropTypes.bool,
   onClockIn: PropTypes.func,
 }
 
-const persons = [
-  {
-    name: 'Mark Elliot Zuckerberg',
-    isMember: true,
-    serialNumber: 1234567,
-    rank: 'green',
-    avatar: 'https://fakeimg.pl/280x360',
-  },
-  {
-    name: null,
-    isMember: false,
-    serialNumber: 7654321,
-    rank: null,
-    avatar: 'https://fakeimg.pl/280x360',
-  },
-  {
-    name: 'Slavcho Karbashewski',
-    isMember: true,
-    serialNumber: 7654321,
-    rank: 'gold',
-    avatar: 'https://fakeimg.pl/280x360',
-  },
-  {
-    name: 'Wan Gengxin',
-    isMember: true,
-    serialNumber: 7654321,
-    rank: 'platunum',
-    avatar: 'https://fakeimg.pl/280x360',
-  },
-  {
-    name: 'Amelia Edwards',
-    isMember: true,
-    serialNumber: 7654321,
-    rank: 'silver',
-    avatar: 'https://fakeimg.pl/280x360',
-  },
-]
-
 function Recognized (props) {
-  const { isClockable, onClockIn } = props
+  const { persons, isClockable, onClockIn } = props
 
   const itemWidth = 280
   const itemSpacing = 40
+  const itemBorder = 6
 
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
@@ -79,7 +43,7 @@ function Recognized (props) {
         speed={800}
       >
         {[...persons, ...persons].map((person, index) => (
-          <div key={index} style={{ padding: `0 ${itemSpacing}px` }}>
+          <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
             <Person person={person} isClockable={isClockable} onClockIn={onClockIn} />
           </div>
         ))}

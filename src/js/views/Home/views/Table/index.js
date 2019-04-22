@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import classnames from 'classnames/bind'
 
 // Components
-import Modal from '../../../../components/Modal'
+import ClockInModal from './components/ClockInModal'
 import Recognized from './components/Recognized'
 import Seated from './components/Seated'
 import Standing from './components/Standing'
@@ -17,11 +17,57 @@ import styles from './style.module.scss'
 // Variables / Functions
 const cx = classnames.bind(styles)
 
+const persons = [
+  {
+    name: 'Mark Elliot Zuckerberg',
+    similarity: 90.5,
+    serialNumber: 1234567,
+    rank: 'green',
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+  {
+    name: null,
+    similarity: 72,
+    serialNumber: 7654321,
+    rank: null,
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+  {
+    name: 'Slavcho Karbashewski',
+    similarity: 95,
+    serialNumber: 1234567,
+    rank: 'gold',
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+  {
+    name: null,
+    similarity: 77,
+    serialNumber: 7654321,
+    rank: null,
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+  {
+    name: 'Wan Gengxin',
+    similarity: 92.5,
+    serialNumber: 1234567,
+    rank: 'platunum',
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+  {
+    name: 'Amelia Edwards',
+    similarity: 94,
+    serialNumber: 1234567,
+    rank: 'silver',
+    avatar: 'https://fakeimg.pl/280x360',
+  },
+]
+
 export const propTypes = {}
 
 function Table (props) {
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
-  const [isModalOpened, setIsModalOpened] = useState(false)
+  const [currentPerson, setCurrentPerson] = useState(null)
+  const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
 
   const seated = { seatSize: '102px' }
   const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
@@ -40,17 +86,18 @@ function Table (props) {
   // Recognized
   const isClockable = selectedSeatIndex !== null
   const onClockIn = (event, person) => {
-    console.log('onClockIn')
-    setIsModalOpened(true)
+    setIsClockInModalOpened(true)
+    setCurrentPerson(person)
+  }
+
+  // Modal
+  const onModalClose = event => {
+    setIsClockInModalOpened(false)
+    setCurrentPerson(null)
   }
 
   return (
     <div className={cx('home-table')}>
-      <Modal isOpened={isModalOpened} onClose={event => setIsModalOpened(false)}>
-        <Modal.Header>header</Modal.Header>
-        <Modal.Body>body</Modal.Body>
-        <Modal.Footer>footer</Modal.Footer>
-      </Modal>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
           <Seated selectedIndex={selectedSeatIndex} onSeatSelect={onSeatSelect} />
@@ -62,8 +109,9 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Recognized isClockable={isClockable} onClockIn={onClockIn} />
+        <Recognized persons={persons} isClockable={isClockable} onClockIn={onClockIn} />
       </div>
+      <ClockInModal person={currentPerson} isOpened={isClockInModalOpened} onClose={onModalClose} />
     </div>
   )
 }
