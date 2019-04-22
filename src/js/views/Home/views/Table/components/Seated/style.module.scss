@@ -1,8 +1,8 @@
-$seat-distance-horizontal: 40px / 2;
-$seat-distance-vertical: 50px / 2;
+$seat-distance-horizontal: 40px;
+$seat-distance-vertical: 50px;
 
-$desk-width: 510px / 2;
-$desk-height: 180px / 2;
+$desk-width: 510px;
+$desk-height: 180px;
 
 .home-table-seated {
   position: relative;
@@ -14,6 +14,7 @@ $desk-height: 180px / 2;
 
   &__seat {
     position: absolute;
+    font-size: $font-size-xs * 2;
     color: $gray-white;
     border: 1px solid $gray-white;
     @include size(var(--seated-seat-size));

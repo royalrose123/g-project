@@ -37,16 +37,16 @@ $transition-mode                      : cubic-bezier( .25, .8, .25, 1);
 
 $font-family                          : "system", "-apple-system", "PingFang-TC", "Segoe UI", "Microsoft JhengHei",
                                         "Roboto", "Oxygen", "Fira Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif";
-
-$font-size-xl                         : 20px;
-$font-size-lg                         : 18px;
-$font-size-md                         : 16px;
-$font-size-sm                         : 14px;
-$font-size-xs                         : 12px;
+// 24 32 28
+$font-size-xl                         : 36px;
+$font-size-lg                         : 32px;
+$font-size-md                         : 28px;
+$font-size-sm                         : 24px;
+$font-size-xs                         : 20px;
 
 
 // Layout
 // ---
 $header-padding                       : 0 70px;
 $header-width                         : 100%;
-$header-height                        : 60px;
+$header-height                        : 100px;
