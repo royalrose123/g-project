@@ -7,6 +7,15 @@
 // ---
 @import "~normalize.css";
 
+// Numeric Keyboard
+.numeric-keyboard {
+  background: transparent !important;
+}
+
 // Customize
 // ---
 @import "reboot.scss";
+
+#root {
+  height: 100vh;
+}

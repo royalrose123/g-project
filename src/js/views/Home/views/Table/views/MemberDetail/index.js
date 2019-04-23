@@ -5,6 +5,7 @@ import classnames from 'classnames/bind'
 // Components
 import Button from '../../../../../../components/Button'
 import Icon from '../../../../../../components/Icon'
+import Keyboard from '../../../../components/Keyboard'
 import Form from '../../../../components/Form'
 import Layout from '../../../../components/Layout'
 
@@ -35,10 +36,13 @@ function MemberDetail (props) {
 
   console.log('MemberDetail member :', member)
 
+  const onKeyboardPress = key => console.log('onKeyboardPress props', key)
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
 
   return (
     <Layout className={cx('home-table-member-detail')}>
+      <Keyboard onPress={onKeyboardPress} />
+
       <Layout.Header>
         <div className={cx('home-table-member-detail__title-wrapper')}>
           <Icon className={cx('home-table-member-detail__icon')} name='cross' mode='01' onClick={event => history.push(findStaticPath(path))} />
@@ -97,7 +101,7 @@ function MemberDetail (props) {
                 <Form.Row>
                   <Form.Label>Who Win</Form.Label>
                   <Form.Radio.Group>
-                    <Form.Radio checked>Player</Form.Radio>
+                    <Form.Radio>Player</Form.Radio>
                     <Form.Radio>Dealer</Form.Radio>
                   </Form.Radio.Group>
                 </Form.Row>
@@ -108,7 +112,7 @@ function MemberDetail (props) {
                   <Form.Label>Action Win/Loss</Form.Label>
                   <Form.Group width={300}>
                     <Form.Radio.Group>
-                      <Form.Radio checked>123</Form.Radio>
+                      <Form.Radio>123</Form.Radio>
                       <Form.Radio>456</Form.Radio>
                     </Form.Radio.Group>
                     <Form.Control style={{ marginTop: 30 }} />
