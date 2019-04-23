@@ -1,0 +1,12 @@
+.home-settings {
+  padding: 80px 120px;
+
+  &__title {
+    margin-bottom: 54px;
+    color: $gray-white;
+    line-height: 1.325;
+    text-transform: uppercase;
+    font-size: $font-size-lg;
+    font-weight: 500;
+  }
+}

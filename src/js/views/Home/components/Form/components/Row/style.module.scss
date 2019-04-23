@@ -1,0 +1,9 @@
+.home-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+
+  &:not(:last-of-type) {
+    margin-bottom: 52px;
+  }
+}
