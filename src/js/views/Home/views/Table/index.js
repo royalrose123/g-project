@@ -4,7 +4,7 @@ import classnames from 'classnames/bind'
 
 // Components
 import ClockInModal from './components/ClockInModal'
-import Recognized from './components/Recognized'
+import Detection from './components/Detection'
 import Seated from './components/Seated'
 import Standing from './components/Standing'
 
@@ -23,7 +23,7 @@ const seated = { count: 7, seatSize: '102px' }
 const defaultSeatList = new Array(seated.count).fill().map((empty, index) => ({ isSeated: false, content: index + 1 }))
 const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
 
-const persons = [
+const detectionList = [
   {
     detectedPhoto: 'https://fakeimg.pl/280x360',
     probable: [
@@ -173,14 +173,14 @@ function Table (props) {
     }
   }
 
-  // Recognized
-  const isRecognizedItemActionDisabled = selectedSeatIndex !== null
-  const onRecognizedItemActionClick = (event, person) => {
+  // Detection
+  const isDetectionItemActionDisabled = selectedSeatIndex !== null
+  const onDetectionItemActionClick = (event, person) => {
     openClockInModal()
     setCurrentPerson(person)
   }
 
-  // Modal
+  // ClockInModal
   const onClockInModalClose = event => {
     closeClockInModal()
     initializeCurrentPerson()
@@ -206,7 +206,7 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Recognized persons={persons} isActionDisabled={isRecognizedItemActionDisabled} onActionClick={onRecognizedItemActionClick} />
+        <Detection detectionList={detectionList} isActionDisabled={isDetectionItemActionDisabled} onActionClick={onDetectionItemActionClick} />
       </div>
       <ClockInModal person={currentPerson} isOpened={isClockInModalOpened} onClose={onClockInModalClose} onClockIn={onClockIn} />
     </div>

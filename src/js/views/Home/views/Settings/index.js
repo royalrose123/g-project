@@ -22,8 +22,8 @@ function Settings (props) {
   return (
     <div className={cx('home-settings')}>
       <h2 className={cx('home-settings__title')}>Settings</h2>
-      <Form width={830}>
-        <Form.Group>
+      <Form>
+        <Form.Group width={830}>
           <Form.Row>
             <Form.Label>Table Number</Form.Label>
             <Form.Control />

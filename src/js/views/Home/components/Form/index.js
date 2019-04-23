@@ -7,6 +7,7 @@ import Control from './components/Control'
 import Display from './components/Display'
 import Group from './components/Group'
 import Label from './components/Label'
+import Radio from './components/Radio'
 import Row from './components/Row'
 
 // Lib MISC
@@ -18,15 +19,13 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  width: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   className: PropTypes.string,
-  style: PropTypes.object,
 }
 
 function Form (props) {
-  const { width, className, style, ...restProps } = props
+  const { className, ...restProps } = props
 
-  return <form className={cx('home-form', className)} style={{ ...style, width }} {...restProps} />
+  return <form className={cx('home-form', className)} {...restProps} />
 }
 
 Form.propTypes = propTypes
@@ -35,6 +34,7 @@ Form.Display = Display
 Form.Control = Control
 Form.Group = Group
 Form.Label = Label
+Form.Radio = Radio
 Form.Row = Row
 
 export default Form

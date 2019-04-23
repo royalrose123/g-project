@@ -15,13 +15,13 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  persons: PropTypes.arrayOf(PersonPropTypes.person),
+  detectionList: PropTypes.arrayOf(PersonPropTypes.person),
   isActionDisabled: PropTypes.bool,
   onActionClick: PropTypes.func,
 }
 
-function Recognized (props) {
-  const { persons, isActionDisabled, onActionClick } = props
+function Detection (props) {
+  const { detectionList, isActionDisabled, onActionClick } = props
 
   const itemWidth = 280
   const itemSpacing = 40
@@ -31,7 +31,7 @@ function Recognized (props) {
   const slideSpacing = -itemSpacing
 
   return (
-    <div className={cx('home-table-recognized')}>
+    <div className={cx('home-table-detection')}>
       <Carousel
         autoGenerateStyleTag={false}
         withoutControls
@@ -42,7 +42,7 @@ function Recognized (props) {
         cellSpacing={slideSpacing}
         speed={800}
       >
-        {[...persons, ...persons].map((person, index) => (
+        {[...detectionList, ...detectionList].map((person, index) => (
           <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
             <Person
               person={person}
@@ -60,6 +60,6 @@ function Recognized (props) {
   )
 }
 
-Recognized.propTypes = propTypes
+Detection.propTypes = propTypes
 
-export default Recognized
+export default Detection
