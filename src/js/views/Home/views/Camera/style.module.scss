@@ -1,0 +1,30 @@
+.home-camera {
+  padding: 80px 70px;
+  display: flex;
+
+  &__column {
+    padding: 0 50px;
+  }
+
+  &__title {
+    margin-bottom: 54px;
+    color: $gray-white;
+    line-height: 1.325;
+    text-transform: uppercase;
+    font-size: $font-size-lg;
+    font-weight: 500;
+  }
+
+  &__video-wrapper {
+    overflow: hidden;
+    position: relative;
+    @include size(910px);
+
+    // TODO: Remove this line
+    background: $gray-black;
+  }
+
+  &__video {
+    @include position-centre;
+  }
+}
