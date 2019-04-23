@@ -16,12 +16,12 @@ const cx = classnames.bind(styles)
 
 export const propTypes = {
   persons: PropTypes.arrayOf(PersonPropTypes.person),
-  isClockable: PropTypes.bool,
-  onClockIn: PropTypes.func,
+  isActionDisabled: PropTypes.bool,
+  onActionClick: PropTypes.func,
 }
 
 function Recognized (props) {
-  const { persons, isClockable, onClockIn } = props
+  const { persons, isActionDisabled, onActionClick } = props
 
   const itemWidth = 280
   const itemSpacing = 40
@@ -44,7 +44,15 @@ function Recognized (props) {
       >
         {[...persons, ...persons].map((person, index) => (
           <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
-            <Person person={person} isClockable={isClockable} onClockIn={onClockIn} />
+            <Person
+              person={person}
+              isClockable
+              isSelectable={false}
+              showSerialNumber={false}
+              showSimilarity={false}
+              isActionDisabled={isActionDisabled}
+              onActionClick={onActionClick}
+            />
           </div>
         ))}
       </Carousel>

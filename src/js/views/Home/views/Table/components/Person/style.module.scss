@@ -1,10 +1,13 @@
 .home-table-person {
-  &[data-is-selectable="true"][data-is-selected="true"] {
-    box-shadow: 0 0 0 6px $color-primary;
-  }
+  &[data-is-selectable="true"] {
+    &[data-is-selected="true"] {
+      box-shadow: 0 0 0 6px $color-primary;
+    }
 
-  &[data-is-selectable="true"][data-is-selected="false"] {
-    opacity: 0.6;
+    // siblings selector
+    ~ [data-is-selected="false"] {
+      opacity: 0.6;
+    }
   }
 
   &__header {
@@ -70,5 +73,10 @@
 
   &__action {
     margin-top: 20px;
+  }
+
+  &__similarity {
+    text-align: center;
+    font-size: $font-size-lg * 2;
   }
 }

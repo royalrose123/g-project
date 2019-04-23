@@ -16,10 +16,11 @@ export const propTypes = {
   person: PropTypes.object,
   isOpened: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  onClockIn: PropTypes.func,
 }
 
 function ClockInModal (props) {
-  const { person, isOpened, onClose } = props
+  const { person, isOpened, onClose, onClockIn } = props
 
   console.log('person :', person)
 
@@ -31,7 +32,7 @@ function ClockInModal (props) {
         <Button className={cx('home-table-clock-in-modal__action')} type='button' isFilled={false}>
           Swipe Membercard
         </Button>
-        <Button className={cx('home-table-clock-in-modal__action')} type='button'>
+        <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={onClockIn}>
           Confirm Clock-In
         </Button>
       </Modal.Footer>

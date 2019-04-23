@@ -13,8 +13,9 @@ $desk-height: 180px;
   height: calc(#{var(--seated-seat-size)} + #{$seat-distance-vertical} + #{$desk-height});
 
   &__seat {
+    overflow: hidden;
     position: absolute;
-    font-size: $font-size-xs * 2;
+    font-size: 0;
     color: $gray-white;
     border: 1px solid $gray-white;
     @include size(var(--seated-seat-size));
@@ -61,6 +62,15 @@ $desk-height: 180px;
       bottom: $desk-height / 2;
       transform: translateY(50%);
     }
+  }
+
+  &__seat-image {
+    width: 100%;
+    @include position-centre;
+  }
+
+  &__seat-empty {
+    font-size: $font-size-xs * 2;
   }
 
   &__desk {
