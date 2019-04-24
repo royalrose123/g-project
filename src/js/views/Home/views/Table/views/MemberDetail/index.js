@@ -3,11 +3,12 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
 // Components
-import Button from '../../../../../../components/Button'
-import Icon from '../../../../../../components/Icon'
+import Person from '../../components/Person'
 import Keyboard from '../../../../components/Keyboard'
 import Form from '../../../../components/Form'
 import Layout from '../../../../components/Layout'
+import Button from '../../../../../../components/Button'
+import Icon from '../../../../../../components/Icon'
 
 // Lib MISC
 import findStaticPath from '../../../../../../lib/utils/find-static-path'
@@ -16,6 +17,7 @@ import findStaticPath from '../../../../../../lib/utils/find-static-path'
 import styles from './style.module.scss'
 
 // Variables / Functions
+import PERSON_TYPE from '../../../../../../constants/PersonType'
 const cx = classnames.bind(styles)
 const TABS = {
   BETTING_RECORD: 'betting-record',
@@ -52,7 +54,9 @@ function MemberDetail (props) {
       </Layout.Header>
 
       <Layout.Content className={cx('home-table-member-detail__content')} style={{ color: '#fff' }}>
-        <div>image</div>
+        <div className={cx('home-table-member-detail__avatar')}>
+          <Person type={PERSON_TYPE.MEMBER} person={member} />
+        </div>
 
         <div className={cx('home-table-member-detail__tabs')}>
           <div className={cx('home-table-member-detail__tabs-list')}>

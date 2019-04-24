@@ -19,6 +19,11 @@
 
   &__content {
     padding: 80px 120px;
+    display: flex;
+  }
+
+  &__avatar {
+    margin-right: 120px;
   }
 
   &__tabs {

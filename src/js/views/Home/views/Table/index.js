@@ -159,7 +159,7 @@ function Table (props) {
     if (typeof seat === 'object') {
       setCurrentMember(seat)
       // TODO: 改成 member id
-      history.push(`${match.url}/${seat.probableList[0].id}`)
+      history.push(`${match.url}/${seat.id}`)
       return
     }
 
@@ -182,8 +182,8 @@ function Table (props) {
     closeClockInModal()
     initializeCurrentDetectionItem()
   }
-  const onClockIn = event => {
-    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? currentDetectionItem : seatItem)))
+  const onClockIn = (event, person) => {
+    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id: '987685649864', image: person.image } : seatItem)))
     closeClockInModal()
     initializeCurrentDetectionItem()
   }

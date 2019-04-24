@@ -33,13 +33,14 @@ export const propTypes = {
 function ClockInModal (props) {
   const { detectionItem, isOpened, onClose, onClockIn } = props
 
+  let person = null
+
   console.log('detectionItem :', detectionItem)
   const renderBody = () => {
     const { type, snapshot, probableList } = detectionItem
 
     const similarityMatchPercent = 80
     const isProbablyMember = probableList.some(probableItem => new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(similarityMatchPercent))
-    let person = null
     console.log('isProbablyMember :', isProbablyMember)
 
     switch (true) {
@@ -76,7 +77,7 @@ function ClockInModal (props) {
         <Button className={cx('home-table-clock-in-modal__action')} type='button' isFilled={false}>
           Swipe Membercard
         </Button>
-        <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={onClockIn}>
+        <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, person)}>
           Confirm Clock-In
         </Button>
       </Modal.Footer>
