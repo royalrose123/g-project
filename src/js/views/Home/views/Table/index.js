@@ -23,101 +23,101 @@ const seated = { count: 7, seatSize: '102px' }
 const defaultSeatList = new Array(seated.count).fill().map((empty, index) => ({ isSeated: false, content: index + 1 }))
 const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
 
-const detectionList = [
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'Mark Elliot Zuckerberg',
-        similarity: 90.5,
-        serialNumber: 1234567,
-        rank: 'green',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-      {
-        name: 'Mark Elliot Zuckerberg 12',
-        similarity: 88,
-        serialNumber: 1234567,
-        rank: 'green',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'aaa',
-        similarity: 72,
-        serialNumber: 7654321,
-        rank: 'green',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-      {
-        name: 'bbb',
-        similarity: 60,
-        serialNumber: 7654321,
-        rank: 'green',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'Slavcho Karbashewski',
-        similarity: 95,
-        serialNumber: 1234567,
-        rank: 'gold',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'ccc',
-        similarity: 77,
-        serialNumber: 7654321,
-        rank: 'green',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'Wan Gengxin 12',
-        similarity: 91,
-        serialNumber: 1234567,
-        rank: 'platunum',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-      {
-        name: 'Wan Gengxin',
-        similarity: 92.5,
-        serialNumber: 1234567,
-        rank: 'platunum',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-  {
-    detectedPhoto: 'https://fakeimg.pl/280x360',
-    probable: [
-      {
-        name: 'Amelia Edwards',
-        similarity: 94,
-        serialNumber: 1234567,
-        rank: 'silver',
-        avatar: 'https://fakeimg.pl/280x360',
-      },
-    ],
-  },
-]
+// const detectionList = [
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'Mark Elliot Zuckerberg',
+//         similarity: 90.5,
+//         serialNumber: 1234567,
+//         rank: 'green',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//       {
+//         name: 'Mark Elliot Zuckerberg 12',
+//         similarity: 88,
+//         serialNumber: 1234567,
+//         rank: 'green',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'aaa',
+//         similarity: 72,
+//         serialNumber: 7654321,
+//         rank: 'green',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//       {
+//         name: 'bbb',
+//         similarity: 60,
+//         serialNumber: 7654321,
+//         rank: 'green',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'Slavcho Karbashewski',
+//         similarity: 95,
+//         serialNumber: 1234567,
+//         rank: 'gold',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'ccc',
+//         similarity: 77,
+//         serialNumber: 7654321,
+//         rank: 'green',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'Wan Gengxin 12',
+//         similarity: 91,
+//         serialNumber: 1234567,
+//         rank: 'platunum',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//       {
+//         name: 'Wan Gengxin',
+//         similarity: 92.5,
+//         serialNumber: 1234567,
+//         rank: 'platunum',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+//   {
+//     detectedPhoto: 'https://fakeimg.pl/280x360',
+//     probable: [
+//       {
+//         name: 'Amelia Edwards',
+//         similarity: 94,
+//         serialNumber: 1234567,
+//         rank: 'silver',
+//         avatar: 'https://fakeimg.pl/280x360',
+//       },
+//     ],
+//   },
+// ]
 
 export const propTypes = {
   match: PropTypes.object,
@@ -161,7 +161,7 @@ function Table (props) {
     if (isSeated) {
       setCurrentMember(seat)
       // TODO: 改成 member id
-      history.push(`${match.url}/${seat.probable[0].serialNumber}`)
+      history.push(`${match.url}/${seat.probableList[0].id}`)
       return
     }
 
@@ -206,7 +206,7 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Detection detectionList={detectionList} isActionDisabled={isDetectionItemActionDisabled} onActionClick={onDetectionItemActionClick} />
+        <Detection isActionDisabled={isDetectionItemActionDisabled} onActionClick={onDetectionItemActionClick} />
       </div>
       <ClockInModal person={currentPerson} isOpened={isClockInModalOpened} onClose={onClockInModalClose} onClockIn={onClockIn} />
     </div>

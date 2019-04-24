@@ -4,9 +4,11 @@ import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 
 // Components
-import Person, { propTypes as PersonPropTypes } from '../Person'
+import Person from '../Person'
 
 // Lib MISC
+import useFetcher from '../../../../../../lib/effects/useFetcher'
+import DetectionApi from '../../../../../../lib/api/Detection'
 
 // Style
 import styles from './style.module.scss'
@@ -15,13 +17,16 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  detectionList: PropTypes.arrayOf(PersonPropTypes.person),
   isActionDisabled: PropTypes.bool,
   onActionClick: PropTypes.func,
 }
 
 function Detection (props) {
-  const { detectionList, isActionDisabled, onActionClick } = props
+  const { isActionDisabled, onActionClick } = props
+
+  const { isLoaded, response: detectionList } = useFetcher(null, DetectionApi.fetchDetectionList)
+
+  console.log('detectionList :', detectionList)
 
   const itemWidth = 280
   const itemSpacing = 40
@@ -32,30 +37,32 @@ function Detection (props) {
 
   return (
     <div className={cx('home-table-detection')}>
-      <Carousel
-        autoGenerateStyleTag={false}
-        withoutControls
-        heightMode='current'
-        edgeEasing='easeBackOut'
-        slidesToScroll='auto'
-        slideWidth={slideWidth}
-        cellSpacing={slideSpacing}
-        speed={800}
-      >
-        {[...detectionList, ...detectionList].map((person, index) => (
-          <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
-            <Person
-              person={person}
-              isClockable
-              isSelectable={false}
-              showSerialNumber={false}
-              showSimilarity={false}
-              isActionDisabled={isActionDisabled}
-              onActionClick={onActionClick}
-            />
-          </div>
-        ))}
-      </Carousel>
+      {isLoaded ? (
+        <Carousel
+          autoGenerateStyleTag={false}
+          withoutControls
+          heightMode='current'
+          edgeEasing='easeBackOut'
+          slidesToScroll='auto'
+          slideWidth={slideWidth}
+          cellSpacing={slideSpacing}
+          speed={800}
+        >
+          {detectionList.map((person, index) => (
+            <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
+              <Person
+                person={person}
+                isClockable
+                isSelectable={false}
+                showId={false}
+                showSimilarity={false}
+                isActionDisabled={isActionDisabled}
+                onActionClick={onActionClick}
+              />
+            </div>
+          ))}
+        </Carousel>
+      ) : null}
     </div>
   )
 }

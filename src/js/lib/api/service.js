@@ -25,29 +25,18 @@ class Service {
   }
 
   static apiConfig = {
-    baseURL: 'http://api',
+    baseURL: 'http://10.1.1.55:45088/v1',
   }
 
   static normalizeList (list, normalizer) {
     return list.map(item => normalizer(item))
   }
 
-  static normalizeListWithPagination ({ count, list, page, pagingIndex, pagingSize, requestDate }, normalizer) {
-    return {
-      count,
-      list: Service.normalizeList(list, normalizer),
-      page,
-      pagingIndex,
-      pagingSize,
-      requestDateTime: requestDate,
-    }
-  }
-
   callApi () {
     const axiosInstance = axios.create(Service.apiConfig)
 
     return axiosInstance(this.config).then(
-      response => this.normalizer(to(response.data, CASES.CAMEL)),
+      response => this.normalizer(to(response.data.data, CASES.CAMEL)),
       error => {
         let message = ''
 

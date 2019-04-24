@@ -6,7 +6,7 @@ function DefaultLoadingComponent () {
 }
 
 function withLoading (Component) {
-  const wihLoadingComponent = ({ isFetching, isLoaded, LoadingComponent, ...props }) => {
+  const withLoadingComponent = ({ isFetching, isLoaded, loadingComponent: LoadingComponent, ...props }) => {
     if (isFetching || !isLoaded) {
       return typeof LoadingComponent === 'undefined' ? <DefaultLoadingComponent /> : <LoadingComponent />
     } else {
@@ -14,13 +14,13 @@ function withLoading (Component) {
     }
   }
 
-  wihLoadingComponent.propTypes = {
+  withLoadingComponent.propTypes = {
     isFetching: PropTypes.bool.isRequired,
     isLoaded: PropTypes.bool.isRequired,
     LoadingComponent: PropTypes.node,
   }
 
-  return wihLoadingComponent
+  return withLoadingComponent
 }
 
 export default withLoading

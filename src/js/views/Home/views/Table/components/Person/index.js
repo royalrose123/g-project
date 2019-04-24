@@ -21,17 +21,17 @@ export const propTypes = {
   isSelectable: PropTypes.bool,
   isSelected: PropTypes.bool,
   isActionDisabled: PropTypes.bool,
-  showSerialNumber: PropTypes.bool,
+  showId: PropTypes.bool,
   showSimilarity: PropTypes.bool,
   person: PropTypes.shape({
-    detectedPhoto: PropTypes.string.isRequired,
-    probable: PropTypes.arrayOf(
+    image: PropTypes.string.isRequired,
+    probableList: PropTypes.arrayOf(
       PropTypes.shape({
+        id: PropTypes.string,
         name: PropTypes.string,
         similarity: PropTypes.number,
-        serialNumber: PropTypes.number.isRequired,
         rank: PropTypes.string,
-        avatar: PropTypes.string.isRequired,
+        image: PropTypes.string.isRequired,
       })
     ).isRequired,
   }).isRequired,
@@ -39,10 +39,10 @@ export const propTypes = {
 }
 
 function Person (props) {
-  const { isClockable, isSelectable, isSelected, isActionDisabled, showSerialNumber, showSimilarity, person, onActionClick } = props
-  const { detectedPhoto, probable } = person
+  const { isClockable, isSelectable, isSelected, isActionDisabled, showId, showSimilarity, person, onActionClick } = props
+  const { image, probableList } = person
 
-  const member = probable
+  const member = probableList
     .filter(p => new BigNumber(p.similarity).isGreaterThanOrEqualTo(THROTTLE.IDENTIFIED))
     .sort((a, b) => new BigNumber(b.similarity).minus(a.similarity))[0]
 
@@ -54,14 +54,14 @@ function Person (props) {
         {isMember ? (
           <>
             <Icon className={cx('home-table-person__header-icon')} data-rank={member.rank} name='crown' mode='01' />
-            {showSerialNumber ? `#${member.serialNumber}` : member.rank}
+            {showId ? `#${member.id}` : member.rank}
           </>
         ) : (
           'Anonymous'
         )}
       </div>
       <div className={cx('home-table-person__body')}>
-        <img src={isMember ? member.avatar : detectedPhoto} alt={name} />
+        <img src={isMember ? member.image : image} alt={name} />
         {isMember && <div className={cx('home-table-person__name')}>{name}</div>}
       </div>
       <div className={cx('home-table-person__footer')}>
