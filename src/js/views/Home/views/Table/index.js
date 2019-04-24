@@ -12,6 +12,7 @@ import Standing from './components/Standing'
 import MemberDetail from './views/MemberDetail'
 
 // Lib MISC
+import GameApi from '../../../../lib/api/Game'
 
 // Style
 import styles from './style.module.scss'
@@ -89,9 +90,13 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = (event, person) => {
-    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id: '987685649864', image: person.image } : seatItem)))
+    const { id, image } = person
+
+    GameApi.memberClockIn({ customerId: Number(id) }).then(() => {
+      setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id, image } : seatItem)))
+    })
+
     closeClockInModal()
-    initializeCurrentDetectionItem()
     initializeSelectedSeatIndex()
   }
 

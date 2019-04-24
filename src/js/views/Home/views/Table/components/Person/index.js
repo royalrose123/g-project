@@ -20,15 +20,16 @@ export const propTypes = {
   type: PropTypes.oneOf([PERSON_TYPE.ANONYMOUS, PERSON_TYPE.MEMBER]).isRequired,
   isSelected: PropTypes.bool,
   person: PropTypes.oneOfType([AnonymousPropTypes.person, MemberPropTypes.person]).isRequired,
+  onClick: PropTypes.func,
 }
 
 function Person (props) {
-  const { type, isSelected, ...restProps } = props
+  const { type, isSelected, onClick, ...restProps } = props
 
   const Component = getComponentByType(type)
 
   return (
-    <div className={cx('home-table-person')} data-is-selected={isSelected}>
+    <div className={cx('home-table-person')} data-is-selected={isSelected} onClick={onClick}>
       <Component {...restProps} />
     </div>
   )

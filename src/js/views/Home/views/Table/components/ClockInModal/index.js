@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
@@ -9,6 +9,7 @@ import Modal from '../../../../../../components/Modal'
 
 // Lib MISC
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
+import useDeepCompareEffect from '../../../../../../lib/effects/useDeepCompareEffect'
 
 // Styles
 import styles from './style.module.scss'
@@ -36,36 +37,69 @@ export const propTypes = {
 function ClockInModal (props) {
   const { detectionItem, isOpened, onClose, afterClose, onClockIn } = props
 
+  const [selectedPerson, setSelectedPerson] = useState(null)
+
   const shouldRenderContent = detectionItem !== null
-  const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : null
+  const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : {}
+
+  useDeepCompareEffect(() => {
+    if (shouldRenderContent) {
+      setSelectedPerson({
+        ...person,
+        identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
+      })
+    } else {
+      setSelectedPerson(null)
+    }
+  }, [shouldRenderContent, detectionItem, person])
 
   const renderHeader = () =>
     detectionItem.type === PERSON_TYPE.MEMBER ? 'Clock-In' : detectionItem.type === PERSON_TYPE.ANONYMOUS && 'Anonymous Clock-In'
 
   const renderBody = () => {
-    const { type, probableList } = detectionItem
-
     switch (true) {
-      case type === PERSON_TYPE.MEMBER:
-        return <Person type={type} mode='compare' title='id' person={person} renderFooter={() => <span>{person.similarity}</span>} />
-
-      case type === PERSON_TYPE.ANONYMOUS && person.isProbablyMember:
+      case detectionItem.type === PERSON_TYPE.MEMBER:
         return (
-          <div>
-            <div>
-              <Person type={type} person={person} />
-            </div>
-            <div>
-              <h4>Probale Matches</h4>
-              {probableList.map((probableItem, index) => (
-                <Person key={index} type={PERSON_TYPE.MEMBER} title='id' person={probableItem} />
-              ))}
+          <Person
+            type={detectionItem.type}
+            mode='compare'
+            title='id'
+            person={person}
+            renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{Math.floor(person.similarity)}</div>}
+          />
+        )
+
+      case detectionItem.type === PERSON_TYPE.ANONYMOUS && person.isProbablyMember:
+        return (
+          <div className={cx('home-table-clock-in-modal__content')}>
+            <Person
+              type={detectionItem.type}
+              person={person}
+              isSelected={selectedPerson && selectedPerson.identify === PERSON_TYPE.ANONYMOUS}
+              onClick={event => setSelectedPerson({ ...person, identify: PERSON_TYPE.ANONYMOUS })}
+            />
+            <div className={cx('home-table-clock-in-modal__probable-list-wrapper')}>
+              <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probale Matches</h4>
+              <div className={cx('home-table-clock-in-modal__probable-list')}>
+                {detectionItem.probableList.map((probableItem, index) => (
+                  <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
+                    <Person
+                      type={PERSON_TYPE.MEMBER}
+                      title='id'
+                      person={probableItem}
+                      isSelected={selectedPerson && selectedPerson.identify === probableItem.id}
+                      onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id })}
+                      renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{Math.floor(probableItem.similarity)}</div>}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )
 
-      case type === PERSON_TYPE.ANONYMOUS && !person.isProbablyMember:
-        return <Person type={type} person={person} />
+      case detectionItem.type === PERSON_TYPE.ANONYMOUS && !person.isProbablyMember:
+        return <Person type={detectionItem.type} person={person} />
     }
   }
 
@@ -77,7 +111,7 @@ function ClockInModal (props) {
         <Button className={cx('home-table-clock-in-modal__action')} type='button' isFilled={false}>
           Swipe Membercard
         </Button>
-        <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, person)}>
+        <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson)}>
           Confirm Clock-In
         </Button>
       </Modal.Footer>

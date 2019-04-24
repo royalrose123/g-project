@@ -30,13 +30,13 @@ export const propTypes = {
 
 function Person (props) {
   const { title, mode, person, renderFooter } = props
-  const { level, image, compareImage } = person
+  const { id, level, image, compareImage } = person
 
   return (
     <div className={cx('home-table-person-member')} data-mode={mode}>
       <Header type={PERSON_TYPE.MEMBER}>
         <Icon className={cx('home-table-person-member__header-icon')} data-level={level} name='crown' mode='01' />
-        {person[title]}
+        {title === 'id' ? `#${id}` : level}
       </Header>
       <Body>
         <img src={image} alt={name} />

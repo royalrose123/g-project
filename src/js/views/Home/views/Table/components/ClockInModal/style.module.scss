@@ -1,4 +1,44 @@
 .home-table-clock-in-modal {
+  &__content {
+    margin-top: $font-size-md * 1.375 + 20px;
+    display: flex;
+    align-items: flex-start;
+  }
+
+  &__probable-list-wrapper {
+    margin-left: 60px;
+    position: relative;
+  }
+
+  &__probable-list-title {
+    line-height: 1.375;
+    font-size: $font-size-md;
+    @include position-left-over-top;
+    top: -20px;
+  }
+
+  &__probable-list {
+    margin: 0 -6px;
+    display: flex;
+  }
+
+  &__probable-item {
+    padding: 0 6px;
+  }
+
+  &__similarity {
+    margin-bottom: 20px;
+    text-align: center;
+    line-height: 1;
+    color: $color-primary;
+    font-size: $font-size-lg * 2;
+    font-weight: 500;
+
+    &:after {
+      content: "%";
+    }
+  }
+
   &__action:last-of-type {
     margin-left: 24px;
   }

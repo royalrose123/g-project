@@ -12,6 +12,9 @@ class Service {
   constructor (config = {}, { denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
     const { params, data, ...restConfig } = config
 
+    this.config = restConfig
+    this.normalizer = normalizer
+
     if (isObject(params)) {
       this.config.params = handleParameter(denormalizer, params)
     }
@@ -19,9 +22,6 @@ class Service {
     if (isObject(data)) {
       this.config.data = handleParameter(denormalizer, data)
     }
-
-    this.config = restConfig
-    this.normalizer = normalizer
   }
 
   static apiConfig = {
