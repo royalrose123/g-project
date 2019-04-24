@@ -42,12 +42,12 @@ function ClockInModal (props) {
     let person = null
     console.log('isProbablyMember :', isProbablyMember)
 
-    switch (type) {
-      case PERSON_TYPE.MEMBER:
+    switch (true) {
+      case type === PERSON_TYPE.MEMBER:
         person = probableList.sort((probableA, probableB) => new BigNumber(probableA.similarity).comparedTo(probableB.similarity))[0]
         return <Person type={type} person={person} />
 
-      case PERSON_TYPE.ANONYMOUS && isProbablyMember:
+      case type === PERSON_TYPE.ANONYMOUS && isProbablyMember:
         person = { image: snapshot }
         return (
           <div>
@@ -62,7 +62,7 @@ function ClockInModal (props) {
           </div>
         )
 
-      case PERSON_TYPE.ANONYMOUS && !isProbablyMember:
+      case type === PERSON_TYPE.ANONYMOUS && !isProbablyMember:
         person = { image: snapshot }
         return <Person type={type} person={person} />
     }
