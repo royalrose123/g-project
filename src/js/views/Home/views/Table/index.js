@@ -20,7 +20,7 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 const seated = { count: 7, seatSize: '102px' }
-const defaultSeatList = new Array(seated.count).fill().map((empty, index) => ({ isSeated: false, content: index + 1 }))
+const defaultSeatList = new Array(seated.count).fill()
 const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
 
 // const detectionList = [
@@ -135,13 +135,13 @@ function Table (props) {
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
   const [currentMember, setCurrentMember] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
-  const [currentPerson, setCurrentPerson] = useState(null)
+  const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
 
   // private methods
   const initializeSelectedSeatIndex = () => setSelectedSeatIndex(null)
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
-  const initializeCurrentPerson = () => setCurrentPerson(null)
+  const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
   // 設定初始值
   useEffect(() => {
@@ -154,11 +154,9 @@ function Table (props) {
   }, [])
 
   // Seat
-  const onSeatSelect = (event, index, seat) => {
-    const { isSeated } = seat
-
+  const onSeatClick = (event, index, seat) => {
     // 如果座位已經有人，打開 detail
-    if (isSeated) {
+    if (typeof seat === 'object') {
       setCurrentMember(seat)
       // TODO: 改成 member id
       history.push(`${match.url}/${seat.probableList[0].id}`)
@@ -174,21 +172,20 @@ function Table (props) {
   }
 
   // Detection
-  const isDetectionItemActionDisabled = selectedSeatIndex !== null
-  const onDetectionItemActionClick = (event, person) => {
+  const onDetectionItemActionClick = (event, detectionItem) => {
     openClockInModal()
-    setCurrentPerson(person)
+    setCurrentDetectionItem(detectionItem)
   }
 
   // ClockInModal
   const onClockInModalClose = event => {
     closeClockInModal()
-    initializeCurrentPerson()
+    initializeCurrentDetectionItem()
   }
   const onClockIn = event => {
-    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { ...currentPerson, isSeated: true } : seatItem)))
+    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? currentDetectionItem : seatItem)))
     closeClockInModal()
-    initializeCurrentPerson()
+    initializeCurrentDetectionItem()
   }
 
   return isDetailVisible ? (
@@ -197,7 +194,7 @@ function Table (props) {
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
-          <Seated seatList={seatList} selectedIndex={selectedSeatIndex} onSeatSelect={onSeatSelect} />
+          <Seated seatList={seatList} selectedIndex={selectedSeatIndex} onSeatClick={onSeatClick} />
           <h2 className={cx('home-table__title')}>Seated</h2>
         </div>
         <div className={cx('home-table__column')}>
@@ -206,9 +203,9 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Detection isActionDisabled={isDetectionItemActionDisabled} onActionClick={onDetectionItemActionClick} />
+        <Detection isSeatSelected={selectedSeatIndex !== null} onItemActionClick={onDetectionItemActionClick} />
       </div>
-      <ClockInModal person={currentPerson} isOpened={isClockInModalOpened} onClose={onClockInModalClose} onClockIn={onClockIn} />
+      <ClockInModal detectionItem={currentDetectionItem} isOpened={isClockInModalOpened} onClose={onClockInModalClose} onClockIn={onClockIn} />
     </div>
   )
 }

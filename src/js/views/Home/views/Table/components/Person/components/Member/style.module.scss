@@ -1,0 +1,35 @@
+.home-table-person-member {
+  &__header-icon {
+    margin-right: 12px;
+
+    &[data-level="green"] {
+      color: #36d98d;
+    }
+
+    &[data-level="gold"] {
+      color: #f4c039;
+    }
+
+    &[data-level="platinum"] {
+      color: #64cce3;
+    }
+
+    &[data-level="silver"] {
+      color: #aabac6;
+    }
+  }
+
+  &__name {
+    padding: 8px 10px;
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    text-align: center;
+    line-height: 1.1875;
+    font-size: $font-size-lg;
+    color: $gray-white;
+    background-image: linear-gradient(180deg, rgba($gray-black, 0), rgba($gray-black, 0.5));
+    @include full-fill;
+  }
+}

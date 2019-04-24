@@ -1,0 +1,18 @@
+.home-table-person-header {
+  padding: 14px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-transform: uppercase;
+  font-size: $font-size-md;
+
+  &[data-type="member"] {
+    color: $gray-black;
+    background-color: $gray-white;
+  }
+
+  &[data-type="anonymous"] {
+    color: $gray-white;
+    background-color: $color-secondary;
+  }
+}

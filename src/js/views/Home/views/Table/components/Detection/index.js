@@ -2,9 +2,11 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
+import { BigNumber } from 'bignumber.js'
 
 // Components
 import Person from '../Person'
+import Button from '../../../../../../components/Button'
 
 // Lib MISC
 import useFetcher from '../../../../../../lib/effects/useFetcher'
@@ -14,19 +16,25 @@ import DetectionApi from '../../../../../../lib/api/Detection'
 import styles from './style.module.scss'
 
 // Variables / Functions
+import PERSON_TYPE from '../../../../../../constants/PersonType'
 const cx = classnames.bind(styles)
+const getPersonByType = payload => {
+  if (payload.type === PERSON_TYPE.ANONYMOUS) {
+    return { image: payload.snapshot }
+  } else if (payload.type === PERSON_TYPE.MEMBER) {
+    return { ...payload.probableList.sort((probableA, probableB) => new BigNumber(probableA.similarity).comparedTo(probableB.similarity))[0] }
+  }
+}
 
 export const propTypes = {
-  isActionDisabled: PropTypes.bool,
-  onActionClick: PropTypes.func,
+  isSeatSelected: PropTypes.bool,
+  onItemActionClick: PropTypes.func,
 }
 
 function Detection (props) {
-  const { isActionDisabled, onActionClick } = props
+  const { isSeatSelected, onItemActionClick } = props
 
   const { isLoaded, response: detectionList } = useFetcher(null, DetectionApi.fetchDetectionList)
-
-  console.log('detectionList :', detectionList)
 
   const itemWidth = 280
   const itemSpacing = 40
@@ -48,16 +56,17 @@ function Detection (props) {
           cellSpacing={slideSpacing}
           speed={800}
         >
-          {detectionList.map((person, index) => (
+          {detectionList.map((detectionItem, index) => (
             <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
               <Person
-                person={person}
-                isClockable
-                isSelectable={false}
-                showId={false}
-                showSimilarity={false}
-                isActionDisabled={isActionDisabled}
-                onActionClick={onActionClick}
+                title='level'
+                type={detectionItem.type}
+                person={getPersonByType(detectionItem)}
+                renderFooter={() => (
+                  <Button isBlock disabled={!isSeatSelected} onClick={event => onItemActionClick(event, detectionItem)}>
+                    Clock-In
+                  </Button>
+                )}
               />
             </div>
           ))}

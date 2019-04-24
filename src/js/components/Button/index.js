@@ -12,12 +12,11 @@ export const propTypes = {
   isRounded: PropTypes.bool.isRequired,
   isFilled: PropTypes.bool.isRequired,
   isBlock: PropTypes.bool,
-  size: PropTypes.string.isRequired,
+  size: PropTypes.oneOf(['sm', 'md', 'lg']),
   setRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   prefix: PropTypes.any,
   suffix: PropTypes.any,
   contentProps: PropTypes.object,
-  style: PropTypes.object,
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
 }
@@ -26,20 +25,20 @@ export const defaultProps = {
   isRounded: false,
   isFilled: true,
   isBlock: false,
-  size: 'md', // ['sm', 'md', 'lg']
+  size: 'md',
   contentProps: {},
 }
 
 function Button (props) {
-  const { isRounded, isFilled, isBlock, size, setRef, prefix, suffix, contentProps, style, className, children, ...restProps } = props
+  const { isRounded, isFilled, isBlock, size, setRef, prefix, suffix, contentProps, className, children, ...restProps } = props
   const { className: contentClassName } = contentProps
 
   return (
     <button
       className={cx(className, 'button')}
-      style={{ ...style, display: isBlock ? 'block' : null, width: isBlock ? '100%' : null }}
       data-is-rounded={isRounded}
       data-is-filled={isFilled}
+      data-is-block={isBlock}
       data-size={size}
       ref={setRef}
       {...restProps}

@@ -42,15 +42,20 @@
     }
   }
 
-  &[data-size="sm"] {
+  &[data-is-block="true"] {
+    display: block;
+    width: 100%;
+  }
+
+  &[data-is-block="false"][data-size="sm"] {
     width: 40px;
   }
 
-  &[data-size="md"] {
+  &[data-is-block="false"][data-size="md"] {
     width: 400px;
   }
 
-  &[data-size="lg"] {
+  &[data-is-block="false"][data-size="lg"] {
     width: 120px;
   }
 

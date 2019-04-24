@@ -9,6 +9,8 @@ class Normalizer {
       similarity,
       id: peopleId,
       name: peopleName,
+      // TODO: 暫時先用假的等級
+      level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
     }
   }
 
@@ -20,9 +22,9 @@ class Normalizer {
     return {
       cameraId,
       type,
-      // image: faceImage,
+      // snapshot: faceImage,
       // TODO: 暫時先用假的圖片
-      image: 'https://fakeimg.pl/280x360',
+      snapshot: 'https://fakeimg.pl/280x360',
       background,
       rect,
       dateTime,

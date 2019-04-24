@@ -13,17 +13,17 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  seatList: PropTypes.array.isRequired,
+  seatList: PropTypes.arrayOf(
+    PropTypes.shape({
+      image: PropTypes.string,
+    })
+  ).isRequired,
   selectedIndex: PropTypes.number,
-  onSeatSelect: PropTypes.func,
-}
-
-export const defaultProps = {
-  onSeatSelect: () => null,
+  onSeatClick: PropTypes.func,
 }
 
 function Seated (props) {
-  const { seatList, selectedIndex, onSeatSelect } = props
+  const { seatList, selectedIndex, onSeatClick } = props
 
   return (
     <div className={cx('home-table-seated')}>
@@ -32,13 +32,13 @@ function Seated (props) {
           key={index}
           type='button'
           className={cx('home-table-seated__seat')}
-          onClick={event => onSeatSelect(event, index, seatItem)}
+          onClick={event => onSeatClick(event, index, seatItem)}
           data-is-selected={index === selectedIndex}
         >
-          {seatItem.isSeated ? (
-            <img className={cx('home-table-seated__seat-image')} src={seatItem.detectedPhoto} />
+          {typeof seatItem === 'object' ? (
+            <img className={cx('home-table-seated__seat-image')} src={seatItem.image} />
           ) : (
-            <span className={cx('home-table-seated__seat-empty')}> {seatItem.content}</span>
+            <span className={cx('home-table-seated__seat-empty')}>{index + 1}</span>
           )}
         </button>
       ))}
@@ -48,6 +48,5 @@ function Seated (props) {
 }
 
 Seated.propTypes = propTypes
-Seated.defaultProps = defaultProps
 
 export default Seated
