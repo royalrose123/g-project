@@ -2,7 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
-import { BigNumber } from 'bignumber.js'
 
 // Components
 import Person from '../Person'
@@ -11,20 +10,13 @@ import Button from '../../../../../../components/Button'
 // Lib MISC
 import useFetcher from '../../../../../../lib/effects/useFetcher'
 import DetectionApi from '../../../../../../lib/api/Detection'
+import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 
 // Style
 import styles from './style.module.scss'
 
 // Variables / Functions
-import PERSON_TYPE from '../../../../../../constants/PersonType'
 const cx = classnames.bind(styles)
-const getPersonByType = payload => {
-  if (payload.type === PERSON_TYPE.ANONYMOUS) {
-    return { image: payload.snapshot }
-  } else if (payload.type === PERSON_TYPE.MEMBER) {
-    return { ...payload.probableList.sort((probableA, probableB) => new BigNumber(probableA.similarity).comparedTo(probableB.similarity))[0] }
-  }
-}
 
 export const propTypes = {
   isSeatSelected: PropTypes.bool,
@@ -36,7 +28,7 @@ function Detection (props) {
 
   const { isLoaded, response: detectionList } = useFetcher(null, DetectionApi.fetchDetectionList)
 
-  const itemWidth = 280
+  const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
   const itemSpacing = 40
   const itemBorder = 6
 
@@ -61,7 +53,7 @@ function Detection (props) {
               <Person
                 title='level'
                 type={detectionItem.type}
-                person={getPersonByType(detectionItem)}
+                person={getPersonByType(detectionItem.type, detectionItem)}
                 renderFooter={() => (
                   <Button isBlock disabled={!isSeatSelected} onClick={event => onItemActionClick(event, detectionItem)}>
                     Clock-In

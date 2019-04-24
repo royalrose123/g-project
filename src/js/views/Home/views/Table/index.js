@@ -20,104 +20,10 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 const seated = { count: 7, seatSize: '102px' }
-const defaultSeatList = new Array(seated.count).fill()
 const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
+const person = { width: '280px' }
 
-// const detectionList = [
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'Mark Elliot Zuckerberg',
-//         similarity: 90.5,
-//         serialNumber: 1234567,
-//         rank: 'green',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//       {
-//         name: 'Mark Elliot Zuckerberg 12',
-//         similarity: 88,
-//         serialNumber: 1234567,
-//         rank: 'green',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'aaa',
-//         similarity: 72,
-//         serialNumber: 7654321,
-//         rank: 'green',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//       {
-//         name: 'bbb',
-//         similarity: 60,
-//         serialNumber: 7654321,
-//         rank: 'green',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'Slavcho Karbashewski',
-//         similarity: 95,
-//         serialNumber: 1234567,
-//         rank: 'gold',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'ccc',
-//         similarity: 77,
-//         serialNumber: 7654321,
-//         rank: 'green',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'Wan Gengxin 12',
-//         similarity: 91,
-//         serialNumber: 1234567,
-//         rank: 'platunum',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//       {
-//         name: 'Wan Gengxin',
-//         similarity: 92.5,
-//         serialNumber: 1234567,
-//         rank: 'platunum',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-//   {
-//     detectedPhoto: 'https://fakeimg.pl/280x360',
-//     probable: [
-//       {
-//         name: 'Amelia Edwards',
-//         similarity: 94,
-//         serialNumber: 1234567,
-//         rank: 'silver',
-//         avatar: 'https://fakeimg.pl/280x360',
-//       },
-//     ],
-//   },
-// ]
+const defaultSeatList = new Array(seated.count).fill()
 
 export const propTypes = {
   match: PropTypes.object,
@@ -151,6 +57,8 @@ function Table (props) {
     document.documentElement.style.setProperty('--standing-column', standing.column)
     document.documentElement.style.setProperty('--standing-place-size', standing.placeSize)
     document.documentElement.style.setProperty('--standing-place-margin', standing.placeMargin)
+
+    document.documentElement.style.setProperty('--person-width', person.width)
   }, [])
 
   // Seat
@@ -178,14 +86,13 @@ function Table (props) {
   }
 
   // ClockInModal
-  const onClockInModalClose = event => {
-    closeClockInModal()
-    initializeCurrentDetectionItem()
-  }
+  const onClockInModalClose = event => closeClockInModal()
+  const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = (event, person) => {
     setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id: '987685649864', image: person.image } : seatItem)))
     closeClockInModal()
     initializeCurrentDetectionItem()
+    initializeSelectedSeatIndex()
   }
 
   return isDetailVisible ? (
@@ -205,7 +112,13 @@ function Table (props) {
       <div className={cx('home-table__row')}>
         <Detection isSeatSelected={selectedSeatIndex !== null} onItemActionClick={onDetectionItemActionClick} />
       </div>
-      <ClockInModal detectionItem={currentDetectionItem} isOpened={isClockInModalOpened} onClose={onClockInModalClose} onClockIn={onClockIn} />
+      <ClockInModal
+        detectionItem={currentDetectionItem}
+        isOpened={isClockInModalOpened}
+        onClose={onClockInModalClose}
+        afterClose={afterClockInModalClose}
+        onClockIn={onClockIn}
+      />
     </div>
   )
 }

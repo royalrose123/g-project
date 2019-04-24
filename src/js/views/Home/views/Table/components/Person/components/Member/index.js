@@ -17,27 +17,30 @@ const cx = classnames.bind(styles)
 
 export const propTypes = {
   title: PropTypes.oneOf(['id', 'level']),
+  mode: PropTypes.oneOf(['compare']),
   person: PropTypes.shape({
     id: PropTypes.string,
     name: PropTypes.string,
     level: PropTypes.oneOf(['green', 'silver', 'gold', 'platinum']),
     image: PropTypes.string,
+    compareImage: PropTypes.string,
   }).isRequired,
   renderFooter: PropTypes.func,
 }
 
 function Person (props) {
-  const { title, person, renderFooter } = props
-  const { image, level } = person
+  const { title, mode, person, renderFooter } = props
+  const { level, image, compareImage } = person
 
   return (
-    <div className={cx('home-table-person-member')}>
+    <div className={cx('home-table-person-member')} data-mode={mode}>
       <Header type={PERSON_TYPE.MEMBER}>
         <Icon className={cx('home-table-person-member__header-icon')} data-level={level} name='crown' mode='01' />
         {person[title]}
       </Header>
       <Body>
         <img src={image} alt={name} />
+        {mode === 'compare' && <img src={compareImage} alt={name} />}
         <div className={cx('home-table-person-member__name')}>{name}</div>
       </Body>
       {typeof renderFooter === 'function' && <Footer>{renderFooter(person)}</Footer>}

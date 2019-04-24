@@ -22,6 +22,8 @@ export const propTypes = {
   isClosable: PropTypes.bool.isRequired,
   isLoading: PropTypes.bool,
   shouldCloseOnOverlayClick: PropTypes.bool,
+  beforeOpen: PropTypes.func,
+  afterClose: PropTypes.func,
   onClose: PropTypes.func,
   appendTarget: PropTypes.oneOfType([PropTypes.func, PropTypes.node, PropTypes.instanceOf(Element)]).isRequired,
   className: PropTypes.string,
@@ -38,10 +40,12 @@ export const defaultProps = {
 }
 
 function Modal (props) {
-  const { isOpened, isClosable, isLoading, shouldCloseOnOverlayClick, onClose, appendTarget, className, ...restProps } = props
+  const { isOpened, isClosable, isLoading, shouldCloseOnOverlayClick, beforeOpen, afterClose, onClose, appendTarget, className, ...restProps } = props
 
   return (
     <Transition
+      onStart={beforeOpen}
+      onRest={(item, state) => !item && state === 'update' && afterClose()}
       items={isOpened}
       from={{ opacity: 0, scale: 'scale(0.5)' }}
       enter={{ opacity: 1, scale: 'scale(1)' }}

@@ -1,4 +1,6 @@
 .home-table-person {
+  display: inline-flex;
+
   &[data-is-selected="true"] {
     box-shadow: 0 0 0 6px $color-primary;
   }

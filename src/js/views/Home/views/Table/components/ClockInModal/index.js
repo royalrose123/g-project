@@ -1,12 +1,14 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
-import { BigNumber } from 'bignumber.js'
 
 // Components
 import Person from '../Person'
 import Button from '../../../../../../components/Button'
 import Modal from '../../../../../../components/Modal'
+
+// Lib MISC
+import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 
 // Styles
 import styles from './style.module.scss'
@@ -27,52 +29,50 @@ export const propTypes = {
   }),
   isOpened: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  afterClose: PropTypes.func.isRequired,
   onClockIn: PropTypes.func,
 }
 
 function ClockInModal (props) {
-  const { detectionItem, isOpened, onClose, onClockIn } = props
+  const { detectionItem, isOpened, onClose, afterClose, onClockIn } = props
 
-  let person = null
+  const shouldRenderContent = detectionItem !== null
+  const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : null
 
-  console.log('detectionItem :', detectionItem)
+  const renderHeader = () =>
+    detectionItem.type === PERSON_TYPE.MEMBER ? 'Clock-In' : detectionItem.type === PERSON_TYPE.ANONYMOUS && 'Anonymous Clock-In'
+
   const renderBody = () => {
-    const { type, snapshot, probableList } = detectionItem
-
-    const similarityMatchPercent = 80
-    const isProbablyMember = probableList.some(probableItem => new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(similarityMatchPercent))
-    console.log('isProbablyMember :', isProbablyMember)
+    const { type, probableList } = detectionItem
 
     switch (true) {
       case type === PERSON_TYPE.MEMBER:
-        person = probableList.sort((probableA, probableB) => new BigNumber(probableA.similarity).comparedTo(probableB.similarity))[0]
-        return <Person type={type} person={person} />
+        return <Person type={type} mode='compare' title='id' person={person} renderFooter={() => <span>{person.similarity}</span>} />
 
-      case type === PERSON_TYPE.ANONYMOUS && isProbablyMember:
-        person = { image: snapshot }
+      case type === PERSON_TYPE.ANONYMOUS && person.isProbablyMember:
         return (
           <div>
             <div>
               <Person type={type} person={person} />
             </div>
             <div>
-              {probableList.map(probableItem => (
-                <Person type={PERSON_TYPE.MEMBER} title='id' person={probableItem} />
+              <h4>Probale Matches</h4>
+              {probableList.map((probableItem, index) => (
+                <Person key={index} type={PERSON_TYPE.MEMBER} title='id' person={probableItem} />
               ))}
             </div>
           </div>
         )
 
-      case type === PERSON_TYPE.ANONYMOUS && !isProbablyMember:
-        person = { image: snapshot }
+      case type === PERSON_TYPE.ANONYMOUS && !person.isProbablyMember:
         return <Person type={type} person={person} />
     }
   }
 
   return (
-    <Modal className={cx('home-table-clock-in-modal')} isOpened={isOpened} onClose={onClose}>
-      <Modal.Header>header</Modal.Header>
-      <Modal.Body>{isOpened && renderBody()}</Modal.Body>
+    <Modal className={cx('home-table-clock-in-modal')} isOpened={isOpened} onClose={onClose} afterClose={afterClose}>
+      <Modal.Header>{shouldRenderContent && renderHeader()}</Modal.Header>
+      <Modal.Body>{shouldRenderContent && renderBody()}</Modal.Body>
       <Modal.Footer>
         <Button className={cx('home-table-clock-in-modal__action')} type='button' isFilled={false}>
           Swipe Membercard

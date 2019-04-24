@@ -1,4 +1,10 @@
 .home-table-person-member {
+  width: var(--person-width);
+
+  &[data-mode="compare"] {
+    width: calc(#{var(--person-width)} * 2);
+  }
+
   &__header-icon {
     margin-right: 12px;
 
