@@ -40,6 +40,32 @@ class Game {
 
     return service.callApi()
   }
+
+  static clockOut ({ id, playType, propPlay, averageBet, whoWin, actualWin, drop, overage }) {
+    const service = new Service(
+      {
+        url: '/clock-out',
+        method: 'POST',
+        data: {
+          body: {
+            id,
+            playType,
+            propPlay,
+            averageBet,
+            whoWin,
+            actualWin,
+            drop,
+            overage,
+          },
+        },
+      },
+      {
+        denormalizer: Denormalizer.ClockOut,
+      }
+    )
+
+    return service.callApi()
+  }
 }
 
 export default Game

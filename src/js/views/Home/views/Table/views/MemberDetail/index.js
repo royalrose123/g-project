@@ -7,13 +7,14 @@ import { Formik, Form as FormikForm, Field } from 'formik'
 
 // Components
 import Person from '../../components/Person'
-// import Keyboard from '../../../../components/Keyboard'
+import Keyboard, { keys } from '../../../../components/Keyboard'
 import Form from '../../../../components/Form'
 import Layout from '../../../../components/Layout'
 import Button from '../../../../../../components/Button'
 import Icon from '../../../../../../components/Icon'
 
 // Lib MISC
+import GameApi from '../../../../../../lib/api/Game'
 import MemberApi from '../../../../../../lib/api/Member'
 import useFetcher from '../../../../../../lib/effects/useFetcher'
 import findStaticPath from '../../../../../../lib/utils/find-static-path'
@@ -37,7 +38,7 @@ export const propTypes = {
 function MemberDetail (props) {
   const { history, match } = props
   const { path, params } = match
-  const { memberId } = params
+  const { memberId: id } = params
 
   const initialValues = {
     playType: '0',
@@ -48,225 +49,244 @@ function MemberDetail (props) {
     drop: '',
     overage: '',
   }
+  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'whoWin')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
+  const [lastFocusField, setLastFocusField] = useState('propPlay')
 
-  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetail, { id: memberId })
+  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetail, { id })
 
-  // const onKeyboardPress = key => console.log('onKeyboardPress props', key)
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
-  const onSubmit = (values, actions) => {
-    console.log('values :', values)
-  }
+  const onSubmit = (values, actions) => GameApi.clockOut({ id, ...values }).then(() => history.push(findStaticPath(path)))
 
   return isLoaded ? (
     <Formik initialValues={initialValues} isInitialValid onSubmit={onSubmit}>
-      {formikProps => {
-        console.log('formikProps :', formikProps)
-        const { values, setFieldValue } = formikProps
-        return (
-          <FormikForm>
-            <Layout className={cx('home-table-member-detail')}>
-              {/* <Keyboard onPress={onKeyboardPress} /> */}
+      {({ values, setFieldValue }) => (
+        <FormikForm>
+          <Layout className={cx('home-table-member-detail')}>
+            <Keyboard
+              onPress={key => {
+                if (key === keys.ENTER) {
+                  const nextFieldIndex = inputableKeys.indexOf(lastFocusField) + 1
+                  const nextIndex = nextFieldIndex > inputableKeys.length - 1 ? 0 : nextFieldIndex
 
-              <Layout.Header>
-                <div className={cx('home-table-member-detail__title-wrapper')}>
-                  <Icon
-                    className={cx('home-table-member-detail__icon')}
-                    name='cross'
-                    mode='01'
-                    onClick={event => history.push(findStaticPath(path))}
-                  />
-                  <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
+                  setLastFocusField(inputableKeys[nextIndex])
+                  return
+                }
+
+                const oldValue = values[lastFocusField]
+                let newValue = ''
+
+                if (key === keys.DEL) {
+                  newValue = oldValue.slice(0, -1)
+                } else {
+                  newValue = `${oldValue}${key}`
+                }
+
+                setFieldValue(lastFocusField, newValue)
+              }}
+            />
+
+            <Layout.Header>
+              <div className={cx('home-table-member-detail__title-wrapper')}>
+                <Icon className={cx('home-table-member-detail__icon')} name='cross' mode='01' onClick={event => history.push(findStaticPath(path))} />
+                <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
+              </div>
+              <Button type='submit'>Clock-Out</Button>
+            </Layout.Header>
+
+            <Layout.Content className={cx('home-table-member-detail__content')} style={{ color: '#fff' }}>
+              <div className={cx('home-table-member-detail__avatar')}>
+                <Person type={PERSON_TYPE.MEMBER} title='id' person={detail} />
+              </div>
+
+              <div className={cx('home-table-member-detail__tabs')}>
+                <div className={cx('home-table-member-detail__tabs-list')}>
+                  <button
+                    className={cx('home-table-member-detail__tabs-item')}
+                    type='button'
+                    data-for={TABS.BETTING_RECORD}
+                    data-is-active={currentTab === TABS.BETTING_RECORD}
+                    onClick={onTabItemClick}
+                  >
+                    Betting Record
+                  </button>
+                  <button
+                    className={cx('home-table-member-detail__tabs-item')}
+                    type='button'
+                    data-for={TABS.CUSTOMER_INFO}
+                    data-is-active={currentTab === TABS.CUSTOMER_INFO}
+                    onClick={onTabItemClick}
+                  >
+                    Customer Info
+                  </button>
                 </div>
-                <Button type='button'>Clock-Out</Button>
-              </Layout.Header>
 
-              <Layout.Content className={cx('home-table-member-detail__content')} style={{ color: '#fff' }}>
-                <div className={cx('home-table-member-detail__avatar')}>
-                  <Person type={PERSON_TYPE.MEMBER} title='id' person={detail} />
-                </div>
+                <div className={cx('home-table-member-detail__tabs-panel-list')}>
+                  <div
+                    id={TABS.BETTING_RECORD}
+                    data-is-active={currentTab === TABS.BETTING_RECORD}
+                    className={cx('home-table-member-detail__tabs-panel-item')}
+                  >
+                    <Form.Group width={640}>
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Play Type</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field
+                            name='playType'
+                            render={({ field }) => (
+                              <Form.Select {...field}>
+                                <option value='0'>CASH</option>
+                                <option value='5'>TMAB</option>
+                                <option value='6'>ABT</option>
+                              </Form.Select>
+                            )}
+                          />
+                        </Form.Column>
+                      </Form.Row>
 
-                <div className={cx('home-table-member-detail__tabs')}>
-                  <div className={cx('home-table-member-detail__tabs-list')}>
-                    <button
-                      className={cx('home-table-member-detail__tabs-item')}
-                      type='button'
-                      data-for={TABS.BETTING_RECORD}
-                      data-is-active={currentTab === TABS.BETTING_RECORD}
-                      onClick={onTabItemClick}
-                    >
-                      Betting Record
-                    </button>
-                    <button
-                      className={cx('home-table-member-detail__tabs-item')}
-                      type='button'
-                      data-for={TABS.CUSTOMER_INFO}
-                      data-is-active={currentTab === TABS.CUSTOMER_INFO}
-                      onClick={onTabItemClick}
-                    >
-                      Customer Info
-                    </button>
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Prop Play</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Form.Row style={{ margin: 0 }}>
+                            <Field
+                              name='propPlay'
+                              render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                            />
+                            <div className={cx('home-table-member-detail__all-games')}>/ {detail.playTimes}</div>
+                          </Form.Row>
+                          <div className={cx('home-table-member-detail__percentage')}>
+                            {values.propPlay.length > 0 && Math.floor(new BigNumber(values.propPlay).dividedBy(detail.playTimes).multipliedBy(100))}%
+                          </div>
+                        </Form.Column>
+                      </Form.Row>
+
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Average Bet</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field
+                            name='averageBet'
+                            render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                          />
+                        </Form.Column>
+                      </Form.Row>
+
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Who Win</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field
+                            name='whoWin'
+                            render={({ field }) => (
+                              <Form.Radio.Group name={field.name}>
+                                <Form.Radio
+                                  value='player'
+                                  onClick={event => setFieldValue(field.name, event.target.value)}
+                                  checked={values.whoWin === 'player'}
+                                  readOnly
+                                >
+                                  Player
+                                </Form.Radio>
+                                <Form.Radio
+                                  value='dealer'
+                                  onClick={event => setFieldValue(field.name, event.target.value)}
+                                  checked={values.whoWin === 'dealer'}
+                                  readOnly
+                                >
+                                  Dealer
+                                </Form.Radio>
+                              </Form.Radio.Group>
+                            )}
+                          />
+                        </Form.Column>
+                      </Form.Row>
+                    </Form.Group>
+
+                    <Form.Group width={640}>
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Actual Win</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field
+                            name='actualWin'
+                            render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                          />
+                        </Form.Column>
+                      </Form.Row>
+
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Drop</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field name='drop' render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />} />
+                        </Form.Column>
+                      </Form.Row>
+
+                      <Form.Row>
+                        <Form.Column size='sm'>
+                          <Form.Label>Overage</Form.Label>
+                        </Form.Column>
+                        <Form.Column size='md'>
+                          <Field name='overage' render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />} />
+                        </Form.Column>
+                      </Form.Row>
+                    </Form.Group>
                   </div>
 
-                  <div className={cx('home-table-member-detail__tabs-panel-list')}>
-                    <div
-                      id={TABS.BETTING_RECORD}
-                      data-is-active={currentTab === TABS.BETTING_RECORD}
-                      className={cx('home-table-member-detail__tabs-panel-item')}
-                    >
-                      <Form.Group width={640}>
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Play Type</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field
-                              name='playType'
-                              render={({ field }) => (
-                                <Form.Select {...field}>
-                                  <option value='0'>CASH</option>
-                                  <option value='5'>TMAB</option>
-                                  <option value='6'>ABT</option>
-                                </Form.Select>
-                              )}
-                            />
-                          </Form.Column>
-                        </Form.Row>
+                  <div
+                    id={TABS.CUSTOMER_INFO}
+                    data-is-active={currentTab === TABS.CUSTOMER_INFO}
+                    className={cx('home-table-member-detail__tabs-panel-item')}
+                  >
+                    <Form.Group width={640}>
+                      <Form.Row>
+                        <Form.Label>Customer ID</Form.Label>
+                        <Form.Display>{detail.id}</Form.Display>
+                      </Form.Row>
 
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Prop Play</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Form.Row style={{ margin: 0 }}>
-                              <Field name='propPlay' render={({ field }) => <Form.Input {...field} />} />
-                              <div className={cx('home-table-member-detail__all-games')}>/ {detail.playTimes}</div>
-                            </Form.Row>
-                            <div className={cx('home-table-member-detail__percentage')}>
-                              {values.propPlay.length > 0 && Math.floor(new BigNumber(values.propPlay).dividedBy(detail.playTimes).multipliedBy(100))}
-                              %
-                            </div>
-                          </Form.Column>
-                        </Form.Row>
+                      <Form.Row>
+                        <Form.Label>Customer Name</Form.Label>
+                        <Form.Display>{detail.name}</Form.Display>
+                      </Form.Row>
 
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Average Bet</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field name='averageBet' render={({ field }) => <Form.Input {...field} />} />
-                          </Form.Column>
-                        </Form.Row>
+                      <Form.Row>
+                        <Form.Label>Gender</Form.Label>
+                        <Form.Display>{detail.gender}</Form.Display>
+                      </Form.Row>
+                    </Form.Group>
 
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Who Win</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field
-                              name='whoWin'
-                              render={({ field }) => (
-                                <Form.Radio.Group name={field.name}>
-                                  <Form.Radio
-                                    value='player'
-                                    onClick={event => setFieldValue(field.name, event.target.value)}
-                                    checked={values.whoWin === 'player'}
-                                    readOnly
-                                  >
-                                    Player
-                                  </Form.Radio>
-                                  <Form.Radio
-                                    value='dealer'
-                                    onClick={event => setFieldValue(field.name, event.target.value)}
-                                    checked={values.whoWin === 'dealer'}
-                                    readOnly
-                                  >
-                                    Dealer
-                                  </Form.Radio>
-                                </Form.Radio.Group>
-                              )}
-                            />
-                          </Form.Column>
-                        </Form.Row>
-                      </Form.Group>
+                    <Form.Group width={640}>
+                      <Form.Row>
+                        <Form.Label>Date of Birth</Form.Label>
+                        <Form.Display>{format(new Date(detail.birthday), 'yyyy/MM/dd')}</Form.Display>
+                      </Form.Row>
 
-                      <Form.Group width={640}>
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Actual Win</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field name='actualWin' render={({ field }) => <Form.Input {...field} />} />
-                          </Form.Column>
-                        </Form.Row>
+                      <Form.Row>
+                        <Form.Label>Age</Form.Label>
+                        <Form.Display>30</Form.Display>
+                      </Form.Row>
 
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Drop</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field name='drop' render={({ field }) => <Form.Input {...field} />} />
-                          </Form.Column>
-                        </Form.Row>
-
-                        <Form.Row>
-                          <Form.Column size='sm'>
-                            <Form.Label>Overage</Form.Label>
-                          </Form.Column>
-                          <Form.Column size='md'>
-                            <Field name='overage' render={({ field }) => <Form.Input {...field} />} />
-                          </Form.Column>
-                        </Form.Row>
-                      </Form.Group>
-                    </div>
-
-                    <div
-                      id={TABS.CUSTOMER_INFO}
-                      data-is-active={currentTab === TABS.CUSTOMER_INFO}
-                      className={cx('home-table-member-detail__tabs-panel-item')}
-                    >
-                      <Form.Group width={640}>
-                        <Form.Row>
-                          <Form.Label>Customer ID</Form.Label>
-                          <Form.Display>{detail.id}</Form.Display>
-                        </Form.Row>
-
-                        <Form.Row>
-                          <Form.Label>Customer Name</Form.Label>
-                          <Form.Display>{detail.name}</Form.Display>
-                        </Form.Row>
-
-                        <Form.Row>
-                          <Form.Label>Gender</Form.Label>
-                          <Form.Display>{detail.gender}</Form.Display>
-                        </Form.Row>
-                      </Form.Group>
-
-                      <Form.Group width={640}>
-                        <Form.Row>
-                          <Form.Label>Date of Birth</Form.Label>
-                          <Form.Display>{format(new Date(detail.birthday), 'yyyy/MM/dd')}</Form.Display>
-                        </Form.Row>
-
-                        <Form.Row>
-                          <Form.Label>Age</Form.Label>
-                          <Form.Display>30</Form.Display>
-                        </Form.Row>
-
-                        <Form.Row>
-                          <Form.Label>Document Number</Form.Label>
-                          <Form.Display>{detail.documentNumber}</Form.Display>
-                        </Form.Row>
-                      </Form.Group>
-                    </div>
+                      <Form.Row>
+                        <Form.Label>Document Number</Form.Label>
+                        <Form.Display>{detail.documentNumber}</Form.Display>
+                      </Form.Row>
+                    </Form.Group>
                   </div>
                 </div>
-              </Layout.Content>
-            </Layout>
-          </FormikForm>
-        )
-      }}
+              </div>
+            </Layout.Content>
+          </Layout>
+        </FormikForm>
+      )}
     </Formik>
   ) : null
 }

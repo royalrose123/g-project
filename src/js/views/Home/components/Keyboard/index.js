@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom'
 import classnames from 'classnames/bind'
-import { NumericKeyboard } from 'numeric-keyboard'
+import { NumericKeyboard } from 'numeric-keyboard/dist/numeric_keyboard.react.js'
+import * as keys from 'numeric-keyboard/lib/keys'
 
 // Styles
 import styles from './style.module.scss'
@@ -24,4 +25,5 @@ function Keyboard (props) {
   )
 }
 
+export { keys }
 export default Keyboard

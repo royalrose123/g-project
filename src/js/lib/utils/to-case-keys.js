@@ -18,13 +18,15 @@ function toCaseKeys (object, toCase, options) {
     throw new Error('There is not the type of case converter.')
   }
 
+  if (!isObject(object)) return object
+
   const converter = to[toCase]
   const newObject = Array.isArray(object) ? [] : {}
   options = Object.assign({ isDeep: true, exclude: [] }, options)
 
   for (const [key, value] of Object.entries(object)) {
     const newKey = matches(options.exclude, key) ? key : converter(key)
-    const newValue = options.isDeep && isObject(value) ? toCaseKeys(value, toCase, options) : value
+    const newValue = options.isDeep ? toCaseKeys(value, toCase, options) : value
 
     newObject[newKey] = newValue
   }
