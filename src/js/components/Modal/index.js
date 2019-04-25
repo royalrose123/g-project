@@ -20,11 +20,13 @@ const cx = classnames.bind(styles)
 export const propTypes = {
   isOpened: PropTypes.bool.isRequired,
   isClosable: PropTypes.bool.isRequired,
+  isBackale: PropTypes.bool,
   isLoading: PropTypes.bool,
   shouldCloseOnOverlayClick: PropTypes.bool,
   beforeOpen: PropTypes.func,
   afterClose: PropTypes.func,
   onClose: PropTypes.func,
+  onBack: PropTypes.func,
   appendTarget: PropTypes.oneOfType([PropTypes.func, PropTypes.node, PropTypes.instanceOf(Element)]).isRequired,
   className: PropTypes.string,
   children: PropTypes.any.isRequired,
@@ -33,14 +35,29 @@ export const propTypes = {
 export const defaultProps = {
   isOpened: false,
   isClosable: true,
+  isBackale: false,
   isLoading: false,
   shouldCloseOnOverlayClick: true,
   onClose: () => null,
+  onBack: () => null,
   appendTarget: document.body,
 }
 
 function Modal (props) {
-  const { isOpened, isClosable, isLoading, shouldCloseOnOverlayClick, beforeOpen, afterClose, onClose, appendTarget, className, ...restProps } = props
+  const {
+    isOpened,
+    isClosable,
+    isBackale,
+    isLoading,
+    shouldCloseOnOverlayClick,
+    beforeOpen,
+    afterClose,
+    onClose,
+    onBack,
+    appendTarget,
+    className,
+    ...restProps
+  } = props
 
   return (
     <Transition
@@ -61,8 +78,10 @@ function Modal (props) {
                 className={cx(className)}
                 style={{ transform: scale }}
                 shouldShowCloseButton={!isLoading && isClosable}
+                shouldShowBackButton={!isLoading && isBackale}
                 shouldShowLoadingOverlay={isLoading}
                 onClose={onClose}
+                onBack={onBack}
                 {...restProps}
               />
               <Overlay isShowed={isOpened} shouldCreatePortal={false} onClick={!isLoading && shouldCloseOnOverlayClick ? onClose : null} />
