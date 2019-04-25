@@ -1,7 +1,9 @@
 .home-table-person-avatar {
+  display: inline-flex;
   width: var(--person-width);
   height: var(--person-height);
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
+  vertical-align: middle;
 }
