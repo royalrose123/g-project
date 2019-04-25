@@ -1,9 +1,9 @@
 .home-camera {
-  padding: 80px 70px;
+  padding: 80px 120px;
   display: flex;
+  justify-content: space-between;
 
   &__column {
-    padding: 0 50px;
   }
 
   &__title {
@@ -18,7 +18,7 @@
   &__video-wrapper {
     overflow: hidden;
     position: relative;
-    @include size(910px);
+    @include size(880px);
 
     // TODO: Remove this line
     background: $gray-black;

@@ -18,11 +18,12 @@ import GameApi from '../../../../lib/api/Game'
 import styles from './style.module.scss'
 
 // Variables / Functions
+import PERSON_TYPE from '../../../../constants/PersonType'
 const cx = classnames.bind(styles)
 
 const seated = { count: 7, seatSize: '102px' }
 const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
-const person = { width: '280px' }
+const person = { width: '280px', height: '360px' }
 
 const defaultSeatList = new Array(seated.count).fill()
 
@@ -40,7 +41,6 @@ function Table (props) {
 
   const [seatList, setSeatList] = useState(defaultSeatList)
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
-  const [currentMember, setCurrentMember] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
 
@@ -60,14 +60,13 @@ function Table (props) {
     document.documentElement.style.setProperty('--standing-place-margin', standing.placeMargin)
 
     document.documentElement.style.setProperty('--person-width', person.width)
+    document.documentElement.style.setProperty('--person-height', person.height)
   }, [])
 
   // Seat
   const onSeatClick = (event, index, seat) => {
     // 如果座位已經有人，打開 detail
     if (typeof seat === 'object') {
-      setCurrentMember(seat)
-      // TODO: 改成 member id
       history.push(`${match.url}/${seat.id}`)
       return
     }
@@ -89,19 +88,30 @@ function Table (props) {
   // ClockInModal
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
-  const onClockIn = (event, person) => {
-    const { id, image } = person
+  const onClockIn = async (event, person) => {
+    const { id, image, identify } = person
 
-    GameApi.memberClockIn({ customerId: Number(id) }).then(() => {
-      setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id, image } : seatItem)))
-    })
+    if (identify === PERSON_TYPE.ANONYMOUS) {
+      // 若是 anonymous
+      // 即自動建立臨時帳號
+      await GameApi.anonymousClockIn()
+    } else if (identify === PERSON_TYPE.ANONYMOUS_WITH_MEMBER_CARD) {
+      // 若是 anonymous with member card
+      // 即為會員，使用荷官輸入的 card number
+      await GameApi.memberClockInByCardNumber({ cardNumber: id })
+    } else {
+      // 若不是 anonymous 或者 anonymous with member card
+      // 即為荷官辨識出該會員，使用資料庫中原有的 id
+      await GameApi.memberClockInById({ id })
+    }
 
+    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id, image } : seatItem)))
     closeClockInModal()
     initializeSelectedSeatIndex()
   }
 
   return isDetailVisible ? (
-    <MemberDetail member={currentMember} {...props} />
+    <MemberDetail {...props} />
   ) : (
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>

@@ -16,12 +16,12 @@ export const propTypes = {
   className: PropTypes.string,
 }
 
-function Control (props) {
+function Input (props) {
   const { className, ...restProps } = props
 
-  return <input type='text' className={cx('home-form-control', className)} {...restProps} />
+  return <input type='text' className={cx('home-form-input', className)} {...restProps} />
 }
 
-Control.propTypes = propTypes
+Input.propTypes = propTypes
 
-export default Control
+export default Input

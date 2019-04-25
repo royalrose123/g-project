@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
 // Components
+import Avatar from '../Avatar'
 import Body from '../Body'
 import Header from '../Header'
 import Footer from '../Footer'
@@ -39,8 +40,8 @@ function Person (props) {
         {title === 'id' ? `#${id}` : level}
       </Header>
       <Body>
-        <img src={image} alt={name} />
-        {mode === 'compare' && <img src={compareImage} alt={name} />}
+        <Avatar src={image} alt={name} />
+        {mode === 'compare' && <Avatar src={compareImage} alt={name} />}
         <div className={cx('home-table-person-member__name')}>{name}</div>
       </Body>
       {typeof renderFooter === 'function' && <Footer>{renderFooter(person)}</Footer>}

@@ -1,0 +1,18 @@
+.home-form-select {
+  padding: 0 18px;
+  width: 100%;
+  height: 62px;
+  color: $gray-white;
+  font-size: $font-size-lg;
+  border: 0;
+  outline: 1px solid $gray-white;
+  background-color: transparent;
+
+  &:focus {
+    outline-offset: 0;
+  }
+
+  > option {
+    background-color: $color-secondary-dark;
+  }
+}

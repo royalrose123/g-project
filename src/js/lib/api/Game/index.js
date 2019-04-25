@@ -3,20 +3,38 @@ import Denormalizer from './denormalizer'
 import Service from '../service'
 
 class Game {
-  static memberClockIn ({ customerId, memberCardNumber }) {
+  static memberClockInById ({ id }) {
     const service = new Service(
       {
         url: '/clock-in',
         method: 'POST',
         data: {
           body: {
-            customerId,
-            memberCardNumber,
+            id,
           },
         },
       },
       {
-        denormalizer: Denormalizer.MemberClockIn,
+        denormalizer: Denormalizer.MemberClockInById,
+      }
+    )
+
+    return service.callApi()
+  }
+
+  static memberClockInByCardNumber ({ cardNumber }) {
+    const service = new Service(
+      {
+        url: '/clock-in',
+        method: 'POST',
+        data: {
+          body: {
+            cardNumber,
+          },
+        },
+      },
+      {
+        denormalizer: Denormalizer.MemberClockInByCardNumber,
       }
     )
 

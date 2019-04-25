@@ -25,38 +25,66 @@ function Settings (props) {
       <Form>
         <Form.Group width={830}>
           <Form.Row>
-            <Form.Label>Table Number</Form.Label>
-            <Form.Control />
+            <Form.Column size='lg'>
+              <Form.Label>Table Number</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Input />
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>Current Log-in Dealer</Form.Label>
-            <Form.Display>Ben Ryan</Form.Display>
+            <Form.Column size='lg'>
+              <Form.Label>Current Log-in Dealer</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Display>Ben Ryan</Form.Display>
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>Current Supervisor</Form.Label>
-            <Form.Control />
+            <Form.Column size='lg'>
+              <Form.Label>Current Supervisor</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Input />
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>Number of Players at Table</Form.Label>
-            <Form.Display>28</Form.Display>
+            <Form.Column size='lg'>
+              <Form.Label>Number of Players at Table</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Display>28</Form.Display>
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>IP of Camera 1</Form.Label>
-            <Form.Display>{cameraIp1}</Form.Display>
+            <Form.Column size='lg'>
+              <Form.Label>IP of Camera 1</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Display>{cameraIp1}</Form.Display>
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>IP of Camera 2</Form.Label>
-            <Form.Display>{cameraIp2}</Form.Display>
+            <Form.Column size='lg'>
+              <Form.Label>IP of Camera 2</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Display>{cameraIp2}</Form.Display>
+            </Form.Column>
           </Form.Row>
 
           <Form.Row>
-            <Form.Label>Match % to member database</Form.Label>
-            <Form.Control />
+            <Form.Column size='lg'>
+              <Form.Label>Match % to member database</Form.Label>
+            </Form.Column>
+            <Form.Column size='md'>
+              <Form.Input />
+            </Form.Column>
           </Form.Row>
         </Form.Group>
       </Form>

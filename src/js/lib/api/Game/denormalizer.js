@@ -1,9 +1,16 @@
 class Denormalizer {
-  static MemberClockIn ({ body: { customerId, memberCardNumber } }) {
+  static MemberClockInById ({ body: { id } }) {
     return {
       body: {
-        cid: customerId,
-        cda: memberCardNumber,
+        cid: Number(id),
+      },
+    }
+  }
+
+  static MemberClockInByCardNumber ({ body: { cardNumber } }) {
+    return {
+      body: {
+        cda: Number(cardNumber),
       },
     }
   }

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
 // Components
+import Avatar from '../Avatar'
 import Body from '../Body'
 import Footer from '../Footer'
 import Header from '../Header'
@@ -29,7 +30,7 @@ function Anonymous (props) {
     <div className={cx('home-table-person-anonymous')}>
       <Header type={PERSON_TYPE.ANONYMOUS}>Anonymous</Header>
       <Body>
-        <img src={image} alt={name} />
+        <Avatar src={image} alt={name} />
       </Body>
       {typeof renderFooter === 'function' && <Footer>{renderFooter(person)}</Footer>}
     </div>
