@@ -1,4 +1,14 @@
 class Denormalizer {
+  static AnonymousClockIn ({ body: { snapshot } }) {
+    return {
+      body: {
+        // 格式為 [RandomString]
+        cnm: `[${Math.floor(Math.random() * 1000 * 1000 * 1000 * 1000)}]`,
+        pic: snapshot,
+      },
+    }
+  }
+
   static MemberClockInById ({ body: { id } }) {
     return {
       body: {

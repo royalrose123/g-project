@@ -7,7 +7,23 @@
   &__place {
     margin: var(--standing-place-margin);
     padding: 5px;
-    border: 1px solid $gray-white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba($gray-white, 0.5);
     @include size(var(--standing-place-size));
+
+    &[data-is-selected="true"] {
+      background-color: rgba($gray-white, 0.5);
+    }
+  }
+
+  &__place-image {
+    width: 100%;
+    @include position-center;
+  }
+
+  &__place-empty {
+    color: rgba($gray-white, 0.5);
   }
 }

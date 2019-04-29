@@ -19,12 +19,12 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  isSeatSelected: PropTypes.bool,
+  isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
 }
 
 function Detection (props) {
-  const { isSeatSelected, onItemActionClick } = props
+  const { isPlaceSelected, onItemActionClick } = props
 
   const { isLoaded, response: detectionList } = useFetcher(null, DetectionApi.fetchDetectionList)
 
@@ -55,7 +55,7 @@ function Detection (props) {
                 type={detectionItem.type}
                 person={getPersonByType(detectionItem.type, detectionItem)}
                 renderFooter={() => (
-                  <Button isBlock disabled={!isSeatSelected} onClick={event => onItemActionClick(event, detectionItem)}>
+                  <Button isBlock disabled={!isPlaceSelected} onClick={event => onItemActionClick(event, detectionItem)}>
                     Clock-In
                   </Button>
                 )}

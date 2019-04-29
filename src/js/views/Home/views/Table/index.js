@@ -26,6 +26,7 @@ const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
 const person = { width: '280px', height: '360px' }
 
 const defaultSeatList = new Array(seated.count).fill()
+const defaultStandingList = new Array(standing.row * standing.column).fill()
 
 export const propTypes = {
   match: PropTypes.object,
@@ -40,12 +41,15 @@ function Table (props) {
   const isDetailVisible = typeof memberId === 'string'
 
   const [seatList, setSeatList] = useState(defaultSeatList)
-  const [selectedSeatIndex, setSelectedSeatIndex] = useState(null)
+  const [standingList, setStandingList] = useState(defaultStandingList)
+  const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
+  const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
 
   // private methods
-  const initializeSelectedSeatIndex = () => setSelectedSeatIndex(null)
+  const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
+  const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
@@ -63,19 +67,21 @@ function Table (props) {
     document.documentElement.style.setProperty('--person-height', person.height)
   }, [])
 
-  // Seat
-  const onSeatClick = (event, index, seat) => {
-    // 如果座位已經有人，打開 detail
-    if (typeof seat === 'object') {
-      history.push(`${match.url}/${seat.id}`)
+  // Seat, Standing
+  const onPlaceClick = (event, { index, place, isStanding }) => {
+    // 如果位置已經有人，打開 detail
+    if (typeof place === 'object') {
+      history.push(`${match.url}/${place.id}`)
       return
     }
 
-    // 如果座位還沒有人，設定選取座位索引
-    if (selectedSeatIndex === index) {
-      initializeSelectedSeatIndex()
+    // 如果位置還沒有人，設定選取座位索引
+    if (isSelectedPlaceStanding === isStanding && selectedPlaceIndex === index) {
+      initializeIsSelectedPlaceStanding()
+      initializeSelectedPlaceIndex()
     } else {
-      setSelectedSeatIndex(index)
+      setIsSelectedPlaceStanding(isStanding)
+      setSelectedPlaceIndex(index)
     }
   }
 
@@ -94,7 +100,7 @@ function Table (props) {
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
-      await GameApi.anonymousClockIn()
+      await GameApi.anonymousClockIn({ snapshot: image })
     } else if (identify === PERSON_TYPE.ANONYMOUS_WITH_MEMBER_CARD) {
       // 若是 anonymous with member card
       // 即為會員，使用荷官輸入的 card number
@@ -105,9 +111,16 @@ function Table (props) {
       await GameApi.memberClockInById({ id })
     }
 
-    setSeatList(seatList.map((seatItem, index) => (index === selectedSeatIndex ? { id, image } : seatItem)))
+    // 根據是否站立，設定位置列表的內容
+    if (isSelectedPlaceStanding) {
+      setStandingList(standingList.map((standingItem, index) => (index === selectedPlaceIndex ? { id, image } : standingItem)))
+    } else {
+      setSeatList(seatList.map((seatItem, index) => (index === selectedPlaceIndex ? { id, image } : seatItem)))
+    }
+
     closeClockInModal()
-    initializeSelectedSeatIndex()
+    initializeIsSelectedPlaceStanding()
+    initializeSelectedPlaceIndex()
   }
 
   return isDetailVisible ? (
@@ -116,16 +129,16 @@ function Table (props) {
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
-          <Seated seatList={seatList} selectedIndex={selectedSeatIndex} onSeatClick={onSeatClick} />
+          <Seated seatList={seatList} selectedIndex={isSelectedPlaceStanding ? null : selectedPlaceIndex} onPlaceSelect={onPlaceClick} />
           <h2 className={cx('home-table__title')}>Seated</h2>
         </div>
         <div className={cx('home-table__column')}>
-          <Standing row={standing.row} column={standing.column} />
+          <Standing standingList={standingList} selectedIndex={isSelectedPlaceStanding ? selectedPlaceIndex : null} onPlaceSelect={onPlaceClick} />
           <h2 className={cx('home-table__title')}>Standing</h2>
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Detection isSeatSelected={selectedSeatIndex !== null} onItemActionClick={onDetectionItemActionClick} />
+        <Detection isPlaceSelected={selectedPlaceIndex !== null} onItemActionClick={onDetectionItemActionClick} />
       </div>
       <ClockInModal
         detectionItem={currentDetectionItem}

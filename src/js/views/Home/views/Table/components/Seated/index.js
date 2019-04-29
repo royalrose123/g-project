@@ -19,11 +19,11 @@ export const propTypes = {
     })
   ).isRequired,
   selectedIndex: PropTypes.number,
-  onSeatClick: PropTypes.func,
+  onPlaceSelect: PropTypes.func,
 }
 
 function Seated (props) {
-  const { seatList, selectedIndex, onSeatClick } = props
+  const { seatList, selectedIndex, onPlaceSelect } = props
 
   return (
     <div className={cx('home-table-seated')}>
@@ -32,7 +32,7 @@ function Seated (props) {
           key={index}
           type='button'
           className={cx('home-table-seated__seat')}
-          onClick={event => onSeatClick(event, index, seatItem)}
+          onClick={event => onPlaceSelect(event, { index, place: seatItem, isStanding: false })}
           data-is-selected={index === selectedIndex}
         >
           {typeof seatItem === 'object' ? (
