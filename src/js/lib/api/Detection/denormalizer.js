@@ -1,7 +1,8 @@
 class Denormalizer {
-  static MethodName ({ frontEndKey }) {
+  static DetectionList ({ table }) {
     return {
-      requestKey: frontEndKey,
+      // TODO: 暫時先寫死，未來會從 config 帶值
+      table: 'Table-0001',
     }
   }
 }

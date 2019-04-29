@@ -22,6 +22,7 @@ export const propTypes = {
   isClosable: PropTypes.bool.isRequired,
   isBackale: PropTypes.bool,
   isLoading: PropTypes.bool,
+  shouldShowOverlayOnLoading: PropTypes.bool,
   shouldCloseOnOverlayClick: PropTypes.bool,
   beforeOpen: PropTypes.func,
   afterClose: PropTypes.func,
@@ -37,6 +38,7 @@ export const defaultProps = {
   isClosable: true,
   isBackale: false,
   isLoading: false,
+  shouldShowOverlayOnLoading: true,
   shouldCloseOnOverlayClick: true,
   onClose: () => null,
   onBack: () => null,
@@ -49,6 +51,7 @@ function Modal (props) {
     isClosable,
     isBackale,
     isLoading,
+    shouldShowOverlayOnLoading,
     shouldCloseOnOverlayClick,
     beforeOpen,
     afterClose,
@@ -79,7 +82,8 @@ function Modal (props) {
                 style={{ transform: scale }}
                 shouldShowCloseButton={!isLoading && isClosable}
                 shouldShowBackButton={!isLoading && isBackale}
-                shouldShowLoadingOverlay={isLoading}
+                shouldShowLoadingIcon={isLoading}
+                shouldShowLoadingOverlay={shouldShowOverlayOnLoading && isLoading}
                 onClose={onClose}
                 onBack={onBack}
                 {...restProps}

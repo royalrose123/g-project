@@ -1,15 +1,20 @@
+import Denormalizer from './denormalizer'
 import Normalizer from './normalizer'
 
 import Service from '../service'
 
 class Detection {
-  static fetchDetectionList () {
+  static fetchDetectionList ({ table }) {
     const service = new Service(
       {
         url: '/people-detection',
         method: 'GET',
+        params: {
+          table,
+        },
       },
       {
+        denormalizer: Denormalizer.DetectionList,
         normalizer: Normalizer.DetectionList,
       }
     )
