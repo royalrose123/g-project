@@ -14,12 +14,13 @@ class TEMPLATE {
         },
       },
       {
+        withAccessToken: false,
         denormalizer: Denormalizer.MethodName,
         normalizer: Normalizer.DataName,
       }
     )
 
-    return service.callApiWithAccessToken()
+    return service.callApi()
   }
 }
 

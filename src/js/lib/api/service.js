@@ -1,29 +1,22 @@
 import axios from 'axios'
-import { omitBy, isUndefined, isNull, isPlainObject } from 'lodash'
+import { omitBy, isUndefined, isPlainObject } from 'lodash'
 
 import toCaseKeys, { CASES } from '../utils/to-case-keys'
 import toPredicateValues from '../utils/to-predicate-values'
 
 export const defaultNormalizer = response => response
-const warn = (url, error, message) => console.warn(`${url} \n - status: ${error.response.status} \n - message: ${message}`, error.response)
-const isValidObject = parameter => !isNull(parameter) && isPlainObject(parameter)
-const predicator = value => omitBy(value, isUndefined)
-const handleParameter = (denormalizer, parameter) => toPredicateValues(denormalizer(toCaseKeys(parameter, CASES.CAMEL)), predicator)
 
 class Service {
-  constructor (config = {}, { denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
-    const { params, data, ...restConfig } = config
-
-    this.config = restConfig
+  constructor (config = {}, { withAccessToken = false, denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
+    this.config = config
+    this.withAccessToken = withAccessToken
+    this.denormalizer = denormalizer
     this.normalizer = normalizer
+  }
 
-    if (isValidObject(params)) {
-      this.config.params = handleParameter(denormalizer, params)
-    }
-
-    if (isValidObject(data)) {
-      this.config.data = handleParameter(denormalizer, data)
-    }
+  static option = {
+    toResponseCase: CASES.CAMEL,
+    toRequestCase: CASES.CAMEL,
   }
 
   static apiConfig = {
@@ -34,24 +27,102 @@ class Service {
     return list.map(item => normalizer(item))
   }
 
+  static normalizeListWithPagination ({ count, list, page, pagingIndex, pagingSize, requestDate }, normalizer) {
+    return {
+      count,
+      list: Service.normalizeList(list, normalizer),
+      page,
+      pagingIndex,
+      pagingSize,
+      requestDateTime: requestDate,
+    }
+  }
+
+  getAxiosInstance () {
+    let apiConfig = null
+
+    if (this.withAccessToken) {
+      apiConfig = Object.assign(Service.apiConfig, { headers: { Authorization: `Bearer ${AuthApi.getAccessToken()}` } })
+    } else {
+      apiConfig = Service.apiConfig
+    }
+
+    return axios.create(apiConfig)
+  }
+
+  getRequestConfig () {
+    const { params, data, ...restConfig } = this.config
+
+    let requestConfig = restConfig
+
+    if (isPlainObject(params)) {
+      this.config.params = this.handleParameter(params)
+    }
+
+    if (isPlainObject(data)) {
+      this.config.data = this.handleParameter(data)
+    }
+
+    return requestConfig
+  }
+
+  getErrorMessage (error) {
+    const { status } = error.response
+
+    const messagesWithoutAccessToken = {
+      400: '參數錯誤',
+      403: '沒有權限',
+    }
+    const messagesWithAccessToken = {}
+
+    let message = ''
+
+    if (this.withAccessToken) {
+      message = messagesWithoutAccessToken[status]
+    } else {
+      message = messagesWithAccessToken[status]
+    }
+
+    return message || 'Has unhandled error!'
+  }
+
+  debug (error, message) {
+    const { url } = this.config
+    const { response } = error
+    const { status } = response
+
+    console.warn(`${url} \n - status: ${status} \n - message: ${message}`, response)
+  }
+
+  handleParameter (parameter) {
+    const casedParameter = toCaseKeys(parameter, Service.option.toRequestCase)
+    const denormalizedParameter = this.denormalizer(casedParameter)
+    const predicator = value => omitBy(value, isUndefined)
+
+    return toPredicateValues(denormalizedParameter, predicator)
+  }
+
+  handleSuccess (response) {
+    const casedResponse = toCaseKeys(response.data, Service.option.toResponseCase)
+    const normalizedResponse = this.normalizer(casedResponse)
+
+    return normalizedResponse
+  }
+
+  handleFailure (error) {
+    const message = this.getErrorMessage(error)
+    const reason = Object.assign(error.response, { message })
+
+    this.debug(error, message)
+
+    return Promise.reject(reason)
+  }
+
   callApi () {
-    const axiosInstance = axios.create(Service.apiConfig)
+    const axiosInstance = this.getAxiosInstance()
+    const requestConfig = this.getRequestConfig()
 
-    return axiosInstance(this.config).then(
-      response => this.normalizer(toCaseKeys(response.data.data, CASES.CAMEL)),
-      error => {
-        let message = ''
-
-        switch (error.response.status) {
-          default:
-            message = 'Has error!'
-        }
-
-        warn(this.config.url, error, message)
-
-        return Promise.reject(Object.assign(error.response, { message }))
-      }
-    )
+    return axiosInstance(requestConfig).then(this.handleSuccess, this.handleFailure)
   }
 }
 
