@@ -2,20 +2,20 @@ import { useEffect, useState, useReducer } from 'react'
 
 import useDeepCompareEffect from './useDeepCompareEffect'
 
-const actionTypes = {
+export const actionTypes = {
   FETCH_REQUEST: 'FETCH_REQUEST',
   FETCH_SUCCESS: 'FETCH_SUCCESS',
   FETCH_FAILURE: 'FETCH_FAILURE',
 }
 
-const initialState = {
+export const initialState = {
   isLoaded: false,
   isFetching: false,
   hasError: false,
   response: null,
 }
 
-const reducer = (state, { type, response }) => {
+export const reducer = (state, { type, response }) => {
   switch (type) {
     case actionTypes.FETCH_REQUEST:
       return { ...state, isFetching: true }

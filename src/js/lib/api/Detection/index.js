@@ -4,7 +4,7 @@ import Normalizer from './normalizer'
 import Service from '../service'
 
 class Detection {
-  static fetchDetectionList ({ table }) {
+  static fetchDetectionList ({ table } = {}) {
     const service = new Service(
       {
         url: '/people-detection',

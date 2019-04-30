@@ -10,9 +10,14 @@ export default function getPersonByTypeFromDetectionItem (type, detectionItem) {
 
   switch (type) {
     case PERSON_TYPE.MEMBER:
+      const { image, ...member } = probableList.sort((probableA, probableB) =>
+        new BigNumber(probableB.similarity).comparedTo(probableA.similarity)
+      )[0]
+
       person = {
-        ...probableList.sort((probableA, probableB) => new BigNumber(probableB.similarity).comparedTo(probableA.similarity))[0],
-        compareImage: snapshot,
+        image: snapshot,
+        compareImage: image,
+        ...member,
       }
       break
 

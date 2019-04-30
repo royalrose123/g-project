@@ -3,9 +3,9 @@ import Service from '../service'
 class Normalizer {
   static ProbableItem ({ image, similarity, peopleId, peopleName }) {
     return {
-      // image,
+      image,
       // TODO: 暫時先用假的圖片
-      image: 'https://fakeimg.pl/280x360',
+      // image: 'https://fakeimg.pl/280x360',
       similarity,
       id: peopleId,
       name: peopleName,
@@ -21,9 +21,9 @@ class Normalizer {
   static DetectionItem ({ type, faceImage, background, rect, result }) {
     return {
       type,
-      // snapshot: faceImage,
+      snapshot: faceImage,
       // TODO: 暫時先用假的圖片
-      snapshot: 'https://fakeimg.pl/280x360',
+      // snapshot: 'https://fakeimg.pl/280x360',
       background,
       rect,
       probableList: Normalizer.ProbableList(result),
@@ -31,7 +31,6 @@ class Normalizer {
   }
 
   static DetectionList (payload) {
-    console.log('payload :', payload)
     return Service.normalizeList(payload, Normalizer.DetectionItem)
   }
 }

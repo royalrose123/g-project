@@ -99,7 +99,6 @@ class Service {
   }
 
   callApi () {
-    console.log('callApi this :', this)
     const axiosInstance = this.getAxiosInstance()
     const requestConfig = this.getRequestConfig()
 
