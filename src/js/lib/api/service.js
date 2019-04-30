@@ -7,9 +7,8 @@ import toPredicateValues from '../utils/to-predicate-values'
 export const defaultNormalizer = response => response
 
 class Service {
-  constructor (config = {}, { withAccessToken = false, denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
+  constructor (config = {}, { denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
     this.config = config
-    this.withAccessToken = withAccessToken
     this.denormalizer = denormalizer
     this.normalizer = normalizer
   }
@@ -39,28 +38,20 @@ class Service {
   }
 
   getAxiosInstance () {
-    let apiConfig = null
-
-    if (this.withAccessToken) {
-      apiConfig = Object.assign(Service.apiConfig, { headers: { Authorization: `Bearer ${AuthApi.getAccessToken()}` } })
-    } else {
-      apiConfig = Service.apiConfig
-    }
-
-    return axios.create(apiConfig)
+    return axios.create(Service.apiConfig)
   }
 
   getRequestConfig () {
     const { params, data, ...restConfig } = this.config
 
-    let requestConfig = restConfig
+    const requestConfig = restConfig
 
     if (isPlainObject(params)) {
-      this.config.params = this.handleParameter(params)
+      requestConfig.params = this.handleParameter(params)
     }
 
     if (isPlainObject(data)) {
-      this.config.data = this.handleParameter(data)
+      requestConfig.data = this.handleParameter(data)
     }
 
     return requestConfig
@@ -69,21 +60,9 @@ class Service {
   getErrorMessage (error) {
     const { status } = error.response
 
-    const messagesWithoutAccessToken = {
-      400: '參數錯誤',
-      403: '沒有權限',
-    }
-    const messagesWithAccessToken = {}
+    const messages = {}
 
-    let message = ''
-
-    if (this.withAccessToken) {
-      message = messagesWithoutAccessToken[status]
-    } else {
-      message = messagesWithAccessToken[status]
-    }
-
-    return message || 'Has unhandled error!'
+    return messages[status] || 'Has unhandled error!'
   }
 
   debug (error, message) {
@@ -98,12 +77,13 @@ class Service {
     const casedParameter = toCaseKeys(parameter, Service.option.toRequestCase)
     const denormalizedParameter = this.denormalizer(casedParameter)
     const predicator = value => omitBy(value, isUndefined)
+    const predicatedParameter = toPredicateValues(denormalizedParameter, predicator)
 
-    return toPredicateValues(denormalizedParameter, predicator)
+    return predicatedParameter
   }
 
   handleSuccess (response) {
-    const casedResponse = toCaseKeys(response.data, Service.option.toResponseCase)
+    const casedResponse = toCaseKeys(response.data.data, Service.option.toResponseCase)
     const normalizedResponse = this.normalizer(casedResponse)
 
     return normalizedResponse
@@ -119,10 +99,11 @@ class Service {
   }
 
   callApi () {
+    console.log('callApi this :', this)
     const axiosInstance = this.getAxiosInstance()
     const requestConfig = this.getRequestConfig()
 
-    return axiosInstance(requestConfig).then(this.handleSuccess, this.handleFailure)
+    return axiosInstance(requestConfig).then(response => this.handleSuccess(response), error => this.handleFailure(error))
   }
 }
 

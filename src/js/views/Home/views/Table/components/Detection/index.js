@@ -28,6 +28,9 @@ function Detection (props) {
 
   const { isLoaded, response: detectionList } = useFetcher(null, DetectionApi.fetchDetectionList)
 
+  console.log('isLoaded :', isLoaded)
+  console.log('detectionList :', detectionList)
+
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
   const itemSpacing = 40
   const itemBorder = 6

@@ -14,7 +14,7 @@ class Detection {
         },
       },
       {
-        denormalizer: Denormalizer.DetectionList,
+        denormalizer: Denormalizer.FetchDetectionList,
         normalizer: Normalizer.DetectionList,
       }
     )

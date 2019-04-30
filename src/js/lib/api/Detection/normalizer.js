@@ -18,22 +18,20 @@ class Normalizer {
     return Service.normalizeList(payload, Normalizer.ProbableItem)
   }
 
-  static DetectionItem ({ cameraId, type, faceImage, background, rect, dateTime, standing, result }) {
+  static DetectionItem ({ type, faceImage, background, rect, result }) {
     return {
-      cameraId,
       type,
       // snapshot: faceImage,
       // TODO: 暫時先用假的圖片
       snapshot: 'https://fakeimg.pl/280x360',
       background,
       rect,
-      dateTime,
-      isStanding: standing,
       probableList: Normalizer.ProbableList(result),
     }
   }
 
   static DetectionList (payload) {
+    console.log('payload :', payload)
     return Service.normalizeList(payload, Normalizer.DetectionItem)
   }
 }
