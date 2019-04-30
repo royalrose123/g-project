@@ -3,6 +3,7 @@ import React from 'react'
 import classnames from 'classnames/bind'
 
 // Components
+import Button from '../../../../components/Button'
 import Form from '../../components/Form'
 
 // Lib MISC
@@ -22,6 +23,7 @@ function Settings (props) {
   return (
     <div className={cx('home-settings')}>
       <h2 className={cx('home-settings__title')}>Settings</h2>
+
       <Form>
         <Form.Group width={830}>
           <Form.Row>
@@ -29,7 +31,7 @@ function Settings (props) {
               <Form.Label>Table Number</Form.Label>
             </Form.Column>
             <Form.Column size='md'>
-              <Form.Input />
+              <Form.Display>Table - 0001</Form.Display>
             </Form.Column>
           </Form.Row>
 
@@ -38,7 +40,7 @@ function Settings (props) {
               <Form.Label>Current Log-in Dealer</Form.Label>
             </Form.Column>
             <Form.Column size='md'>
-              <Form.Display>Ben Ryan</Form.Display>
+              <Form.Display>Dealer Name</Form.Display>
             </Form.Column>
           </Form.Row>
 
@@ -47,7 +49,7 @@ function Settings (props) {
               <Form.Label>Current Supervisor</Form.Label>
             </Form.Column>
             <Form.Column size='md'>
-              <Form.Input />
+              <Form.Display>Supervisor Name</Form.Display>
             </Form.Column>
           </Form.Row>
 
@@ -83,11 +85,17 @@ function Settings (props) {
               <Form.Label>Match % to member database</Form.Label>
             </Form.Column>
             <Form.Column size='md'>
-              <Form.Input />
+              <Form.Select>
+                <option value='90'>90%</option>
+              </Form.Select>
             </Form.Column>
           </Form.Row>
         </Form.Group>
       </Form>
+
+      <div className={cx('home-settings__footer')}>
+        <Button type='button'>Save</Button>
+      </div>
     </div>
   )
 }

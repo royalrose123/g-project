@@ -2,14 +2,10 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
-// Components
-import Content from './Content'
-import Footer from './Footer'
-import Header from './Header'
-
 // Style
 import styles from './style.module.scss'
 
+// Variables / Functions
 const cx = classnames.bind(styles)
 
 export const propTypes = {
@@ -17,20 +13,16 @@ export const propTypes = {
   children: PropTypes.any.isRequired,
 }
 
-function Layout (props) {
+function Footer (props) {
   const { className, children, ...restProps } = props
 
   return (
-    <section className={cx('home-layout', className)} {...restProps}>
+    <footer className={cx('home-layout-footer', className)} {...restProps}>
       {children}
-    </section>
+    </footer>
   )
 }
 
-Layout.propTypes = propTypes
+Footer.propTypes = propTypes
 
-Layout.Content = Content
-Layout.Footer = Footer
-Layout.Header = Header
-
-export default Layout
+export default Footer

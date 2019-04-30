@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
-import { format } from 'date-fns'
+import { format, formatDistanceStrict } from 'date-fns'
 import { BigNumber } from 'bignumber.js'
 import { Formik, Form as FormikForm, Field } from 'formik'
 
@@ -272,7 +272,9 @@ function MemberDetail (props) {
 
                       <Form.Row>
                         <Form.Label>Age</Form.Label>
-                        <Form.Display>30</Form.Display>
+                        <Form.Display>
+                          {formatDistanceStrict(new Date(detail.birthday), new Date(), { roundingMethod: 'floor', unit: 'year' }).replace(/\D/gi, '')}
+                        </Form.Display>
                       </Form.Row>
 
                       <Form.Row>
