@@ -11,7 +11,7 @@ import Person from '../Person'
 import Button from '../../../../../../components/Button'
 
 // Lib MISC
-import DetectionApi from '../../../../../../lib/api/Detection'
+import DeviceApi from '../../../../../../lib/api/Device'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 
 // Style
@@ -33,7 +33,7 @@ function Detection (props) {
   // init
   useEffect(() => {
     const fetchData = async () => {
-      const response = await DetectionApi.fetchDetectionList()
+      const response = await DeviceApi.fetchDetectionList()
       setDetectionList(response)
     }
 
@@ -47,7 +47,7 @@ function Detection (props) {
 
     const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(
       delay(1000 * delaySecond),
-      flatMap(index => from(DetectionApi.fetchDetectionList()))
+      flatMap(index => from(DeviceApi.fetchDetectionList()))
     )
     const fetchDataSubscription = fetchDataObservable.subscribe(response => setDetectionList(response))
 

@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { AppContainer } from 'react-hot-loader'
 
 import { initializeStore } from './js/lib/redux/store'
-import { register } from './serviceWorker'
+import { unregister } from './serviceWorker'
 import App from './App'
 
 import './styles/main.scss'
@@ -26,7 +26,7 @@ const render = () =>
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://bit.ly/CRA-PWA
-register()
+unregister()
 render()
 
 if (module.hot) {

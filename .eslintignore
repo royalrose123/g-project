@@ -1,4 +1,5 @@
 build
 config
 scripts
-/src/serviceWorker.js
+src/serviceWorker.js
+player

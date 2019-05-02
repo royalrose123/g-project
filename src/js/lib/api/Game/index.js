@@ -9,10 +9,8 @@ class Game {
         url: '/clock-in/anonymous',
         method: 'POST',
         data: {
-          body: {
-            name,
-            snapshot,
-          },
+          name,
+          snapshot,
         },
       },
       {
@@ -29,9 +27,7 @@ class Game {
         url: '/clock-in/member',
         method: 'POST',
         data: {
-          body: {
-            id,
-          },
+          id,
         },
       },
       {
@@ -48,9 +44,7 @@ class Game {
         url: '/clock-in/member',
         method: 'POST',
         data: {
-          body: {
-            cardNumber,
-          },
+          cardNumber,
         },
       },
       {
@@ -67,16 +61,14 @@ class Game {
         url: '/clock-out',
         method: 'POST',
         data: {
-          body: {
-            id,
-            playType,
-            propPlay,
-            averageBet,
-            whoWin,
-            actualWin,
-            drop,
-            overage,
-          },
+          id,
+          playType,
+          propPlay,
+          averageBet,
+          whoWin,
+          actualWin,
+          drop,
+          overage,
         },
       },
       {

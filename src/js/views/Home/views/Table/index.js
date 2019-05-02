@@ -96,6 +96,7 @@ function Table (props) {
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = async (event, person) => {
     const { id, image, identify } = person
+    console.log('person :', person)
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous

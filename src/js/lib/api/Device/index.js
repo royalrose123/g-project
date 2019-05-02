@@ -3,7 +3,7 @@ import Normalizer from './normalizer'
 
 import Service from '../service'
 
-class Detection {
+class Device {
   static fetchDetectionList ({ table } = {}) {
     const service = new Service(
       {
@@ -21,6 +21,24 @@ class Detection {
 
     return service.callApi()
   }
+
+  static fetchCameraList ({ table } = {}) {
+    const service = new Service(
+      {
+        url: '/camera',
+        method: 'GET',
+        params: {
+          table,
+        },
+      },
+      {
+        denormalizer: Denormalizer.FetchCameraList,
+        normalizer: Normalizer.CameraList,
+      }
+    )
+
+    return service.callApi()
+  }
 }
 
-export default Detection
+export default Device

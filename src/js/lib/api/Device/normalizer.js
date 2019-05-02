@@ -33,6 +33,20 @@ class Normalizer {
   static DetectionList (payload) {
     return Service.normalizeList(payload, Normalizer.DetectionItem)
   }
+
+  static CameraItem ({ cameraId, url }) {
+    const serverIp = '192.168.100.18:10080'
+
+    return {
+      id: cameraId,
+      rtspUrl: url,
+      websocketUrl: `ws://${serverIp}/camera_relay?tcpaddr=${window.encodeURIComponent(url.replace('rtsp://', ''))}`,
+    }
+  }
+
+  static CameraList (payload) {
+    return Service.normalizeList(payload, Normalizer.CameraItem)
+  }
 }
 
 export default Normalizer

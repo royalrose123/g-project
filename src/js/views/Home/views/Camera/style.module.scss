@@ -19,12 +19,10 @@
     overflow: hidden;
     position: relative;
     @include size(880px);
-
-    // TODO: Remove this line
-    background: $gray-black;
   }
 
   &__video {
+    @include size(100%);
     @include position-center;
   }
 }
