@@ -94,7 +94,9 @@ function Settings (props) {
       </Form>
 
       <div className={cx('home-settings__footer')}>
-        <Button type='button'>Save</Button>
+        <Button type='button' disabled>
+          Save
+        </Button>
       </div>
     </div>
   )
