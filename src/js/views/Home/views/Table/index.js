@@ -96,13 +96,12 @@ function Table (props) {
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = async (event, person) => {
     const { id, image, identify } = person
-    console.log('person :', person)
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       await GameApi.anonymousClockIn({ snapshot: image })
-    } else if (identify === PERSON_TYPE.ANONYMOUS_WITH_MEMBER_CARD) {
+    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 anonymous with member card
       // 即為會員，使用荷官輸入的 card number
       await GameApi.memberClockInByCardNumber({ cardNumber: id })
