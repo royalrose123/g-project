@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
 
 // Components
@@ -11,6 +12,14 @@ import Standing from './components/Standing'
 // Views
 import MemberDetail from './views/MemberDetail'
 
+// Modules
+import { operations as seatedOperations, selectors as seatedSelectors, constants as SEATED_CONSTANTS } from '../../../../lib/redux/modules/seated'
+import {
+  operations as standingOperations,
+  selectors as standingSelectors,
+  constants as STANDING_CONSTANTS,
+} from '../../../../lib/redux/modules/standing'
+
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
@@ -21,28 +30,26 @@ import styles from './style.module.scss'
 // Variables / Functions
 import PERSON_TYPE from '../../../../constants/PersonType'
 const cx = classnames.bind(styles)
-
-const seated = { count: 7, seatSize: '102px' }
-const standing = { row: 3, column: 6, placeSize: '102px', placeMargin: '25px' }
 const person = { width: '280px', height: '360px' }
-
-const defaultSeatList = new Array(seated.count).fill()
-const defaultStandingList = new Array(standing.row * standing.column).fill()
 
 export const propTypes = {
   match: PropTypes.object,
   history: PropTypes.object,
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
+  addSeatItem: PropTypes.func,
+  removeSeatItem: PropTypes.func,
+  addStandingItem: PropTypes.func,
+  removeStandingItem: PropTypes.func,
 }
 
 function Table (props) {
-  const { match, history } = props
+  const { match, history, seatedList, standingList, addSeatItem, removeSeatItem, addStandingItem, removeStandingItem } = props
   const { path, params } = match
   const { memberId } = params
 
   const isDetailVisible = typeof memberId === 'string'
 
-  const [seatList, setSeatList] = useState(defaultSeatList)
-  const [standingList, setStandingList] = useState(defaultStandingList)
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
@@ -57,12 +64,12 @@ function Table (props) {
 
   // 設定初始值
   useEffect(() => {
-    document.documentElement.style.setProperty('--seated-seat-size', seated.seatSize)
+    document.documentElement.style.setProperty('--seated-seat-size', SEATED_CONSTANTS.SIZE)
 
-    document.documentElement.style.setProperty('--standing-row', standing.row)
-    document.documentElement.style.setProperty('--standing-column', standing.column)
-    document.documentElement.style.setProperty('--standing-place-size', standing.placeSize)
-    document.documentElement.style.setProperty('--standing-place-margin', standing.placeMargin)
+    document.documentElement.style.setProperty('--standing-row', STANDING_CONSTANTS.ROW)
+    document.documentElement.style.setProperty('--standing-column', STANDING_CONSTANTS.COLUMN)
+    document.documentElement.style.setProperty('--standing-place-size', STANDING_CONSTANTS.PLACE_SIZE)
+    document.documentElement.style.setProperty('--standing-place-margin', STANDING_CONSTANTS.PLACE_MARGIN)
 
     document.documentElement.style.setProperty('--person-width', person.width)
     document.documentElement.style.setProperty('--person-height', person.height)
@@ -96,13 +103,14 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = async (event, person) => {
-    const { id, tempId, name, memberCard, image, identify } = person
-    console.log('person :', person)
+    let { id } = person
+    const { tempId, name, memberCard, image, identify } = person
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
-      await GameApi.anonymousClockIn({ tempId, name, snapshot: image })
+      // 並以取得的 id 放進 seat / standing list 中
+      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image })
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
@@ -115,9 +123,9 @@ function Table (props) {
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
-      setStandingList(standingList.map((standingItem, index) => (index === selectedPlaceIndex ? { id, image } : standingItem)))
+      addStandingItem({ id, image }, selectedPlaceIndex)
     } else {
-      setSeatList(seatList.map((seatItem, index) => (index === selectedPlaceIndex ? { id, image } : seatItem)))
+      addSeatItem({ id, image }, selectedPlaceIndex)
     }
 
     closeClockInModal()
@@ -127,18 +135,17 @@ function Table (props) {
 
   // MemberDetail
   const onClockOut = async (values, actions) => {
-    console.log('standingList :', standingList)
-    console.log('seatList :', seatList)
-    console.log('isSelectedPlaceStanding :', isSelectedPlaceStanding)
-    console.log('selectedPlaceIndex :', selectedPlaceIndex)
     await GameApi.clockOut({ id: memberId, ...values })
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
-      setStandingList(standingList.map((standingItem, index) => (index === selectedPlaceIndex ? undefined : standingItem)))
+      removeStandingItem(selectedPlaceIndex)
     } else {
-      setSeatList(seatList.map((seatItem, index) => (index === selectedPlaceIndex ? undefined : seatItem)))
+      removeSeatItem(selectedPlaceIndex)
     }
+
+    initializeIsSelectedPlaceStanding()
+    initializeSelectedPlaceIndex()
 
     await history.push(findStaticPath(path))
   }
@@ -149,7 +156,7 @@ function Table (props) {
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>
         <div className={cx('home-table__column')}>
-          <Seated seatList={seatList} selectedIndex={isSelectedPlaceStanding ? null : selectedPlaceIndex} onPlaceSelect={onPlaceClick} />
+          <Seated seatedList={seatedList} selectedIndex={isSelectedPlaceStanding ? null : selectedPlaceIndex} onPlaceSelect={onPlaceClick} />
           <h2 className={cx('home-table__title')}>Seated</h2>
         </div>
         <div className={cx('home-table__column')}>
@@ -173,4 +180,21 @@ function Table (props) {
 
 Table.propTypes = propTypes
 
-export default Table
+const mapStateToProps = (state, props) => {
+  return {
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
+  }
+}
+
+const mapDispatchToProps = {
+  addSeatItem: seatedOperations.addItemToList,
+  removeSeatItem: seatedOperations.removeItemFromList,
+  addStandingItem: standingOperations.addItemToList,
+  removeStandingItem: standingOperations.removeItemFromList,
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Table)

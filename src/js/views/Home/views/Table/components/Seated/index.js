@@ -13,7 +13,7 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
-  seatList: PropTypes.arrayOf(
+  seatedList: PropTypes.arrayOf(
     PropTypes.shape({
       image: PropTypes.string,
     })
@@ -23,20 +23,20 @@ export const propTypes = {
 }
 
 function Seated (props) {
-  const { seatList, selectedIndex, onPlaceSelect } = props
+  const { seatedList, selectedIndex, onPlaceSelect } = props
 
   return (
     <div className={cx('home-table-seated')}>
-      {seatList.map((seatItem, index) => (
+      {seatedList.map((seatedItem, index) => (
         <button
           key={index}
           type='button'
           className={cx('home-table-seated__seat')}
-          onClick={event => onPlaceSelect(event, { index, place: seatItem, isStanding: false })}
+          onClick={event => onPlaceSelect(event, { index, place: seatedItem, isStanding: false })}
           data-is-selected={index === selectedIndex}
         >
-          {typeof seatItem === 'object' ? (
-            <img className={cx('home-table-seated__seat-image')} src={seatItem.image} />
+          {typeof seatedItem === 'object' ? (
+            <img className={cx('home-table-seated__seat-image')} src={seatedItem.image} />
           ) : (
             <span className={cx('home-table-seated__seat-empty')}>{index + 1}</span>
           )}

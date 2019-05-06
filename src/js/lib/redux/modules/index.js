@@ -1,1 +1,2 @@
-export { default as TEMPLATE } from './_TEMPLATE'
+export { default as seated } from './seated'
+export { default as standing } from './standing'

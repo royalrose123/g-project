@@ -43,6 +43,7 @@
     color: $gray-white;
     line-height: 1.325;
     font-size: $font-size-lg;
+    font-weight: 500;
 
     &:after {
       content: "";
@@ -60,16 +61,12 @@
     }
 
     &[data-is-active="true"] {
-      font-weight: 500;
-
       &:after {
         background-color: $gray-white;
       }
     }
 
     &[data-is-active="false"] {
-      font-weight: 400;
-
       &:after {
         background-color: transparent;
       }
@@ -82,7 +79,6 @@
   &__tabs-panel-item {
     padding: 55px 0;
     display: flex;
-    // justify-content: space-between;
 
     &[data-is-active="true"] {
     }
@@ -92,7 +88,7 @@
     }
 
     > *:not(:first-of-type) {
-      margin-left: 110px;
+      margin-left: 220px;
     }
   }
 

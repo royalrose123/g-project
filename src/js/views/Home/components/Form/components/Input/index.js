@@ -13,13 +13,14 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  isFocused: PropTypes.bool,
   className: PropTypes.string,
 }
 
 function Input (props) {
-  const { className, ...restProps } = props
+  const { isFocused, className, ...restProps } = props
 
-  return <input type='text' className={cx('home-form-input', className)} {...restProps} />
+  return <input type='text' className={cx('home-form-input', className)} data-is-focused={isFocused} {...restProps} />
 }
 
 Input.propTypes = propTypes

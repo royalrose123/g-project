@@ -48,7 +48,9 @@ function Camera (props) {
       {isLoaded &&
         cameraList.map(({ id }, index) => (
           <div key={index} className={cx('home-camera__column')}>
-            <h2 className={cx('home-camera__title')}>Camera 1 : {id}</h2>
+            <h2 className={cx('home-camera__title')}>
+              Camera {index + 1} : {id}
+            </h2>
             <div className={cx('home-camera__video-wrapper')}>
               <iframe className={cx('home-camera__video')} src={`/camera${index + 1}/index.html`} frameBorder='0' />
             </div>

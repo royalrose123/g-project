@@ -6,4 +6,9 @@
   font-size: $font-size-lg;
   border: 1px solid $gray-white;
   background-color: transparent;
+
+  &[data-is-focused="true"] {
+    border-width: 5px;
+    border-color: $color-primary;
+  }
 }

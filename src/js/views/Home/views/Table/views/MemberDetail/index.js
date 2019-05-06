@@ -44,12 +44,12 @@ function MemberDetail (props) {
     playType: '0',
     propPlay: '',
     averageBet: '',
-    whoWin: 'player',
+    overallWinner: 'player',
     actualWin: '',
     drop: '',
     overage: '',
   }
-  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'whoWin')
+  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('propPlay')
@@ -91,7 +91,9 @@ function MemberDetail (props) {
                 <Icon className={cx('home-table-member-detail__icon')} name='cross' mode='01' onClick={event => history.push(findStaticPath(path))} />
                 <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
               </div>
-              <Button type='submit'>Clock-Out</Button>
+              <Button type='submit' disabled={!values.actualWin}>
+                Clock-Out
+              </Button>
             </Layout.Header>
 
             <Layout.Content className={cx('home-table-member-detail__content')} style={{ color: '#fff' }}>
@@ -154,7 +156,9 @@ function MemberDetail (props) {
                           <Form.Row style={{ margin: 0 }}>
                             <Field
                               name='propPlay'
-                              render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                              render={({ field }) => (
+                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                              )}
                             />
                             <div className={cx('home-table-member-detail__all-games')}>/ {detail.playTimes}</div>
                           </Form.Row>
@@ -171,7 +175,9 @@ function MemberDetail (props) {
                         <Form.Column size='md'>
                           <Field
                             name='averageBet'
-                            render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                            render={({ field }) => (
+                              <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                            )}
                           />
                         </Form.Column>
                       </Form.Row>
@@ -182,13 +188,13 @@ function MemberDetail (props) {
                         </Form.Column>
                         <Form.Column size='md'>
                           <Field
-                            name='whoWin'
+                            name='overallWinner'
                             render={({ field }) => (
                               <Form.Radio.Group name={field.name}>
                                 <Form.Radio
                                   value='player'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.whoWin === 'player'}
+                                  checked={values.overallWinner === 'player'}
                                   readOnly
                                 >
                                   Player
@@ -196,7 +202,7 @@ function MemberDetail (props) {
                                 <Form.Radio
                                   value='dealer'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.whoWin === 'dealer'}
+                                  checked={values.overallWinner === 'dealer'}
                                   readOnly
                                 >
                                   Dealer
@@ -211,12 +217,14 @@ function MemberDetail (props) {
                     <Form.Group width={640}>
                       <Form.Row>
                         <Form.Column size='sm'>
-                          <Form.Label>Actual Win</Form.Label>
+                          <Form.Label>* Actual Win</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
                           <Field
                             name='actualWin'
-                            render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />}
+                            render={({ field }) => (
+                              <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                            )}
                           />
                         </Form.Column>
                       </Form.Row>
@@ -226,7 +234,12 @@ function MemberDetail (props) {
                           <Form.Label>Drop</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
-                          <Field name='drop' render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />} />
+                          <Field
+                            name='drop'
+                            render={({ field }) => (
+                              <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                            )}
+                          />
                         </Form.Column>
                       </Form.Row>
 
@@ -235,7 +248,12 @@ function MemberDetail (props) {
                           <Form.Label>Overage</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
-                          <Field name='overage' render={({ field }) => <Form.Input onFocus={event => setLastFocusField(field.name)} {...field} />} />
+                          <Field
+                            name='overage'
+                            render={({ field }) => (
+                              <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                            )}
+                          />
                         </Form.Column>
                       </Form.Row>
                     </Form.Group>
