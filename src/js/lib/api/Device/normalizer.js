@@ -9,10 +9,10 @@ class Normalizer {
       image,
       // 來的時候是小數點，需要乘以一百，再無條件捨去
       similarity: Number(new BigNumber(similarity).multipliedBy(100).integerValue(BigNumber.ROUND_FLOOR)),
-      id: idcard || 'Anonymous',
+      id: idcard,
       tempId: peopleId,
       name: peopleName,
-      level: CARD_TYPE[ctc] || CARD_TYPE.TEMP,
+      level: CARD_TYPE[ctc],
     }
   }
 

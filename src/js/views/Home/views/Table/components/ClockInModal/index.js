@@ -114,6 +114,9 @@ function ClockInModal (props) {
               <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probale Matches</h4>
               <div className={cx('home-table-clock-in-modal__probable-list')}>
                 {detectionItem.probableList
+                  // 濾掉自己
+                  .filter(probableItem => !probableItem.id)
+                  // 濾出相似度高於 80% 的結果
                   .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
                   .map((probableItem, index) => (
                     <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
