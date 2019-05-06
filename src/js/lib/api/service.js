@@ -93,12 +93,13 @@ class Service {
     let reason = null
 
     if (isUndefined(error.response)) {
-      const message = this.getErrorMessage(error.response)
-      reason = Object.assign(error.response, { message })
+      reason = error
+    } else {
+      const { response } = error
+      const message = this.getErrorMessage(response)
+      reason = Object.assign(error, Object.assign(response, { message }))
 
       this.debug(reason)
-    } else {
-      reason = error
     }
 
     return Promise.reject(reason)
