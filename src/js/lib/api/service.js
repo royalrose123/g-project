@@ -23,7 +23,7 @@ class Service {
   }
 
   static normalizeList (list, normalizer) {
-    return list.map(item => normalizer(item))
+    return [...(list || [])].map(item => normalizer(item))
   }
 
   static normalizeListWithPagination ({ count, list, page, pagingIndex, pagingSize, requestDate }, normalizer) {
@@ -57,27 +57,27 @@ class Service {
     return requestConfig
   }
 
-  getErrorMessage (error) {
-    const { status } = error.response
+  getErrorMessage (response) {
+    const { status } = response
 
     const messages = {}
 
-    return messages[status] || 'Has unhandled error!'
+    return messages[status] || 'Unhandled Error!'
   }
 
-  debug (error, message) {
+  debug (reason) {
     const { url } = this.config
-    const { response } = error
-    const { status } = response
+    const { status, message } = reason
 
-    console.warn(`${url} \n - status: ${status} \n - message: ${message}`, response)
+    console.warn(`${url} \n - status: ${status} \n - message: ${message}`, reason)
   }
 
   handleParameter (parameter) {
-    const casedParameter = toCaseKeys(parameter, Service.option.toRequestCase)
-    const denormalizedParameter = this.denormalizer(casedParameter)
+    const denormalizedParameter = this.denormalizer(parameter)
+    const casedParameter = toCaseKeys(denormalizedParameter, Service.option.toRequestCase)
+
     const predicator = value => omitBy(value, isUndefined)
-    const predicatedParameter = toPredicateValues(denormalizedParameter, predicator)
+    const predicatedParameter = toPredicateValues(casedParameter, predicator)
 
     return predicatedParameter
   }
@@ -90,10 +90,16 @@ class Service {
   }
 
   handleFailure (error) {
-    const message = this.getErrorMessage(error)
-    const reason = Object.assign(error.response, { message })
+    let reason = null
 
-    this.debug(error, message)
+    if (isUndefined(error.response)) {
+      const message = this.getErrorMessage(error.response)
+      reason = Object.assign(error.response, { message })
+
+      this.debug(reason)
+    } else {
+      reason = error
+    }
 
     return Promise.reject(reason)
   }

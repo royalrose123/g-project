@@ -1,7 +1,13 @@
 class Denormalizer {
-  static FetchMemberDetail ({ id }) {
+  static FetchMemberDetailById ({ id }) {
     return {
       cid: Number(id),
+    }
+  }
+
+  static FetchMemberDetailByMemberCard ({ memberCard }) {
+    return {
+      cda: memberCard,
     }
   }
 }

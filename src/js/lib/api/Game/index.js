@@ -3,12 +3,13 @@ import Denormalizer from './denormalizer'
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ snapshot }) {
+  static anonymousClockIn ({ tempId, name, snapshot }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
         method: 'POST',
         data: {
+          tempId,
           name,
           snapshot,
         },
@@ -38,17 +39,17 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInByCardNumber ({ cardNumber }) {
+  static memberClockInByMemberCard ({ memberCard }) {
     const service = new Service(
       {
         url: '/clock-in/member',
         method: 'POST',
         data: {
-          cardNumber,
+          memberCard,
         },
       },
       {
-        denormalizer: Denormalizer.MemberClockInByCardNumber,
+        denormalizer: Denormalizer.MemberClockInByMemberCard,
       }
     )
 

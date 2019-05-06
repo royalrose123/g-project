@@ -14,7 +14,6 @@ import Button from '../../../../../../components/Button'
 import Icon from '../../../../../../components/Icon'
 
 // Lib MISC
-import GameApi from '../../../../../../lib/api/Game'
 import MemberApi from '../../../../../../lib/api/Member'
 import useFetcher from '../../../../../../lib/effects/useFetcher'
 import findStaticPath from '../../../../../../lib/utils/find-static-path'
@@ -33,10 +32,11 @@ const TABS = {
 export const propTypes = {
   history: PropTypes.object,
   match: PropTypes.object,
+  onClockOut: PropTypes.func,
 }
 
 function MemberDetail (props) {
-  const { history, match } = props
+  const { history, match, onClockOut } = props
   const { path, params } = match
   const { memberId: id } = params
 
@@ -54,13 +54,12 @@ function MemberDetail (props) {
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('propPlay')
 
-  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetail, { id })
+  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
-  const onSubmit = (values, actions) => GameApi.clockOut({ id, ...values }).then(() => history.push(findStaticPath(path)))
 
   return isLoaded ? (
-    <Formik initialValues={initialValues} isInitialValid onSubmit={onSubmit}>
+    <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut}>
       {({ values, setFieldValue }) => (
         <FormikForm>
           <Layout className={cx('home-table-member-detail')}>

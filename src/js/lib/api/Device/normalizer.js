@@ -1,16 +1,18 @@
+import { BigNumber } from 'bignumber.js'
+
+import CARD_TYPE from '../../../constants/CardType'
 import Service from '../service'
 
 class Normalizer {
-  static ProbableItem ({ image, similarity, peopleId, peopleName }) {
+  static ProbableItem ({ image, similarity, idcard, peopleId, peopleName, ctc }) {
     return {
       image,
-      // TODO: 暫時先用假的圖片
-      // image: 'https://fakeimg.pl/280x360',
-      similarity,
-      id: peopleId,
+      // 來的時候是小數點，需要乘以一百，再無條件捨去
+      similarity: Number(new BigNumber(similarity).multipliedBy(100).integerValue(BigNumber.ROUND_FLOOR)),
+      id: idcard || 'Anonymous',
+      tempId: peopleId,
       name: peopleName,
-      // TODO: 暫時先用假的等級
-      level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
+      level: CARD_TYPE[ctc] || CARD_TYPE.TEMP,
     }
   }
 
@@ -22,8 +24,6 @@ class Normalizer {
     return {
       type,
       snapshot: faceImage,
-      // TODO: 暫時先用假的圖片
-      // snapshot: 'https://fakeimg.pl/280x360',
       background,
       rect,
       probableList: Normalizer.ProbableList(result),

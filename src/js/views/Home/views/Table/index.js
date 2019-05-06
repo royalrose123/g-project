@@ -13,6 +13,7 @@ import MemberDetail from './views/MemberDetail'
 
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
+import findStaticPath from '../../../../lib/utils/find-static-path'
 
 // Style
 import styles from './style.module.scss'
@@ -35,7 +36,7 @@ export const propTypes = {
 
 function Table (props) {
   const { match, history } = props
-  const { params } = match
+  const { path, params } = match
   const { memberId } = params
 
   const isDetailVisible = typeof memberId === 'string'
@@ -69,6 +70,9 @@ function Table (props) {
 
   // Seat, Standing
   const onPlaceClick = (event, { index, place, isStanding }) => {
+    setIsSelectedPlaceStanding(isStanding)
+    setSelectedPlaceIndex(index)
+
     // 如果位置已經有人，打開 detail
     if (typeof place === 'object') {
       history.push(`${match.url}/${place.id}`)
@@ -79,9 +83,6 @@ function Table (props) {
     if (isSelectedPlaceStanding === isStanding && selectedPlaceIndex === index) {
       initializeIsSelectedPlaceStanding()
       initializeSelectedPlaceIndex()
-    } else {
-      setIsSelectedPlaceStanding(isStanding)
-      setSelectedPlaceIndex(index)
     }
   }
 
@@ -95,19 +96,20 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = async (event, person) => {
-    const { id, image, identify } = person
+    const { id, tempId, name, memberCard, image, identify } = person
+    console.log('person :', person)
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
-      await GameApi.anonymousClockIn({ snapshot: image })
+      await GameApi.anonymousClockIn({ tempId, name, snapshot: image })
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
-      // 若是 anonymous with member card
-      // 即為會員，使用荷官輸入的 card number
-      await GameApi.memberClockInByCardNumber({ cardNumber: id })
+      // 若是 member card
+      // 即為會員，使用荷官輸入的 member card
+      await GameApi.memberClockInByMemberCard({ memberCard })
     } else {
-      // 若不是 anonymous 或者 anonymous with member card
-      // 即為荷官辨識出該會員，使用資料庫中原有的 id
+      // 若不是 anonymous 或者 member card
+      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       await GameApi.memberClockInById({ id })
     }
 
@@ -123,8 +125,26 @@ function Table (props) {
     initializeSelectedPlaceIndex()
   }
 
+  // MemberDetail
+  const onClockOut = async (values, actions) => {
+    console.log('standingList :', standingList)
+    console.log('seatList :', seatList)
+    console.log('isSelectedPlaceStanding :', isSelectedPlaceStanding)
+    console.log('selectedPlaceIndex :', selectedPlaceIndex)
+    await GameApi.clockOut({ id: memberId, ...values })
+
+    // 根據是否站立，設定位置列表的內容
+    if (isSelectedPlaceStanding) {
+      setStandingList(standingList.map((standingItem, index) => (index === selectedPlaceIndex ? undefined : standingItem)))
+    } else {
+      setSeatList(seatList.map((seatItem, index) => (index === selectedPlaceIndex ? undefined : seatItem)))
+    }
+
+    await history.push(findStaticPath(path))
+  }
+
   return isDetailVisible ? (
-    <MemberDetail {...props} />
+    <MemberDetail onClockOut={onClockOut} {...props} />
   ) : (
     <div className={cx('home-table')}>
       <div className={cx('home-table__row')}>

@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
+import { BigNumber } from 'bignumber.js'
 
 // Components
 import Person from '../Person'
@@ -9,6 +10,7 @@ import Modal from '../../../../../../components/Modal'
 import Svg from '../../../../../../components/Svg'
 
 // Lib MISC
+import MemberApi from '../../../../../../lib/api/Member'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import useDeepCompareEffect from '../../../../../../lib/effects/useDeepCompareEffect'
 
@@ -22,6 +24,7 @@ const MODE = {
   CLOCK_IN: 'CLOCK_IN',
   SWIPE_MEMBER_CARD: 'SWIPE_MEMBER_CARD',
 }
+const MEMBER_MATCH_PERCENT = 80
 
 export const propTypes = {
   detectionItem: PropTypes.shape({
@@ -48,49 +51,6 @@ function ClockInModal (props) {
   const [isLoading, setIsLoading] = useState(false)
   const [isMemberCardDetected, setIsMemberCardDetected] = useState(false)
   const [member, setMember] = useState(null)
-  const memberCardDetectedMember = {
-    type: 'member',
-    snapshot: 'base64',
-    background: 'base64',
-    rect: [3, 5, 7, 9],
-    probableList: [
-      {
-        image: 'https://fakeimg.pl/280x360',
-        similarity: 99.999,
-        id: '987685649864',
-        name: 'someoneA',
-        level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
-      },
-      {
-        image: 'https://fakeimg.pl/280x360',
-        similarity: 49.999,
-        id: '987685649862',
-        name: 'someoneB',
-        level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
-      },
-      {
-        image: 'https://fakeimg.pl/280x360',
-        similarity: 19.999,
-        id: '987685649860',
-        name: 'someoneC',
-        level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
-      },
-      {
-        image: 'https://fakeimg.pl/280x360',
-        similarity: 19.999,
-        id: '987685649860',
-        name: 'someoneD',
-        level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
-      },
-      {
-        image: 'https://fakeimg.pl/280x360',
-        similarity: 19.999,
-        id: '987685649860',
-        name: 'someoneE',
-        level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * Math.floor(3))],
-      },
-    ],
-  }
   // === TEMP ===
 
   const [mode, setMode] = useState(MODE.CLOCK_IN)
@@ -136,7 +96,7 @@ function ClockInModal (props) {
             mode='compare'
             title='id'
             person={person}
-            renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{Math.floor(person.similarity)}</div>}
+            renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{person.similarity}</div>}
           />
         )
         break
@@ -153,18 +113,20 @@ function ClockInModal (props) {
             <div className={cx('home-table-clock-in-modal__probable-list-wrapper')}>
               <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probale Matches</h4>
               <div className={cx('home-table-clock-in-modal__probable-list')}>
-                {detectionItem.probableList.map((probableItem, index) => (
-                  <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
-                    <Person
-                      type={PERSON_TYPE.MEMBER}
-                      title='id'
-                      person={probableItem}
-                      isSelected={selectedPerson && selectedPerson.identify === probableItem.id}
-                      onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id })}
-                      renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{Math.floor(probableItem.similarity)}</div>}
-                    />
-                  </div>
-                ))}
+                {detectionItem.probableList
+                  .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
+                  .map((probableItem, index) => (
+                    <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
+                      <Person
+                        type={PERSON_TYPE.MEMBER}
+                        title='id'
+                        person={probableItem}
+                        isSelected={selectedPerson && selectedPerson.identify === probableItem.id}
+                        onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id })}
+                        renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{probableItem.similarity}</div>}
+                      />
+                    </div>
+                  ))}
               </div>
             </div>
           </div>
@@ -194,15 +156,17 @@ function ClockInModal (props) {
             membercardInputRef.current.value = '9586100080000152=21041016385533' // 8000015
           }, 1000)
 
-          setTimeout(() => {
-            setIsLoading(true)
-          }, 2000)
+          setTimeout(async () => {
+            const memberCard = membercardInputRef.current.value
 
-          setTimeout(() => {
+            setIsLoading(true)
+
+            const memberCardDetectedMember = await MemberApi.fetchMemberDetailByMemberCard({ memberCard })
+
             setIsLoading(false)
-            setMember({ ...memberCardDetectedMember, identify: PERSON_TYPE.MEMBER_CARD })
+            setMember({ ...memberCardDetectedMember, memberCard, identify: PERSON_TYPE.MEMBER_CARD })
             setIsMemberCardDetected(true)
-          }, 3000)
+          }, 2000)
 
           // === TEMP ===
         }}
@@ -248,12 +212,10 @@ function ClockInModal (props) {
   )
 
   const renderSwipeMemberCardDetectedBody = () => {
-    const memberCardPerson = getPersonByType(member.type, member)
-
     return (
       <Modal.Body>
         <div className={cx('home-table-clock-in-modal__member-card-wrapper')}>
-          <Person type={member.type} person={memberCardPerson} />
+          <Person type={PERSON_TYPE.MEMBER} person={{ ...member, compareImage: person.image }} />
         </div>
       </Modal.Body>
     )
@@ -326,10 +288,23 @@ function ClockInModal (props) {
 
         return body
       })()}
-      {shouldRenderContent &&
-        (mode === MODE.CLOCK_IN
-          ? renderClockInFooter()
-          : mode === MODE.SWIPE_MEMBER_CARD && !isLoading && isMemberCardDetected && renderSwipeMemberCardDetectedFooter())}
+      {(() => {
+        if (!shouldRenderContent) return null
+
+        let footer = null
+
+        switch (true) {
+          case mode === MODE.CLOCK_IN:
+            footer = renderClockInFooter()
+            break
+
+          case mode === MODE.SWIPE_MEMBER_CARD && !isLoading && isMemberCardDetected:
+            footer = renderSwipeMemberCardDetectedFooter()
+            break
+        }
+
+        return footer
+      })()}
     </Modal>
   )
 }

@@ -2,18 +2,16 @@ import { BigNumber } from 'bignumber.js'
 
 import PERSON_TYPE from '../../constants/PersonType'
 
+const SIMILARITY_MATCH_PERCENT = 90
+
 export default function getPersonByTypeFromDetectionItem (type, detectionItem) {
   const { snapshot, probableList } = detectionItem
 
-  const similarityMatchPercent = 80
   let person = null
+  const { image, ...member } = probableList.sort((a, b) => new BigNumber(b.similarity).comparedTo(a.similarity))[0] || {}
 
   switch (type) {
     case PERSON_TYPE.MEMBER:
-      const { image, ...member } = probableList.sort((probableA, probableB) =>
-        new BigNumber(probableB.similarity).comparedTo(probableA.similarity)
-      )[0]
-
       person = {
         image: snapshot,
         compareImage: image,
@@ -24,7 +22,8 @@ export default function getPersonByTypeFromDetectionItem (type, detectionItem) {
     case PERSON_TYPE.ANONYMOUS:
       person = {
         image: snapshot,
-        isProbablyMember: probableList.some(probableItem => new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(similarityMatchPercent)),
+        isProbablyMember: probableList.some(probableItem => new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(SIMILARITY_MATCH_PERCENT)),
+        ...member,
       }
       break
   }

@@ -1,19 +1,32 @@
+import CARD_TYPE from '../../../constants/CardType'
 import toBase64Src from '../../utils/to-base64-src'
 
 class Normalizer {
-  static MemberDetail ({ cid, gen, pic, cnm, dob, idDocNo }) {
+  static MemberDetail ({ cid, cnm, pic, ctc, pgpDen, gen, dob, idDocNo }) {
     return {
       id: String(cid),
       name: cnm,
       // transform base64 to src
       image: toBase64Src(pic),
-      // TODO: 暫時先用假的等級
-      level: ['green', 'silver', 'gold', 'platinum'][Math.floor(Math.random() * 3)],
-      // TODO: 暫時先用假的遊戲總數
-      playTimes: 80,
+      level: CARD_TYPE[ctc],
+      playTimes: pgpDen,
       gender: gen,
       birthday: dob,
       documentNumber: idDocNo,
+    }
+  }
+
+  static MemberDetailByMemberCard ({ dpiCid, dpiCnm, dpiCtc, dpiCtd, dpiCti, dpiDob, dpiGen, pic }) {
+    return {
+      id: String(dpiCid),
+      name: dpiCnm,
+      // transform base64 to src
+      image: toBase64Src(pic),
+      level: CARD_TYPE[dpiCtc],
+      // dpiCtd,
+      // dpiCti,
+      gender: dpiGen,
+      birthday: dpiDob,
     }
   }
 }

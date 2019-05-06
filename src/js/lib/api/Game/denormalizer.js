@@ -1,8 +1,9 @@
 class Denormalizer {
-  static AnonymousClockIn ({ snapshot }) {
+  static AnonymousClockIn ({ tempId, name, snapshot }) {
     return {
+      tempId,
       // 格式為 [RandomString]
-      cnm: `[${Math.floor(Math.random() * 1000 * 1000 * 1000 * 1000)}]`,
+      cnm: `[${name}-${Math.floor(Math.random() * 1000 * 1000 * 1000 * 1000)}]`,
       pic: snapshot,
     }
   }
@@ -14,9 +15,9 @@ class Denormalizer {
     }
   }
 
-  static MemberClockInByCardNumber ({ cardNumber }) {
+  static MemberClockInByMemberCard ({ memberCard }) {
     return {
-      cda: Number(cardNumber),
+      cda: memberCard,
     }
   }
 
