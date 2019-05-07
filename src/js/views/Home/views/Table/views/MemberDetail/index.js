@@ -184,7 +184,7 @@ function MemberDetail (props) {
 
                       <Form.Row>
                         <Form.Column size='sm'>
-                          <Form.Label>Who Win</Form.Label>
+                          <Form.Label>Overall Winner</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
                           <Field

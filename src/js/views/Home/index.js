@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import PropTypes from 'prop-types'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import Loadable from 'react-loadable'
@@ -12,6 +12,7 @@ import Menu from './components/Menu'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
+import { requestFullScreen, exitFullScreen } from '../../lib/utils/full-screen-operations'
 
 // Style
 import styles from './style.module.scss'
@@ -76,6 +77,7 @@ export const propTypes = {
 
 function Home (props) {
   const { match } = props
+  const [isFullScreen, setIsFullScreen] = useState(false)
 
   return (
     <Layout className={cx('home')}>
@@ -83,7 +85,23 @@ function Home (props) {
         <Clock />
         <Menu>
           {navigations.map(({ path, name, icon, component }, index) => (
-            <Menu.Item key={index}>
+            // TODO: 暫時做成按下 Dealer name 之後會 full screen，再按一次取消 full screen
+            <Menu.Item
+              key={index}
+              onClick={
+                path === 'user'
+                  ? isFullScreen
+                    ? event => {
+                      setIsFullScreen(false)
+                      exitFullScreen()
+                    }
+                    : event => {
+                      setIsFullScreen(true)
+                      requestFullScreen(document.documentElement)
+                    }
+                  : null
+              }
+            >
               <Menu.Link to={`${match.url}/${findStaticPath(path)}`} disabled={component === null}>
                 <Svg className={cx('home__menu-link-icon')} {...icon} />
                 <span className={cx('home__menu-link-text')}>{name}</span>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
+// import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
@@ -103,5 +104,11 @@ function Detection (props) {
 }
 
 Detection.propTypes = propTypes
+
+// const mapStateToProps = (state, props) => {
+//   return {}
+// }
+
+// const mapDispatchToProps = {}
 
 export default Detection
