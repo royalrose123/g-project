@@ -5,6 +5,7 @@
   height: calc((#{var(--standing-place-size)} + #{var(--standing-place-margin)} * 2) * #{var(--standing-row)});
 
   &__place {
+    overflow: hidden;
     position: relative;
     margin: var(--standing-place-margin);
     padding: 5px;

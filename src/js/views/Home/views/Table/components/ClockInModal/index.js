@@ -111,11 +111,11 @@ function ClockInModal (props) {
               onClick={event => setSelectedPerson({ ...person, identify: PERSON_TYPE.ANONYMOUS })}
             />
             <div className={cx('home-table-clock-in-modal__probable-list-wrapper')}>
-              <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probale Matches</h4>
+              <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probable Matches</h4>
               <div className={cx('home-table-clock-in-modal__probable-list')}>
                 {detectionItem.probableList
                   // 濾掉自己
-                  .filter(probableItem => !probableItem.id)
+                  .filter(probableItem => probableItem.id)
                   // 濾出相似度高於 80% 的結果
                   .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
                   .map((probableItem, index) => (

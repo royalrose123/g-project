@@ -114,6 +114,8 @@ function Table (props) {
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
+      // 立刻關掉 modal
+      closeClockInModal()
       await GameApi.memberClockInByMemberCard({ memberCard })
     } else {
       // 若不是 anonymous 或者 member card
@@ -123,9 +125,9 @@ function Table (props) {
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
-      addStandingItem({ id, image }, selectedPlaceIndex)
+      addStandingItem({ id: String(id), image }, selectedPlaceIndex)
     } else {
-      addSeatItem({ id, image }, selectedPlaceIndex)
+      addSeatItem({ id: String(id), image }, selectedPlaceIndex)
     }
 
     closeClockInModal()

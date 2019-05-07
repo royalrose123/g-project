@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
-// import { connect } from 'react-redux'
+import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
@@ -13,6 +13,8 @@ import Button from '../../../../../../components/Button'
 
 // Lib MISC
 import DeviceApi from '../../../../../../lib/api/Device'
+import { selectors as seatedSelectors } from '../../../../../../lib/redux/modules/seated'
+import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 
 // Style
@@ -22,12 +24,14 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
   isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
 }
 
 function Detection (props) {
-  const { isPlaceSelected, onItemActionClick } = props
+  const { seatedList, standingList, isPlaceSelected, onItemActionClick } = props
 
   const [detectionList, setDetectionList] = useState([])
 
@@ -83,20 +87,31 @@ function Detection (props) {
           cellSpacing={slideSpacing}
           speed={800}
         >
-          {detectionList.map((detectionItem, index) => (
-            <div key={index} style={{ padding: `${itemBorder}px ${itemSpacing}px` }}>
-              <Person
-                title='level'
-                type={detectionItem.type}
-                person={getPersonByType(detectionItem.type, detectionItem)}
-                renderFooter={() => (
-                  <Button isBlock disabled={!isPlaceSelected} onClick={event => onItemActionClick(event, detectionItem)}>
-                    Clock-In
-                  </Button>
-                )}
-              />
-            </div>
-          ))}
+          {detectionList.map((detectionItem, index) => {
+            const person = getPersonByType(detectionItem.type, detectionItem)
+
+            if (seatedList.find(seatedItem => seatedItem && seatedItem.id === person.id)) return null
+            if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id)) return null
+
+            return (
+              <div
+                key={index}
+                style={{ padding: `${itemBorder}px ${itemSpacing}px`, outline: 0 }}
+                onClick={event => onItemActionClick(event, detectionItem)}
+              >
+                <Person
+                  title='level'
+                  type={detectionItem.type}
+                  person={person}
+                  renderFooter={() => (
+                    <Button isBlock disabled={!isPlaceSelected} onClick={event => onItemActionClick(event, detectionItem)}>
+                      Clock-In
+                    </Button>
+                  )}
+                />
+              </div>
+            )
+          })}
         </Carousel>
       )}
     </div>
@@ -105,10 +120,16 @@ function Detection (props) {
 
 Detection.propTypes = propTypes
 
-// const mapStateToProps = (state, props) => {
-//   return {}
-// }
+const mapStateToProps = (state, props) => {
+  return {
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
+  }
+}
 
-// const mapDispatchToProps = {}
+const mapDispatchToProps = {}
 
-export default Detection
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Detection)

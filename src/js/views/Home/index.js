@@ -12,7 +12,7 @@ import Menu from './components/Menu'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
-import { requestFullScreen, exitFullScreen } from '../../lib/utils/full-screen-operations'
+import { requestFullscreen, exitFullScreen } from '../../lib/utils/full-screen-operations'
 
 // Style
 import styles from './style.module.scss'
@@ -97,7 +97,7 @@ function Home (props) {
                     }
                     : event => {
                       setIsFullScreen(true)
-                      requestFullScreen(document.documentElement)
+                      requestFullscreen(document.documentElement)
                     }
                   : null
               }

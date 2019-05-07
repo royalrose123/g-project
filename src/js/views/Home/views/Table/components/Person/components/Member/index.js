@@ -31,7 +31,7 @@ export const propTypes = {
 
 function Person (props) {
   const { title, mode, person, renderFooter } = props
-  const { id, level, image, compareImage } = person
+  const { id, level, image, name, compareImage } = person
 
   return (
     <div className={cx('home-table-person-member')} data-mode={mode}>
