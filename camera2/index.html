@@ -13,15 +13,19 @@
   <script type="module">
     import Player from "./src/player.js";
 
+    const ip = "192.168.100.182";
+    const port = "8554";
+
     const options = {
       video: document.getElementById("video"),
       canvas: document.getElementById("canvas"),
 
-      wsUrl: "ws://192.168.100.18:10080/camera_relay?tcpaddr=admin%3Aadmin%40192.168.100.182%3A8554%2Flive",
-      rtspUrl: "rtsp://admin:admin@192.168.100.182:8554/live",
+      wsUrl: `ws://192.168.100.18:10080/camera_relay?tcpaddr=admin%3Aadmin%40${ip}%3A${port}%2Flive`,
+      rtspUrl: `rtsp://admin:admin@${ip}:${port}/live`,
       user: "admin",
       pwd: "youwillsee!"
     };
+
     let player = new Player(options);
     player.init();
     player.on("error", function() {
