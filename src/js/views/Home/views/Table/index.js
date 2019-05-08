@@ -103,8 +103,8 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
   const onClockIn = async (event, person) => {
-    let { id } = person
-    const { tempId, name, memberCard, image, identify } = person
+    let { id, image } = person
+    const { tempId, name, compareImage, memberCard, identify } = person
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
@@ -115,12 +115,16 @@ function Table (props) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
+      // 圖片改用資料庫中的照片
       closeClockInModal()
       await GameApi.memberClockInByMemberCard({ memberCard })
+      image = compareImage
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
+      // 圖片改用資料庫中的照片
       await GameApi.memberClockInById({ id })
+      image = compareImage
     }
 
     // 根據是否站立，設定位置列表的內容

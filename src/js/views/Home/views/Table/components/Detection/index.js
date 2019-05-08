@@ -97,7 +97,7 @@ function Detection (props) {
               <div
                 key={index}
                 style={{ padding: `${itemBorder}px ${itemSpacing}px`, outline: 0 }}
-                onClick={event => onItemActionClick(event, detectionItem)}
+                onClick={isPlaceSelected ? event => onItemActionClick(event, detectionItem) : null}
               >
                 <Person
                   title='level'
