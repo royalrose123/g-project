@@ -118,7 +118,6 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       closeClockInModal()
       await GameApi.memberClockInByMemberCard({ memberCard })
-      image = compareImage
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card

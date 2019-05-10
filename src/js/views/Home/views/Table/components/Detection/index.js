@@ -5,7 +5,7 @@ import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
-import { flatMap, delay } from 'rxjs/operators'
+import { flatMap } from 'rxjs/operators'
 
 // Components
 import Person from '../Person'
@@ -35,35 +35,17 @@ function Detection (props) {
 
   const [detectionList, setDetectionList] = useState([])
 
-  // init
-  useEffect(() => {
-    const fetchData = async () => {
-      const response = await DeviceApi.fetchDetectionList()
-      setDetectionList(response)
-    }
-
-    fetchData()
-  }, [])
-
   // polling
   useEffect(() => {
-    const timerSecond = 10
-    const delaySecond = 5
+    const timerSecond = 2
 
-    const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(
-      delay(1000 * delaySecond),
-      flatMap(index => from(DeviceApi.fetchDetectionList()))
-    )
-    const fetchDataSubscription = fetchDataObservable.subscribe(response => setDetectionList(response))
-
-    const sortDataObservable = fetchDataObservable.pipe(delay(1000 * delaySecond))
-    const sortDataSubscription = sortDataObservable.subscribe(response =>
+    const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(flatMap(index => from(DeviceApi.fetchDetectionList())))
+    const fetchDataSubscription = fetchDataObservable.subscribe(response =>
       setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
     )
 
     return () => {
       fetchDataSubscription.unsubscribe()
-      sortDataSubscription.unsubscribe()
     }
   }, [])
 

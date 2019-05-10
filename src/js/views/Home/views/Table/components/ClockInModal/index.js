@@ -218,7 +218,7 @@ function ClockInModal (props) {
     return (
       <Modal.Body>
         <div className={cx('home-table-clock-in-modal__member-card-wrapper')}>
-          <Person type={PERSON_TYPE.MEMBER} person={{ ...member, compareImage: person.image }} />
+          <Person type={PERSON_TYPE.MEMBER} person={member} />
         </div>
       </Modal.Body>
     )
