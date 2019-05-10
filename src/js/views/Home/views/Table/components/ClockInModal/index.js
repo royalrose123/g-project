@@ -156,7 +156,7 @@ function ClockInModal (props) {
           // TODO: 暫時做成一秒後自動帶入密碼，兩秒後自動顯示 Loading 畫面，三秒後顯示偵測到使用者的畫面
           // === TEMP ===
           setTimeout(() => {
-            membercardInputRef.current.value = '9586100080004188=21041016900248'
+            membercardInputRef.current.value = '9586100080004188=21041018939996'
           }, 1000)
 
           setTimeout(async () => {
