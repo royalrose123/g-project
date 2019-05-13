@@ -125,7 +125,7 @@ function ClockInModal (props) {
                         title='id'
                         person={probableItem}
                         isSelected={selectedPerson && selectedPerson.identify === probableItem.id}
-                        onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id })}
+                        onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id, compareImage: probableItem.image })}
                         renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{probableItem.similarity}</div>}
                       />
                     </div>

@@ -22,7 +22,6 @@ export default function getPersonByTypeFromDetectionItem (type, detectionItem) {
     case PERSON_TYPE.ANONYMOUS:
       person = {
         image: snapshot,
-        compareImage: image,
         isProbablyMember: probableList.some(
           probableItem => probableItem.id && new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(SIMILARITY_MATCH_PERCENT)
         ),

@@ -22,6 +22,7 @@ import findStaticPath from '../../../../../../lib/utils/find-static-path'
 import styles from './style.module.scss'
 
 // Variables / Functions
+import CARD_TYPE from '../../../../../../constants/CardType'
 import PERSON_TYPE from '../../../../../../constants/PersonType'
 const cx = classnames.bind(styles)
 const TABS = {
@@ -52,7 +53,7 @@ function MemberDetail (props) {
   const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
-  const [lastFocusField, setLastFocusField] = useState('propPlay')
+  const [lastFocusField, setLastFocusField] = useState('actualWin')
 
   const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
 
@@ -67,7 +68,9 @@ function MemberDetail (props) {
               onPress={key => {
                 if (key === keys.ENTER) {
                   const nextFieldIndex = inputableKeys.indexOf(lastFocusField) + 1
-                  const nextIndex = nextFieldIndex > inputableKeys.length - 1 ? 0 : nextFieldIndex
+                  let nextIndex = nextFieldIndex > inputableKeys.length - 1 ? 0 : nextFieldIndex
+                  const nextField = inputableKeys[nextIndex]
+                  nextIndex = nextIndex + (detail.level !== CARD_TYPE.VIP && nextField === 'propPlay' ? 1 : 0)
 
                   setLastFocusField(inputableKeys[nextIndex])
                   return
@@ -91,7 +94,7 @@ function MemberDetail (props) {
                 <Icon className={cx('home-table-member-detail__icon')} name='cross' mode='01' onClick={event => history.push(findStaticPath(path))} />
                 <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
               </div>
-              <Button type='submit' disabled={!values.actualWin}>
+              <Button type='submit' disabled={detail.level === CARD_TYPE.VIP ? !values.actualWin && !values.propPlay : !values.actualWin}>
                 Clock-Out
               </Button>
             </Layout.Header>
@@ -150,14 +153,19 @@ function MemberDetail (props) {
 
                       <Form.Row>
                         <Form.Column size='sm'>
-                          <Form.Label>Prop Play</Form.Label>
+                          <Form.Label>{detail.level === CARD_TYPE.VIP && '* '}Prop Play</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
                           <Form.Row style={{ margin: 0 }}>
                             <Field
                               name='propPlay'
                               render={({ field }) => (
-                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                <Form.Input
+                                  isFocused={lastFocusField === field.name}
+                                  onFocus={event => setLastFocusField(field.name)}
+                                  disabled={detail.level !== CARD_TYPE.VIP}
+                                  {...field}
+                                />
                               )}
                             />
                             <div className={cx('home-table-member-detail__all-games')}>/ {detail.playTimes}</div>

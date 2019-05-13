@@ -11,4 +11,8 @@
     border-width: 5px;
     border-color: $color-primary;
   }
+
+  &[disabled] {
+    background-color: rgba($gray-light, 0.5);
+  }
 }

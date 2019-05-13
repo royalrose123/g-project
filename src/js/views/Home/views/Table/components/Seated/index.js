@@ -46,7 +46,7 @@ function Seated (props) {
           )}
         </button>
       ))}
-      <div className={cx('home-table-seated__desk')}>{isLoaded && cameraList[0].id}</div>
+      <div className={cx('home-table-seated__desk')}>{isLoaded && cameraList[0].id.slice(0, -2)}</div>
     </div>
   )
 }
