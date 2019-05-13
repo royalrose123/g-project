@@ -5,6 +5,8 @@ import classnames from 'classnames/bind'
 // Components
 
 // Lib MISC
+import DeviceApi from '../../../../../../lib/api/Device'
+import useFetcher from '../../../../../../lib/effects/useFetcher'
 
 // Style
 import styles from './style.module.scss'
@@ -25,6 +27,8 @@ export const propTypes = {
 function Seated (props) {
   const { seatedList, selectedIndex, onPlaceSelect } = props
 
+  const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
+
   return (
     <div className={cx('home-table-seated')}>
       {seatedList.map((seatedItem, index) => (
@@ -42,7 +46,7 @@ function Seated (props) {
           )}
         </button>
       ))}
-      <div className={cx('home-table-seated__desk')} />
+      <div className={cx('home-table-seated__desk')}>{isLoaded && cameraList[0].id}</div>
     </div>
   )
 }

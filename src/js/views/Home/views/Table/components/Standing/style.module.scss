@@ -12,7 +12,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid rgba($gray-white, 0.5);
+    border: 2px solid rgba($gray-white, 0.5);
     @include size(var(--standing-place-size));
 
     &[data-is-selected="true"] {
@@ -27,5 +27,6 @@
 
   &__place-empty {
     color: rgba($gray-white, 0.5);
+    transform: scale(1.4);
   }
 }

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
 // Components
+import Account from './Account'
 import Item from './Item'
 import Link from './Link'
 
@@ -24,6 +25,7 @@ function Menu (props) {
 
 Menu.propTypes = propTypes
 
+Menu.Account = Account
 Menu.Item = Item
 Menu.Link = Link
 

@@ -3,7 +3,8 @@ import * as actionTypes from './actionTypes'
 
 import { ROW, COLUMN } from './constants'
 
-const initialState = new Array(ROW * COLUMN).fill()
+// 只要 14 個人，去掉最前面
+const initialState = new Array(ROW * COLUMN).fill().slice(1)
 
 const standing = createReducer(initialState, {
   [actionTypes.ADD_ITEM_TO_LIST]: (state, { payload }) => state.map((item, index) => (index === payload.index ? payload.item : item)),
