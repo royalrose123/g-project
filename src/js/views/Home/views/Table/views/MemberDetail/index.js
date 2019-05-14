@@ -94,7 +94,7 @@ function MemberDetail (props) {
                 <Icon className={cx('home-table-member-detail__icon')} name='cross' mode='01' onClick={event => history.push(findStaticPath(path))} />
                 <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
               </div>
-              <Button type='submit' disabled={detail.level === CARD_TYPE.VIP ? !values.actualWin && !values.propPlay : !values.actualWin}>
+              <Button type='submit' disabled={detail.level === CARD_TYPE.VIP ? !(values.actualWin && values.propPlay) : !values.actualWin}>
                 Clock-Out
               </Button>
             </Layout.Header>
