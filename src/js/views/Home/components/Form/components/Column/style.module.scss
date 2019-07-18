@@ -1,17 +1,19 @@
 .home-form-column {
+  position: relative;
   flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
+  justify-content: space-between;
 
   &[data-size="sm"] {
     width: 270px;
   }
 
   &[data-size="md"] {
-    width: 300px;
+    width: 310px;
   }
 
   &[data-size="lg"] {
-    width: 450px;
+    width: 400px;
   }
 }

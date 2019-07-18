@@ -6,7 +6,9 @@ import classnames from 'classnames/bind'
 import Column from './components/Column'
 import Display from './components/Display'
 import Group from './components/Group'
+import GroupName from './components/GroupName'
 import Input from './components/Input'
+import InputText from './components/InputText'
 import Label from './components/Label'
 import Radio from './components/Radio'
 import Row from './components/Row'
@@ -35,7 +37,9 @@ Form.propTypes = propTypes
 Form.Column = Column
 Form.Display = Display
 Form.Group = Group
+Form.GroupName = GroupName
 Form.Input = Input
+Form.InputText = InputText
 Form.Label = Label
 Form.Radio = Radio
 Form.Row = Row

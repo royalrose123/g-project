@@ -12,7 +12,22 @@
     border-color: $color-primary;
   }
 
+  &[data-is-short="true"] {
+    width: 200px;
+  }
+
+  &--error {
+    position: absolute;
+    top: 62px;
+    left: 0;
+    font-size: 26px;
+    color: #e52d2d;
+    margin-top: 5px;
+  }
+
   &[disabled] {
-    background-color: rgba($gray-light, 0.5);
+    color: #999;
+    background-color: #ccc;
+    border: 1px solid transparent;
   }
 }

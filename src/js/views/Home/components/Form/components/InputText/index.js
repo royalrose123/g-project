@@ -14,15 +14,14 @@ const cx = classnames.bind(styles)
 
 export const propTypes = {
   className: PropTypes.string,
-  align: PropTypes.string,
 }
 
-function Row (props) {
-  const { className, align, ...restProps } = props
+function InputText (props) {
+  const { className, ...restProps } = props
 
-  return <div className={cx('home-form-row', className)} data-align={align} {...restProps} />
+  return <span type='text' className={cx('home-form-input-text', className)} {...restProps} />
 }
 
-Row.propTypes = propTypes
+InputText.propTypes = propTypes
 
-export default Row
+export default InputText

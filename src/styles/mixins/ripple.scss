@@ -1,0 +1,24 @@
+@mixin ripple($pseudo: "after", $opacity-start: 0.75, $scale-end: 1.75) {
+  @keyframes ripple {
+    0% {
+      opacity: $opacity-start;
+      transform: scale(0);
+    }
+    100% {
+      opacity: 0;
+      transform: scale($scale-end);
+    }
+  }
+
+  &:#{$pseudo} {
+    content: "";
+    z-index: -1;
+    background-color: inherit;
+    border-radius: inherit;
+    animation-name: ripple;
+    animation-duration: inherit;
+    animation-timing-function: $transition-mode;
+
+    @include full-fill;
+  }
+}

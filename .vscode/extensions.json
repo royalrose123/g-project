@@ -3,8 +3,6 @@
   // for the documentation about the extensions.json format
   "recommendations": [
     // ENVIRONMENT
-    // icons
-    "robertohuertasm.vscode-icons",
     // debugger
     "msjsdiag.debugger-for-chrome",
 

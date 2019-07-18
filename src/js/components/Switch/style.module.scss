@@ -1,0 +1,70 @@
+$switch-width: 56px;
+$switch-height: 28px;
+$switch-border-width: 1px;
+$switch-toggler-size: $switch-height;
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: $switch-width;
+  height: $switch-height;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 50% / 100%;
+  transition: background-color 200ms $transition-mode;
+  animation-duration: 600ms;
+
+  &:before {
+    content: "";
+    position: absolute;
+    top: -$switch-border-width;
+    display: inline-block;
+    border-radius: $switch-toggler-size;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba($gray-dark, 0.5);
+    transition: all 200ms $transition-mode;
+    @include size($switch-toggler-size);
+  }
+
+  &:active:before {
+    width: $switch-toggler-size * 1.25;
+  }
+
+  &[data-is-checked="true"] {
+    justify-content: flex-start;
+    border-color: $color-primary;
+    background-color: $color-primary;
+    @include ripple("after", 1, 1.5);
+
+    &:before {
+      left: calc(100% + #{$switch-border-width});
+      transform: translateX(-100%);
+      border: inherit;
+    }
+  }
+
+  &[data-is-checked="false"] {
+    justify-content: flex-end;
+    border-color: $gray-light;
+
+    &:before {
+      left: -$switch-border-width;
+      transform: translateX(0%);
+      border: inherit;
+    }
+  }
+
+  &__inner {
+    padding: 0 4px;
+  }
+}
+
+.switch-group {
+  display: inline-flex;
+  align-items: center;
+  flex-grow: 2;
+
+  &__label {
+    margin-right: 12px;
+  }
+}

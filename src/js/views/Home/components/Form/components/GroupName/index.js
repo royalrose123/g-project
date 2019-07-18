@@ -14,15 +14,14 @@ const cx = classnames.bind(styles)
 
 export const propTypes = {
   className: PropTypes.string,
-  align: PropTypes.string,
 }
 
-function Row (props) {
-  const { className, align, ...restProps } = props
+function GroupName (props) {
+  const { className, ...restProps } = props
 
-  return <div className={cx('home-form-row', className)} data-align={align} {...restProps} />
+  return <h3 className={cx('home-form-group-name', className)} {...restProps} />
 }
 
-Row.propTypes = propTypes
+GroupName.propTypes = propTypes
 
-export default Row
+export default GroupName

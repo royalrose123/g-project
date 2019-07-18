@@ -4,4 +4,8 @@
   color: $color-primary;
   line-height: 1;
   font-size: $font-size-lg;
+
+  &[data-text-align="right"] {
+    text-align: right;
+  }
 }
