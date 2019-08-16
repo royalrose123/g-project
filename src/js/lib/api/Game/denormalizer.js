@@ -1,17 +1,19 @@
 class Denormalizer {
-  static AnonymousClockIn ({ tempId, name, snapshot }) {
+  static AnonymousClockIn ({ tempId, name, snapshot, tableNumber }) {
     return {
       tempId,
       // 格式為 [RandomString]
       cnm: `[${name}-${Math.floor(Math.random() * 1000 * 1000 * 1000 * 1000)}]`,
       pic: snapshot,
+      tableName: tableNumber,
     }
   }
 
-  static MemberClockInById ({ id }) {
+  static MemberClockInById ({ id, tableNumber }) {
     return {
       // 跟後端協調後，收到時為 string，送出時轉成 number
       cid: Number(id),
+      tableName: tableNumber,
     }
   }
 

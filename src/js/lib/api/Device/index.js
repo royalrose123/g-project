@@ -4,13 +4,13 @@ import Normalizer from './normalizer'
 import Service from '../service'
 
 class Device {
-  static fetchDetectionList ({ table } = {}) {
+  static fetchDetectionList ({ tableNumber } = {}) {
     const service = new Service(
       {
         url: '/people-detection',
         method: 'GET',
         params: {
-          table,
+          tableNumber,
         },
       },
       {
@@ -22,13 +22,13 @@ class Device {
     return service.callApi()
   }
 
-  static fetchCameraList ({ table } = {}) {
+  static fetchCameraList ({ tableNumber } = {}) {
     const service = new Service(
       {
         url: '/camera',
         method: 'GET',
         params: {
-          table,
+          tableNumber,
         },
       },
       {

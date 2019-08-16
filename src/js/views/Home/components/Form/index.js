@@ -11,6 +11,7 @@ import Input from './components/Input'
 import InputText from './components/InputText'
 import Label from './components/Label'
 import Radio from './components/Radio'
+import Checkbox from './components/Checkbox'
 import Row from './components/Row'
 import Select from './components/Select'
 
@@ -42,6 +43,7 @@ Form.Input = Input
 Form.InputText = InputText
 Form.Label = Label
 Form.Radio = Radio
+Form.Checkbox = Checkbox
 Form.Row = Row
 Form.Select = Select
 

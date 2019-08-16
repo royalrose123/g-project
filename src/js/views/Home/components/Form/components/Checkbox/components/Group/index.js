@@ -2,10 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
-// Components
-
-// Lib MISC
-
 // Style
 import styles from './style.module.scss'
 
@@ -16,11 +12,12 @@ export const propTypes = {
   className: PropTypes.string,
 }
 
-function Select (props) {
+function Group (props) {
   const { className, ...restProps } = props
-  return <select className={cx('home-form-select', className)} {...restProps} />
+
+  return <div className={cx('home-form-checkbox-group', className)} {...restProps} />
 }
 
-Select.propTypes = propTypes
+Group.propTypes = propTypes
 
-export default Select
+export default Group

@@ -1,0 +1,15 @@
+$radiobox-size: 28px;
+$checkbox-size: 14px;
+
+.home-form-checkbox {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+
+  &__inner {
+    position: relative;
+    display: inline-block;
+    outline: none;
+  }
+}

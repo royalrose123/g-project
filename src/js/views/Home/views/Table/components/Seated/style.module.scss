@@ -86,5 +86,9 @@ $desk-height: 220px;
     align-items: center;
     justify-content: center;
     font-size: $font-size-lg;
+
+    &__number {
+      letter-spacing: 2px;
+    }
   }
 }

@@ -5,8 +5,8 @@ import classnames from 'classnames/bind'
 // Components
 
 // Lib MISC
-import DeviceApi from '../../../../../../lib/api/Device'
-import useFetcher from '../../../../../../lib/effects/useFetcher'
+// import DeviceApi from '../../../../../../lib/api/Device'
+// import useFetcher from '../../../../../../lib/effects/useFetcher'
 
 // Style
 import styles from './style.module.scss'
@@ -22,13 +22,13 @@ export const propTypes = {
   ).isRequired,
   selectedIndex: PropTypes.number,
   onPlaceSelect: PropTypes.func,
+  tableNumber: PropTypes.string,
 }
 
 function Seated (props) {
-  const { seatedList, selectedIndex, onPlaceSelect } = props
-
-  const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
-
+  const { seatedList, selectedIndex, onPlaceSelect, tableNumber } = props
+  // const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
+  // console.log(isLoaded, cameraList)
   return (
     <div className={cx('home-table-seated')}>
       {seatedList.map((seatedItem, index) => (
@@ -46,7 +46,11 @@ function Seated (props) {
           )}
         </button>
       ))}
-      <div className={cx('home-table-seated__desk')}>{isLoaded && cameraList[0].id.slice(0, -2)}</div>
+      <div className={cx('home-table-seated__desk')}>
+        {/* {isLoaded && cameraList[0].id.slice(0, -2)} */}
+        {tableNumber}
+        <p className={cx('home-table-seated__desk__number')} />
+      </div>
     </div>
   )
 }

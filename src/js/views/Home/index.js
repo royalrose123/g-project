@@ -1,5 +1,6 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import { connect } from 'react-redux'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import Loadable from 'react-loadable'
 import classnames from 'classnames/bind'
@@ -9,6 +10,9 @@ import Svg from '../../components/Svg'
 import Clock from './components/Clock'
 import Layout from './components/Layout'
 import Menu from './components/Menu'
+
+// Modules
+import { operations as tableOperations } from '../../lib/redux/modules/table'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
@@ -62,11 +66,13 @@ const defaultNavigation = navigations[0]
 
 export const propTypes = {
   match: PropTypes.object,
+  initTableNumber: PropTypes.func,
 }
 
 function Home (props) {
-  const { match } = props
-
+  const { match, initTableNumber } = props
+  let localStorageTableNumber = localStorage.getItem('tableNumber')
+  if (localStorageTableNumber) initTableNumber(localStorageTableNumber)
   return (
     <Layout className={cx('home')}>
       <Layout.Header>
@@ -107,4 +113,18 @@ function Home (props) {
 
 Home.propTypes = propTypes
 
-export default Home
+const mapStateToProps = (state, props) => {
+  return {
+    // tableNumber: tableSelectors.getTableNumber(state, props), //
+  }
+}
+
+const mapDispatchToProps = {
+  initTableNumber: tableOperations.initTableNumber,
+  // changeTableNumber: tableOperations.changeTableNumber,
+}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(Home)

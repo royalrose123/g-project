@@ -2,10 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
-// Components
-
-// Lib MISC
-
 // Style
 import styles from './style.module.scss'
 
@@ -13,14 +9,16 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  checked: PropTypes.bool,
   className: PropTypes.string,
 }
 
-function Select (props) {
-  const { className, ...restProps } = props
-  return <select className={cx('home-form-select', className)} {...restProps} />
+function Icon (props) {
+  const { checked, className, ...restProps } = props
+
+  return <span className={cx('home-form-checkbox-icon', className)} data-is-checked={checked} {...restProps} />
 }
 
-Select.propTypes = propTypes
+Icon.propTypes = propTypes
 
-export default Select
+export default Icon

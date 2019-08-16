@@ -2,10 +2,6 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 
-// Components
-
-// Lib MISC
-
 // Style
 import styles from './style.module.scss'
 
@@ -16,11 +12,11 @@ export const propTypes = {
   className: PropTypes.string,
 }
 
-function Select (props) {
+function Label (props) {
   const { className, ...restProps } = props
-  return <select className={cx('home-form-select', className)} {...restProps} />
+  return <span className={cx('home-form-checkbox-label', className)} {...restProps} />
 }
 
-Select.propTypes = propTypes
+Label.propTypes = propTypes
 
-export default Select
+export default Label
