@@ -40,10 +40,12 @@ export const propTypes = {
   onClose: PropTypes.func.isRequired,
   afterClose: PropTypes.func.isRequired,
   onClockIn: PropTypes.func,
+  isAutoClocking: PropTypes.bool,
 }
 
 function ClockInModal (props) {
-  const { detectionItem, isOpened, onClose, afterClose, onClockIn } = props
+  // console.warn('clockModal 888888888')
+  const { detectionItem, isOpened, onClose, afterClose, onClockIn, isAutoClocking } = props
 
   // TODO: 暫時做成一秒後自動帶入密碼
   // === TEMP ===
@@ -55,10 +57,12 @@ function ClockInModal (props) {
 
   const [mode, setMode] = useState(MODE.CLOCK_IN)
   const [selectedPerson, setSelectedPerson] = useState(null)
+  // const [isAuto, setIsAuto] = useState(false)
 
   const shouldRenderContent = detectionItem !== null
   const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : {}
-
+  // console.warn('clock in modal', person)
+  // console.log('modal isAutoClocking', isAutoClocking)
   // 打開時給預設值
   // 關掉時重設狀態
   useDeepCompareEffect(() => {
@@ -77,6 +81,29 @@ function ClockInModal (props) {
       // === TEMP ===
     }
   }, [shouldRenderContent, detectionItem, person])
+
+  // if (isAutoClocking) {
+  //         console.warn('modal isAutoClocking 999999999', isAutoClocking)
+  //         onClockIn(event, selectedPerson, isAutoClocking)
+  //         // setIsAuto(false)
+  //       }
+  if (shouldRenderContent && isAutoClocking) {
+    console.warn('modal isAutoClocking 999999999', isAutoClocking)
+    console.log('selectedPerson', selectedPerson)
+    onClockIn(event, selectedPerson, isAutoClocking)
+  }
+  // useEffect(() => {
+  //   // if (isOpened) onClockIn(event, selectedPerson)
+  //   // setIsAuto(isAutoClocking)
+  //   if (selectedPerson) {
+  //     console.warn('modal selectedPerson 9999999', selectedPerson)
+  //     if (isAutoClocking) {
+  //       console.warn('modal isAutoClocking 999999999', isAutoClocking)
+  //       onClockIn(event, selectedPerson, isAutoClocking)
+  //       // setIsAuto(false)
+  //     }
+  //   }
+  // }, [isAutoClocking, onClockIn, selectedPerson])
 
   // Clock in
   const renderClockInHeader = () => (
@@ -119,6 +146,7 @@ function ClockInModal (props) {
                   // 濾出相似度高於 80% 的結果
                   .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
                   .map((probableItem, index) => (
+                    // Auto anonymous clock in 時需自動setSelectedPerson
                     <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
                       <Person
                         type={PERSON_TYPE.MEMBER}
@@ -176,7 +204,7 @@ function ClockInModal (props) {
       >
         Swipe Membercard
       </Button>
-      <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson)}>
+      <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson, isAutoClocking)}>
         Confirm Clock-In
       </Button>
     </Modal.Footer>

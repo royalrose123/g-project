@@ -31,6 +31,13 @@ export const changeTableNumber = tableNumber => ({
   },
 })
 
+export const initClockState = clockState => ({
+  type: actionTypes.INIT_CLOCK_STATE,
+  payload: {
+    clockState,
+  },
+})
+
 export const changeClockState = clockState => ({
   type: actionTypes.CHANGE_CLOCK_STATE,
   payload: {

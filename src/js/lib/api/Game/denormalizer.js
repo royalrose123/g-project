@@ -32,6 +32,7 @@ class Denormalizer {
       awl: actualWin.length === 0 ? null : Number(actualWin),
       drp: drop.length === 0 ? null : Number(drop),
       ovg: overage.length === 0 ? null : Number(overage),
+      // whoWin:
     }
   }
 }

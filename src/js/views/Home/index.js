@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Switch, Route, Redirect } from 'react-router-dom'
@@ -12,7 +12,9 @@ import Layout from './components/Layout'
 import Menu from './components/Menu'
 
 // Modules
-import { operations as tableOperations } from '../../lib/redux/modules/table'
+import { operations as tableOperations, selectors as tableSelectors } from '../../lib/redux/modules/table'
+
+// import { operations as standingOperations } from '../../lib/redux/modules/standing'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
@@ -66,13 +68,18 @@ const defaultNavigation = navigations[0]
 
 export const propTypes = {
   match: PropTypes.object,
+  tableNumber: PropTypes.string,
   initTableNumber: PropTypes.func,
+  // initStandingList: PropTypes.func,
 }
 
 function Home (props) {
-  const { match, initTableNumber } = props
-  let localStorageTableNumber = localStorage.getItem('tableNumber')
-  if (localStorageTableNumber) initTableNumber(localStorageTableNumber)
+  const { match, tableNumber, initTableNumber } = props
+  const localStorageTableNumber = localStorage.getItem('tableNumber')
+  useEffect(() => {
+    if (localStorageTableNumber && tableNumber === 'Please select') initTableNumber(localStorageTableNumber)
+  }, [initTableNumber, localStorageTableNumber, tableNumber])
+
   return (
     <Layout className={cx('home')}>
       <Layout.Header>
@@ -115,12 +122,13 @@ Home.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {
-    // tableNumber: tableSelectors.getTableNumber(state, props), //
+    tableNumber: tableSelectors.getTableNumber(state, props), //
   }
 }
 
 const mapDispatchToProps = {
   initTableNumber: tableOperations.initTableNumber,
+  // initStandingList: standingOperations.initStandingList,
   // changeTableNumber: tableOperations.changeTableNumber,
 }
 

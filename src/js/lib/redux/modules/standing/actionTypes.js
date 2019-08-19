@@ -1,4 +1,5 @@
 import { MODULE_NAME } from './constants'
 
+export const INIT_STANDING_LIST = `${MODULE_NAME}/INIT_STANDING_LIST`
 export const ADD_ITEM_TO_LIST = `${MODULE_NAME}/ADD_ITEM_TO_LIST`
 export const REMOVE_ITEM_FROM_LIST = `${MODULE_NAME}/REMOVE_ITEM_FROM_LIST`

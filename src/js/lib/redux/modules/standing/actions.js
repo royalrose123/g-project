@@ -17,6 +17,14 @@
 
 import * as actionTypes from './actionTypes'
 
+export const initStandingList = (item, index) => ({
+  type: actionTypes.INIT_STANDING_LIST,
+  payload: {
+    item,
+    index,
+  },
+})
+
 export const addItemToList = (item, index) => ({
   type: actionTypes.ADD_ITEM_TO_LIST,
   payload: {

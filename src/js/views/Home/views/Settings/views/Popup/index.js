@@ -51,7 +51,7 @@ function Popup (props) {
       <div className={cx('home-setting-popup-dialog')}>
         <p className={cx('home-setting-popup-title')}>{popupContent}</p>
         <p className={cx('home-setting-popup-content')}>
-          Once your press "CONFIRM", the system will clear the "TABLE" and {popupContent.toLowerCase()}
+          {`Once your press "CONFIRM", the system will clear the "TABLE" and ${popupContent.toLowerCase()}`}
         </p>
         <Button type='button' onClick={() => onCancel()} isFilled={false} size={'md'}>
           CANCEL

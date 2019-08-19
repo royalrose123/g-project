@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { timer } from 'rxjs'
+import { findIndex, some } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -21,12 +21,13 @@ import {
   selectors as standingSelectors,
   constants as STANDING_CONSTANTS,
 } from '../../../../lib/redux/modules/standing'
+// import { useLocalStorage } from '../../../../lib/effects/useLocalStorage'
 
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
-import SettingsApi from '../../../../lib/api/Setting'
-import useFetcher from '../../../../lib/effects/useFetcher'
+// import SettingsApi from '../../../../lib/api/Setting'
+// import useFetcher from '../../../../lib/effects/useFetcher'
 
 // Style
 import styles from './style.module.scss'
@@ -42,31 +43,43 @@ export const propTypes = {
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
   tableNumber: PropTypes.string,
+  clockState: PropTypes.string,
   addSeatItem: PropTypes.func,
   removeSeatItem: PropTypes.func,
+  initStandingList: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
 }
 
 function Table (props) {
-  console.warn('table')
-  const { match, history, seatedList, standingList, addSeatItem, removeSeatItem, addStandingItem, removeStandingItem, tableNumber } = props
+  const {
+    match,
+    history,
+    seatedList,
+    standingList,
+    addSeatItem,
+    removeSeatItem,
+    initStandingList,
+    addStandingItem,
+    removeStandingItem,
+    tableNumber,
+    clockState,
+  } = props
+
   const { path, params } = match
   const { memberId } = params
 
+  const localStorageStandingList = JSON.parse(localStorage.getItem('standingList'))
+  const isLocalStorageStandingListNull = some(localStorageStandingList, 'id')
+  console.warn('isLocalStorageStandingListNull', isLocalStorageStandingListNull)
+
   const isDetailVisible = typeof memberId === 'string'
-  const { response: settingDetail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
-  console.log('settingDetail', settingDetail)
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
-  const [autoAnonymousState, setAutoAnonymousState] = useState(false)
-  const [autoMemberState, setAutoMemberState] = useState(false)
-  const [detectionList, setDetectionList] = useState()
-  // console.log('autoAnonymousState', autoAnonymousState)
-  // console.log('autoMemberState', autoMemberState)
-
+  const [isAutoClocking, setIsAutoClocking] = useState(false)
+  console.log('this is table')
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -74,21 +87,23 @@ function Table (props) {
   const closeClockInModal = () => setIsClockInModalOpened(false)
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
+  // const setLocalStorageStandingList = async (standingList, itemIndex) => {
+  //   //
+  //   await localStorage.setItem('standingList', JSON.stringify(standingList))
+  //   console.warn('setLocalStorage standingList', standingList)
+  // }
+
+  useEffect(() => {
+    // if (isLocalStorageStandingListNull) {
+    //   initStandingList(localStorageStandingList)
+    // }
+  }, [initStandingList, isLocalStorageStandingListNull, localStorageStandingList])
+
   // 設定初始值
   useEffect(() => {
-    console.log('table detectionList', detectionList)
-
-    if (settingDetail) {
-      setAutoMemberState(settingDetail.autoSettings.autoClockMember)
-      setAutoAnonymousState(settingDetail.autoSettings.autoClockAnonymous)
-    }
-
-    if (autoMemberState !== false || autoAnonymousState !== false) {
-      const clockInTime = timer(3000, 1000)
-      clockInTime.subscribe(number => {
-        // console.log('number', number)
-      })
-    }
+    // if (isLocalStorageStandingListNull) {
+    //   initStandingList(localStorageStandingList)
+    // }
 
     document.documentElement.style.setProperty('--seated-seat-size', SEATED_CONSTANTS.SIZE)
 
@@ -99,7 +114,7 @@ function Table (props) {
 
     document.documentElement.style.setProperty('--person-width', person.width)
     document.documentElement.style.setProperty('--person-height', person.height)
-  }, [autoAnonymousState, autoMemberState, detectionList, settingDetail])
+  })
 
   // Seat, Standing
   const onPlaceClick = (event, { index, place, isStanding }) => {
@@ -120,25 +135,41 @@ function Table (props) {
   }
 
   // Detection
-  const onDetectionItemActionClick = (event, detectionItem, clockInSecond) => {
+  const onDetectionItemActionClick = (event, detectionItem, detectionItemTempId, isAuto = false) => {
+    console.warn('table open clockInModal 1111111111', detectionItem)
+    console.log('table detectionItemTempId', detectionItemTempId)
+    console.log('standingList', standingList)
     openClockInModal()
-    setCurrentDetectionItem(detectionItem)
-  }
 
-  const getDetectionList = detectionList => {
-    setDetectionList(detectionList)
+    setIsAutoClocking(isAuto)
+    setCurrentDetectionItem(detectionItem)
   }
 
   // ClockInModal
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
-  const onClockIn = async (event, person) => {
-    console.warn('event', event)
+  const onClockIn = async (event, person, isAutoClocking) => {
+    console.warn('table onClockIn 2222222222')
     console.log('onClockIn person 00000', person)
+    if (!person) return
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify } = person
     console.log('onClockIn person 11111', person)
+
+    // 根據是否站立，設定位置列表的內容
+    if (isAutoClocking) {
+      const standingIndex = findIndex(standingList, item => {
+        return item === undefined
+      })
+      console.warn('standingIndex 000000000000', standingIndex)
+      addStandingItem({ id: String(id), image }, standingIndex)
+      initializeCurrentDetectionItem()
+    } else if (isSelectedPlaceStanding) {
+      addStandingItem({ id: String(id), image }, selectedPlaceIndex)
+    } else {
+      addSeatItem({ id: String(id), image }, selectedPlaceIndex)
+    }
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
@@ -150,24 +181,18 @@ function Table (props) {
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      closeClockInModal()
+      // closeClockInModal()
       await GameApi.memberClockInByMemberCard({ memberCard })
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
+      closeClockInModal()
       await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
     }
 
-    // 根據是否站立，設定位置列表的內容
-    if (isSelectedPlaceStanding) {
-      addStandingItem({ id: String(id), image }, selectedPlaceIndex)
-    } else {
-      addSeatItem({ id: String(id), image }, selectedPlaceIndex)
-    }
-
-    closeClockInModal()
+    await closeClockInModal()
     initializeIsSelectedPlaceStanding()
     initializeSelectedPlaceIndex()
   }
@@ -209,7 +234,12 @@ function Table (props) {
         </div>
       </div>
       <div className={cx('home-table__row')}>
-        <Detection isPlaceSelected={selectedPlaceIndex !== null} onItemActionClick={onDetectionItemActionClick} getDetectionList={getDetectionList} />
+        <Detection
+          isPlaceSelected={selectedPlaceIndex !== null}
+          onItemActionClick={onDetectionItemActionClick}
+          isOpened={isClockInModalOpened}
+          clockState={clockState}
+        />
       </div>
       <ClockInModal
         detectionItem={currentDetectionItem}
@@ -217,6 +247,7 @@ function Table (props) {
         onClose={onClockInModalClose}
         afterClose={afterClockInModalClose}
         onClockIn={onClockIn}
+        isAutoClocking={isAutoClocking}
       />
     </div>
   )
@@ -229,12 +260,14 @@ const mapStateToProps = (state, props) => {
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
     tableNumber: tableSelectors.getTableNumber(state, props),
+    clockState: tableSelectors.getClockState(state, props),
   }
 }
 
 const mapDispatchToProps = {
   addSeatItem: seatedOperations.addItemToList,
   removeSeatItem: seatedOperations.removeItemFromList,
+  initStandingList: standingOperations.initStandingList,
   addStandingItem: standingOperations.addItemToList,
   removeStandingItem: standingOperations.removeItemFromList,
   changeTableNumber: tableOperations.changeTableNumber,

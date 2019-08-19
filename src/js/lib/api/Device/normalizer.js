@@ -20,7 +20,7 @@ class Normalizer {
     return Service.normalizeList(payload, Normalizer.ProbableItem)
   }
 
-  static DetectionItem ({ type, faceImage, background, rect, result, dateTime }) {
+  static DetectionItem ({ type, faceImage, background, rect, result, dateTime, cameraId }) {
     return {
       type,
       snapshot: faceImage,
@@ -28,6 +28,7 @@ class Normalizer {
       rect,
       probableList: Normalizer.ProbableList(result),
       dateTime,
+      cameraId,
     }
   }
 
