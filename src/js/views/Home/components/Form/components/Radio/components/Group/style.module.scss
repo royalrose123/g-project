@@ -1,11 +1,11 @@
 .home-form-radio-group {
-  padding: 15px 0;
+  // padding: 15px 0;
   display: inline-flex;
   flex-wrap: wrap;
 
   > [role="radio"] {
     &:not(:last-of-type) {
-      margin-right: 30px;
+      margin-right: 7px;
     }
   }
 }

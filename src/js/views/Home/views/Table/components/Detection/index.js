@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
 import Carousel from 'nuka-carousel'
-import { BigNumber } from 'bignumber.js'
+// import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
 
@@ -36,14 +36,55 @@ export const propTypes = {
 
 function Detection (props) {
   const { seatedList, standingList, tableNumber, isPlaceSelected, onItemActionClick } = props
-  const [detectionList, setDetectionList] = useState([])
+  // const [detectionList, setDetectionList] = useState([])
   // polling
+  const detectionList = [
+    {
+      background:
+        'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTc5LTE3ODkwLWltYWdlIn0=',
+      dateTime: '2019-08-16T14:16:20+08:00',
+      probableList: [
+        {
+          id: '',
+          image:
+            'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTc5LTE3ODkwLWZhY2UifQ==',
+          name: '20190815-Table-0812-33',
+          similarity: 100,
+          tempId: '20190815-Table-0812-33',
+        },
+      ],
+      rect: [880, 496, 288, 288],
+      snapshot:
+        'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTY0LTE3ODgxLWZhY2UifQ==',
+      type: 'anonymous',
+    },
+    {
+      background:
+        'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTc5LTE3ODkwLWltYWdlIn0=',
+      dateTime: '2019-08-16T14:16:20+08:00',
+      probableList: [
+        {
+          id: '8000853',
+          image:
+            'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTc5LTE3ODkwLWZhY2UifQ==',
+          level: 'green',
+          name: '84',
+          similarity: 100,
+          tempId: '84',
+        },
+      ],
+      rect: [870, 496, 288, 288],
+      snapshot:
+        'http://10.1.1.19:10090/photos/eyJidWNrZXRfbmFtZSI6InNlY3VyaXR5LXJlY28iLCJvYmplY3RfbmFtZSI6IjIwMTktOC0xNi8xNTY1OTM2MTY0LTE3ODgxLWZhY2UifQ==',
+      type: 'member',
+    },
+  ]
 
   useEffect(() => {
     const timerSecond = 2
     const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(flatMap(index => from(DeviceApi.fetchDetectionList({ tableNumber }))))
     const fetchDataSubscription = fetchDataObservable.subscribe(response => {
-      setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
+      // setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
     })
     return () => {
       fetchDataSubscription.unsubscribe()
@@ -51,8 +92,8 @@ function Detection (props) {
   }, [tableNumber])
 
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
-  const itemSpacing = 40
-  const itemBorder = 6
+  const itemSpacing = 20
+  const itemBorder = 30
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
   return (

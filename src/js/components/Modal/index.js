@@ -65,7 +65,7 @@ function Modal (props) {
   return (
     <Transition
       onStart={beforeOpen}
-      onRest={(item, state) => !item && state === 'update' && afterClose()}
+      onRest={(item, state) => !item && state === 'update' && typeof afterClose === 'function' && afterClose()}
       items={isOpened}
       from={{ opacity: 0, scale: 'scale(0.5)' }}
       enter={{ opacity: 1, scale: 'scale(1)' }}

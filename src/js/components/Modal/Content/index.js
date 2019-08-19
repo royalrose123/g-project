@@ -46,7 +46,7 @@ function Content (props) {
       {shouldShowLoadingOverlay && <div className={cx('modal-content__loading-overlay')} />}
       {shouldShowCloseButton && !shouldShowBackButton && (
         <button className={cx('modal-content__icon-wrapper', 'modal-content__icon-wrapper--cross')} onClick={onClose}>
-          <Icon data={crossData} size={24} />
+          <Icon data={crossData} size={12} />
         </button>
       )}
       {shouldShowBackButton && (
@@ -56,7 +56,7 @@ function Content (props) {
       )}
       {shouldShowLoadingIcon && (
         <span className={cx('modal-content__icon-wrapper', 'modal-content__icon-wrapper--loading')}>
-          <Icon data={loadingData} size={32} />
+          <Icon data={loadingData} size={16} />
         </span>
       )}
       {children}

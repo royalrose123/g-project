@@ -1,5 +1,5 @@
 .home-camera {
-  padding: 80px 120px;
+  padding: 38px 57px;
   display: flex;
   justify-content: space-between;
 
@@ -7,7 +7,7 @@
   }
 
   &__title {
-    margin-bottom: 54px;
+    margin-bottom: 25px;
     color: $gray-white;
     line-height: 1.325;
     text-transform: uppercase;
@@ -18,7 +18,7 @@
   &__video-wrapper {
     overflow: hidden;
     position: relative;
-    @include size(880px);
+    @include size(430px);
   }
 
   &__video {

@@ -34,7 +34,7 @@ import styles from './style.module.scss'
 // Variables / Functions
 import PERSON_TYPE from '../../../../constants/PersonType'
 const cx = classnames.bind(styles)
-const person = { width: '280px', height: '360px' }
+const person = { width: '130px', height: '170px' }
 
 export const propTypes = {
   match: PropTypes.object,
@@ -193,22 +193,23 @@ function Table (props) {
     <MemberDetail onClockOut={onClockOut} {...props} />
   ) : (
     <div className={cx('home-table')}>
-      <div className={cx('home-table__row')}>
-        <div className={cx('home-table__column')}>
+      <div className={cx('home-table__seating-plan')}>
+        <div className={cx('home-table__seated-wrapper')}>
           <Seated
             seatedList={seatedList}
             selectedIndex={isSelectedPlaceStanding ? null : selectedPlaceIndex}
             onPlaceSelect={onPlaceClick}
             tableNumber={tableNumber}
           />
-          <h2 className={cx('home-table__title')}>Seated</h2>
+          <h2 className={cx('home-table__seated-title')}>Seated</h2>
         </div>
-        <div className={cx('home-table__column')}>
+        <div className={cx('home-table__standing-wrapper')}>
           <Standing standingList={standingList} selectedIndex={isSelectedPlaceStanding ? selectedPlaceIndex : null} onPlaceSelect={onPlaceClick} />
-          <h2 className={cx('home-table__title')}>Standing</h2>
+          <h2 className={cx('home-table__standing-title')}>Standing</h2>
         </div>
       </div>
-      <div className={cx('home-table__row')}>
+
+      <div className={cx('home-table__detection-wrapper')}>
         <Detection isPlaceSelected={selectedPlaceIndex !== null} onItemActionClick={onDetectionItemActionClick} getDetectionList={getDetectionList} />
       </div>
       <ClockInModal

@@ -14,7 +14,7 @@ $border-radius: 4px;
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 1000px;
+  min-width: 475px;
   background-color: $gray-white;
   border-radius: $border-radius;
   box-shadow: 0 10px 10px 0 rgba(0, 0, 0, 0.1);
@@ -29,15 +29,15 @@ $border-radius: 4px;
     color: $color-primary;
 
     &--cross {
-      padding: 31px 36px;
+      padding: 14px 17px;
     }
 
     &--arrow {
-      padding: 31px 36px;
+      padding: 14px 17px;
     }
 
     &--loading {
-      padding: 27px 36px;
+      padding: 14px 17px;
       animation: rotate 1000ms linear infinite;
     }
   }

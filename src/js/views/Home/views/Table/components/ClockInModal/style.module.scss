@@ -1,5 +1,5 @@
 .home-table-clock-in-modal {
-  height: 850px;
+  height: 385px;
 
   &__content {
     margin-top: $font-size-md * 1.375 + 20px;
@@ -29,7 +29,7 @@
   }
 
   &__similarity {
-    margin-bottom: 20px;
+    // margin-bottom: 20px;
     text-align: center;
     line-height: 1;
     color: $color-primary;
@@ -48,10 +48,10 @@
   }
 
   &__member-card-input {
-    padding: 12px 18px;
+    padding: 4px 10px;
     width: 400px;
-    height: 62px;
-    font-size: $font-size-lg;
+    height: 29px;
+    font-size: $font-size-sm;
     border: 1px solid $gray-light;
   }
 

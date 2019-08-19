@@ -113,7 +113,7 @@ function MemberDetail (props) {
                     data-is-active={currentTab === TABS.BETTING_RECORD}
                     onClick={onTabItemClick}
                   >
-                    Betting Record
+                    BETTING RECORD
                   </button>
                   <button
                     className={cx('home-table-member-detail__tabs-item')}
@@ -122,7 +122,7 @@ function MemberDetail (props) {
                     data-is-active={currentTab === TABS.CUSTOMER_INFO}
                     onClick={onTabItemClick}
                   >
-                    Customer Info
+                    CUSTOMER INFO
                   </button>
                 </div>
 
@@ -132,7 +132,7 @@ function MemberDetail (props) {
                     data-is-active={currentTab === TABS.BETTING_RECORD}
                     className={cx('home-table-member-detail__tabs-panel-item')}
                   >
-                    <Form.Group width={640}>
+                    <Form.Group width={300}>
                       <Form.Row>
                         <Form.Column size='sm'>
                           <Form.Label>Play Type</Form.Label>
@@ -222,7 +222,7 @@ function MemberDetail (props) {
                       </Form.Row>
                     </Form.Group>
 
-                    <Form.Group width={640}>
+                    <Form.Group width={300}>
                       <Form.Row>
                         <Form.Column size='sm'>
                           <Form.Label>* Actual Win</Form.Label>
@@ -272,7 +272,7 @@ function MemberDetail (props) {
                     data-is-active={currentTab === TABS.CUSTOMER_INFO}
                     className={cx('home-table-member-detail__tabs-panel-item')}
                   >
-                    <Form.Group width={640}>
+                    <Form.Group width={300}>
                       <Form.Row>
                         <Form.Label>Customer ID</Form.Label>
                         <Form.Display>{detail.id}</Form.Display>
@@ -289,7 +289,7 @@ function MemberDetail (props) {
                       </Form.Row>
                     </Form.Group>
 
-                    <Form.Group width={640}>
+                    <Form.Group width={300}>
                       <Form.Row>
                         <Form.Label>Date of Birth</Form.Label>
                         <Form.Display>{format(new Date(detail.birthday), 'yyyy/MM/dd')}</Form.Display>

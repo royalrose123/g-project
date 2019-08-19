@@ -1,11 +1,13 @@
-$seat-distance-horizontal: 40px;
-$seat-distance-vertical: 50px;
+$seat-distance-horizontal: 22px;
+$seat-distance-vertical: 22px;
 
-$desk-width: 620px;
-$desk-height: 220px;
+$desk-width: 295px;
+$desk-height: 105px;
 
 .home-table-seated {
   position: relative;
+  // top: 25px;
+  // left: 35px;
   display: flex;
   justify-content: center;
   align-items: flex-end;
@@ -17,7 +19,7 @@ $desk-height: 220px;
     position: absolute;
     font-size: 0;
     color: $gray-white;
-    border: 2px solid $gray-white;
+    border: 1px solid $gray-white;
     @include size(var(--seated-seat-size));
 
     &[data-is-selected="true"] {
@@ -79,7 +81,7 @@ $desk-height: 220px;
     height: $desk-height;
     border-radius: $desk-height;
     box-shadow: inset 0 0 20px 0 rgba($gray-black, 0.7);
-    border: 2px solid $gray-white;
+    border: 1px solid $gray-white;
     background-image: radial-gradient(circle, #4a5d6d, #24303a 70%, #24303a);
 
     color: $gray-white;
