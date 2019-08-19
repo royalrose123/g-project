@@ -8,13 +8,10 @@ import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
 
 // Components
+import Modal from '../../../../components/Modal'
 import Button from '../../../../components/Button'
 import Form from '../../components/Form'
 import Keyboard, { keys } from '../../components/Keyboard'
-// import Switch from '../../../../components/Switch'
-
-// Views
-import Popup from './views/Popup'
 
 // Modules
 import { operations as tableOperations, selectors as tableSelectors } from '../../../../lib/redux/modules/table'
@@ -42,15 +39,35 @@ export const propTypes = {
 }
 
 export const checkClockState = (memberClock, anonymousClock) => {
-  if (memberClock === false && anonymousClock === false) {
-    return 'manualClock'
-  } else if (memberClock === false && anonymousClock === true) {
-    return 'autoAnonymous'
-  } else if (memberClock === true && anonymousClock === false) {
-    return 'autoMember'
-  } else if (memberClock === true && anonymousClock === true) {
-    return 'autoClock'
+  switch (true) {
+    case memberClock === false && anonymousClock === false:
+      return 'manualClock'
+    case memberClock === false && anonymousClock === true:
+      return 'autoAnonymous'
+    case memberClock === true && anonymousClock === false:
+      return 'autoMember'
+    case memberClock === true && anonymousClock === true:
+      return 'autoClock'
   }
+}
+
+const confirmModalText = {
+  manualClock: {
+    title: 'Manually Clock-In/Out Member and Anonymous',
+    description: `Once your press "CONFIRM", the system will clear the "TABLE" and manually clock-in/out member and anonymous`,
+  },
+  autoAnonymous: {
+    title: 'Automatic Clock-In/Out Anonymous',
+    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out anonymous`,
+  },
+  autoMember: {
+    title: 'Automatic Clock-In/Out Member',
+    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member`,
+  },
+  autoClock: {
+    title: 'Automatic Clock-In/Out Member and Anonymous',
+    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member and anonymous`,
+  },
 }
 
 function Settings (props) {
@@ -62,25 +79,23 @@ function Settings (props) {
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberAutomatic, setMemberAutomatic] = useState(false)
   const [anonymousAutomatic, setAnonymousAutomatic] = useState(false)
-  const [previousClockState, setPreviousClockState] = useState()
+  const [previousClockState, setPreviousClockState] = useState('')
   const [tableList, setTableList] = useState([])
-  const [popupContent, setPopupContent] = useState()
-  const [popupDisplay, setPopupDisplay] = useState('flex')
-  const localStorageTableNumber = localStorage.getItem('tableNumber')
-
-  // const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
+  const [confirmModalTextPack, setConfirmModalTextPack] = useState({})
+  const [isConfirmModalOpened, setIsConfirmModalOpened] = useState(false)
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
-  const onCancelSave = () => {
-    setPopupDisplay('none')
-  }
-
-  const onConfirmSave = () => {
-    setPopupDisplay('none')
-  }
-
-  const setClockPreviousState = clockState => {
-    setPreviousClockState(clockState)
+  const openConfirmModal = () => setIsConfirmModalOpened(true)
+  const closeConfirmModal = () => setIsConfirmModalOpened(false)
+  const saveConfirmModal = formikValues => {
+    setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    SettingsApi.postSettingDetail({
+      systemSettings: formikValues.systemSettings,
+      autoSettings: formikValues.autoSettings,
+      defaultRecord: formikValues.defaultRecord,
+    })
+    closeConfirmModal()
   }
 
   const API_NUMBER = 25
@@ -115,7 +130,6 @@ function Settings (props) {
 
   const validateFormData = (validateForm, submitForm) => {
     validateForm().then(errors => {
-      console.log('errors :', errors)
       if (isEmpty(errors)) {
         submitForm()
       }
@@ -138,10 +152,8 @@ function Settings (props) {
       })
     )
     if (selectedTableName !== 'Please select') SettingsApi.activeTable({ selectedTableName })
-    console.log('localStorageTableNumber', localStorageTableNumber)
     SettingsApi.deactiveTable({ tableNumber })
-    console.log('selectedTableName', selectedTableName)
-    localStorage.setItem('tableNumber', selectedTableName)
+    window.localStorage.setItem('tableNumber', selectedTableName)
     changeTableNumber(selectedTableName)
   }
 
@@ -206,7 +218,6 @@ function Settings (props) {
               const currentAnonymousClock = values.autoSettings.autoClockAnonymous
 
               if (previousClockState === checkClockState(currentMemberClock, currentAnonymousClock)) {
-                alert('It is same.')
                 SettingsApi.postSettingDetail({
                   systemSettings: values.systemSettings,
                   autoSettings: values.autoSettings,
@@ -215,35 +226,46 @@ function Settings (props) {
                 setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
                 changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
               } else {
-                switch (checkClockState(currentMemberClock, currentAnonymousClock)) {
-                  case 'manualClock':
-                    setPopupContent('Manually Clock-In/Out Member and Anonymous')
-                    break
-                  case 'autoAnonymous':
-                    setPopupContent('Automatic Clock-In/Out Anonymous')
-                    break
-                  case 'autoMember':
-                    setPopupContent('Automatic Clock-In/Out Member')
-                    break
-                  case 'autoClock':
-                    setPopupContent('Automatic Clock-In/Out Member and Anonymous')
-                    break
-                }
-                setPopupDisplay('flex')
+                setConfirmModalTextPack(confirmModalText[checkClockState(currentMemberClock, currentAnonymousClock)])
+                openConfirmModal()
               }
             }}
           >
             {({ validateForm, submitForm, initialValues, values, setFieldValue }) => {
               return (
                 <FormikForm>
-                  <Popup
-                    popupContent={popupContent}
-                    display={popupDisplay}
-                    onCancel={onCancelSave}
-                    onConfirm={onConfirmSave}
-                    formikValues={values}
-                    setClockPreviousState={setClockPreviousState}
-                  />
+                  <Modal
+                    className={cx('home-settings-confirm-modal')}
+                    isClosable={false}
+                    shouldCloseOnOverlayClick={false}
+                    isOpened={isConfirmModalOpened}
+                  >
+                    <Modal.Header>
+                      <div className={cx('home-settings-confirm-modal__header')}>{confirmModalTextPack.title}</div>
+                    </Modal.Header>
+                    <Modal.Body>
+                      <div className={cx('home-settings-confirm-modal__body')}>{confirmModalTextPack.description}</div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                      <Button
+                        type='button'
+                        className={cx('home-settings-confirm-modal__action')}
+                        isFilled={false}
+                        size={'md'}
+                        onClick={closeConfirmModal}
+                      >
+                        CANCEL
+                      </Button>
+                      <Button
+                        type='button'
+                        className={cx('home-settings-confirm-modal__action')}
+                        size={'md'}
+                        onClick={() => saveConfirmModal(values)}
+                      >
+                        CONFIRM
+                      </Button>
+                    </Modal.Footer>
+                  </Modal>
                   <Keyboard
                     onPress={key => {
                       if (key === keys.ENTER) return
@@ -288,7 +310,6 @@ function Settings (props) {
                               </option>
                             ))}
                           </Form.Select>
-                          {/* <Form.Display>{initialValues.tableNumber}</Form.Display> */}
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
@@ -408,7 +429,6 @@ function Settings (props) {
                                 <Form.Checkbox
                                   onChange={event => {
                                     setFieldValue(field.name, event.target.checked)
-                                    // setAnonymousIntoDynamiq(event.target.checked)
                                   }}
                                   checked={values.systemSettings.clockInOutAnonymousDynamiq}
                                   readOnly
@@ -432,7 +452,6 @@ function Settings (props) {
                                 <Form.Checkbox
                                   onChange={event => {
                                     setFieldValue(field.name, event.target.checked)
-                                    // setAnonymousLogging(event.target.checked)
                                   }}
                                   checked={values.systemSettings.logAnonymousClock}
                                   readOnly
@@ -442,18 +461,6 @@ function Settings (props) {
                               </Form.Checkbox.Group>
                             )}
                           />
-                          {/* <Field
-                            name='systemSettings.logAnonymousClock'
-                            render={({ field }) => (
-                              <Switch
-                                onChange={(event, isChecked) => {
-                                  setFieldValue(field.name, isChecked)
-                                  setAnonymousLogging(isChecked)
-                                }}
-                                isChecked={anonymousLogging || values.systemSettings.logAnonymousClock}
-                              />
-                            )}
-                          /> */}
                         </Form.Column>
                       </Form.Row>
                     </Form.Group>
@@ -550,22 +557,6 @@ function Settings (props) {
                               </Form.Checkbox.Group>
                             )}
                           />
-                          {/* <Field
-                            name='autoSettings.autoClockAnonymous'
-                            render={({ field }) => (
-                              <Switch
-                                onChange={(event, isChecked) => {
-                                  setFieldValue(field.name, isChecked)
-                                  anonymousAutomatic &&
-                                    setFieldValue('autoSettings.autoClockInAnonymousSec', values.autoSettings.autoClockInAnonymousSec)
-                                  anonymousAutomatic &&
-                                    setFieldValue('autoSettings.autoClockOutAnonymousSec', values.autoSettings.autoClockOutAnonymousSec)
-                                  setAnonymousAutomatic(isChecked)
-                                }}
-                                isChecked={anonymousAutomatic || values.autoSettings.autoClockAnonymous}
-                              />
-                            )}
-                          /> */}
                         </Form.Column>
                       </Form.Row>
 
@@ -610,10 +601,10 @@ function Settings (props) {
                   </div>
 
                   <div id={TABS.DEFAULT_RECORD} data-is-active={currentTab === TABS.DEFAULT_RECORD} className={cx('home-settings__tabs-panel-item')}>
-                    <Form.Group width={'50%'}>
+                    <Form.Group width={'40%'}>
                       <Form.GroupName>MEMBER</Form.GroupName>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Play Type</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -633,7 +624,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row align='top'>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Prop Play</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -657,7 +648,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Average Bet</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -670,7 +661,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Who Win</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -700,7 +691,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Actual Win</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -713,7 +704,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Drop</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -726,7 +717,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Overage</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -740,10 +731,10 @@ function Settings (props) {
                       </Form.Row>
                     </Form.Group>
 
-                    <Form.Group width={'50%'}>
+                    <Form.Group width={'40%'}>
                       <Form.GroupName>ANOMYMOUS</Form.GroupName>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Play Type</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -763,7 +754,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row align='top'>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Prop Play</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -787,7 +778,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Average Bet</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -800,7 +791,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Who Win</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -830,7 +821,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Actual Win</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -843,7 +834,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Drop</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -856,7 +847,7 @@ function Settings (props) {
                         </Form.Column>
                       </Form.Row>
                       <Form.Row>
-                        <Form.Column size='lg'>
+                        <Form.Column size='md'>
                           <Form.Label>Overage</Form.Label>
                         </Form.Column>
                         <Form.Column size='md'>
@@ -888,8 +879,6 @@ function Settings (props) {
 Settings.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
-  console.warn('map state', state)
-  console.warn('map props', props)
   return {
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),

@@ -1,5 +1,5 @@
 .home-menu-account {
-  padding: 0 30px;
+  padding-left: 15px;
   display: flex;
   align-items: center;
   height: 100%;
@@ -15,7 +15,7 @@
     font-size: $font-size-sm;
 
     &:not(:last-of-type) {
-      padding-right: 16px;
+      padding-right: 8px;
 
       &:after {
         content: "";

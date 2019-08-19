@@ -12,7 +12,7 @@ const cx = classnames.bind(styles)
 
 function Keyboard (props) {
   useEffect(() => {
-    document.querySelector('#root').style.setProperty('height', 'calc(100vh - 585px)')
+    document.querySelector('#root').style.setProperty('height', 'calc(100vh - 277px)')
 
     return () => document.querySelector('#root').style.removeProperty('height')
   }, [])

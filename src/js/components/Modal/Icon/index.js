@@ -26,10 +26,11 @@ function Icon (props) {
     <svg
       width={svgWidth}
       height={svgHeight}
-      viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+      viewBox={`0 0 ${svgWidth * 2} ${svgHeight * 2}`}
       aria-hidden
       focusable={false}
       className={cx(className, 'modal-icon')}
+      // style={{ width: svgWidth / 2, height: 'auto' }} // TODO: 暫時縮小
       {...restProps}
     >
       <path d={data} />

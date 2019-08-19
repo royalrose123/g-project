@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
@@ -124,8 +124,8 @@ function Detection (props) {
   }, [detectionItemLogInTimer, detectionListTempId, tableNumber])
   console.log('detectionItemLogInTimer 000000000', detectionItemLogInTimer)
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
-  const itemSpacing = 40
-  const itemBorder = 6
+  const itemSpacing = 20
+  const itemBorder = 30
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
   console.warn('detectionList', detectionList)

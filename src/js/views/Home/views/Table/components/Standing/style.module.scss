@@ -7,12 +7,14 @@
   &__place {
     overflow: hidden;
     position: relative;
+    // top: 25px;
+    // left: 10px;
     margin: var(--standing-place-margin);
     padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba($gray-white, 0.5);
+    border: 1px solid rgba($gray-white, 0.5);
     @include size(var(--standing-place-size));
 
     &[data-is-selected="true"] {

@@ -30,6 +30,7 @@ function Svg (props) {
       aria-hidden
       focusable={false}
       className={cx(className, 'svg')}
+      style={{ width: svgWidth / 2, height: 'auto' }} // TODO: 暫時縮小
       {...restProps}
     >
       <path d={data} />
