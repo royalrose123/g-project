@@ -11,3 +11,5 @@ export const changeTableNumber = actions.changeTableNumber
 export const initClockState = actions.initClockState
 
 export const changeClockState = actions.changeClockState
+
+export const changeClockInTriggerTime = actions.changeClockInTriggerTime

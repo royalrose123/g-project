@@ -36,6 +36,7 @@ export const propTypes = {
   clockState: PropTypes.string,
   changeTableNumber: PropTypes.func,
   changeClockState: PropTypes.func,
+  changeClockInTriggerTime: PropTypes.func,
 }
 
 export const checkClockState = (memberClock, anonymousClock) => {
@@ -71,8 +72,9 @@ const confirmModalText = {
 }
 
 function Settings (props) {
-  const { tableNumber, clockState, changeTableNumber, changeClockState } = props
+  const { tableNumber, clockState, changeTableNumber, changeClockState, changeClockInTriggerTime } = props
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
+
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
   // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
   const [currentTab, setCurrentTab] = useState(TABS.SYSTEM_SETTINGS)
@@ -83,12 +85,14 @@ function Settings (props) {
   const [tableList, setTableList] = useState([])
   const [confirmModalTextPack, setConfirmModalTextPack] = useState({})
   const [isConfirmModalOpened, setIsConfirmModalOpened] = useState(false)
+  const [autoClockInTriggerTime, setAutoClockInTriggerTime] = useState([60, 60])
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
   const openConfirmModal = () => setIsConfirmModalOpened(true)
   const closeConfirmModal = () => setIsConfirmModalOpened(false)
   const saveConfirmModal = formikValues => {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    changeClockInTriggerTime([formikValues.autoSettings.autoClockInMemberSec, formikValues.autoSettings.autoClockInAnonymousSec])
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
     SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
@@ -170,9 +174,11 @@ function Settings (props) {
 
     if (detail) {
       setPreviousClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
-      if (!clockState) changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+      setAutoClockInTriggerTime([detail.autoSettings.autoClockInMemberSec, detail.autoSettings.autoClockInAnonymousSec])
+      // if (isLoaded) changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
-  }, [changeClockState, clockState, detail, tableList, tableListTemp])
+    // if (autoClockInTriggerTime) changeClockInTriggerTime(autoClockInTriggerTime)
+  }, [autoClockInTriggerTime, changeClockInTriggerTime, changeClockState, clockState, detail, isLoaded, tableList, tableListTemp])
 
   return isLoaded ? (
     <div className={cx('home-settings')}>
@@ -223,6 +229,7 @@ function Settings (props) {
                   autoSettings: values.autoSettings,
                   defaultRecord: values.defaultRecord,
                 })
+                changeClockInTriggerTime([values.autoSettings.autoClockInMemberSec, values.autoSettings.autoClockInAnonymousSec])
                 setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
                 changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
               } else {
@@ -888,6 +895,8 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   changeTableNumber: tableOperations.changeTableNumber,
   changeClockState: tableOperations.changeClockState,
+  changeClockInTriggerTime: tableOperations.changeClockInTriggerTime,
+  changeClockOutTriggerTime: tableOperations.changeClockOutTriggerTime,
 }
 
 export default connect(

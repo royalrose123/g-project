@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get, findIndex } from 'lodash'
+import { get, difference, omit } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -54,17 +54,33 @@ function Detection (props) {
   } = props
   console.warn('detection')
   const [detectionList, setDetectionList] = useState([])
-  const [detectionItemLogInTimer, setDetectionItemLogInTimer] = useState([])
-  const [detectionListTempId, setDetectionListTempId] = useState([])
-  const previousDectionList = usePrevious(detectionList)
-  console.log('previousDectionList', previousDectionList)
-  // const createDetectionListTempId = detectionList => {
-  //   // const detectionListTempId = []
+  console.log('detectionList 000000000', detectionList)
+  let [detectionItemLogInTimer, setDetectionItemLogInTimer] = useState({}) //
+  const [currentDetectionListTempIdArray, setCurrentDetectionListTempIdArray] = useState([])
+  const [previousDetectionListTempIdArray, setPreviousDetectionListTempIdArray] = useState([])
+  let [leaveDetectionList, setLeaveDetectionList] = useState([]) //
+  const previousDetectionList = usePrevious(detectionList)
+  console.log('previousDetectionList', previousDetectionList)
 
-  //   // detectionList.map(detectionItem => detectionListTempId.push(pick(detectionItem[''],'probableList')))
-  //   setDetectionListTempId(detectionList)
-  //   console.log('detectionListTempId', detectionListTempId)
+  // const newCurrentDetectionListTempIdArray = detectionList.map(item => {
+  //   return item.probableList[0].tempId
+  // })
+  // const newPreviousDetectionListTempIdArray = previousDetectionList.map(item => {
+  //   return item.probableList[0].tempId
+  // })
+
+  console.log('detectionItemLogInTimer 00000000', detectionItemLogInTimer)
+  console.log('currentDetectionListTempIdArray', currentDetectionListTempIdArray)
+  console.log('previousDetectionListTempIdArray', previousDetectionListTempIdArray)
+
+  // if (leaveDetectionList.length > 0) {
+  //   detectionItemLogInTimer = omit(detectionItemLogInTimer, leaveDetectionList)
+  //   console.warn('omitttttttttt')
+  //   console.log('omit detectionItemLogInTimer 22222222', detectionItemLogInTimer)
   // }
+
+  console.log('detectionItemLogInTimer 111111', detectionItemLogInTimer)
+  console.log('leaveDetectionList', leaveDetectionList)
 
   // console.log('detectionItemLogInTimer init', detectionItemLogInTimer)
   // console.log('autoMemberTriggerTime', autoMemberTriggerTime)
@@ -105,10 +121,22 @@ function Detection (props) {
   //     snapshot: '',
   //     type: 'member',
   //   },
-  // // ]
-  // useEffect(() => {
-  //   createDetectionListTempId()
-  // }, [createDetectionListTempId, detectionList])
+  // ]
+  // if (detectionList && previousDetectionList) {
+  //   console.log('cooooooool')
+  // currentDetectionListTempIdArray = detectionList.map(item => {
+  //   return item.probableList[0].tempId
+  // })
+
+  // previousDetectionListTempIdArray = previousDetectionList.map(item => {
+  //   return item.probableList[0].tempId
+  // })
+
+  // setCurrentDetectionListTempIdArray(currentDetectionListTempIdArray)
+  // setPreviousDetectionListTempIdArray(previousDetectionListTempIdArray)
+  // }
+
+  // useEffect(() => {}, [])
 
   useEffect(() => {
     const timerSecond = 2
@@ -116,12 +144,42 @@ function Detection (props) {
     const fetchDataSubscription = fetchDataObservable.subscribe(response => {
       setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
     })
-    setDetectionItemLogInTimer(detectionItemLogInTimer)
-    setDetectionListTempId(detectionListTempId)
+
     return () => {
       fetchDataSubscription.unsubscribe()
     }
-  }, [detectionItemLogInTimer, detectionListTempId, tableNumber])
+  }, [tableNumber])
+
+  useEffect(() => {
+    if (previousDetectionList && previousDetectionList.length > 0) {
+      const newCurrentDetectionListTempIdArray = detectionList.map(item => {
+        return item.probableList[0].tempId
+      })
+      const newPreviousDetectionListTempIdArray = previousDetectionList.map(item => {
+        return item.probableList[0].tempId
+      })
+
+      setCurrentDetectionListTempIdArray(newCurrentDetectionListTempIdArray)
+      setPreviousDetectionListTempIdArray(newPreviousDetectionListTempIdArray)
+    }
+  }, [currentDetectionListTempIdArray, detectionList, previousDetectionList, previousDetectionListTempIdArray])
+
+  useEffect(() => {
+    if (previousDetectionListTempIdArray.length > 0) {
+      const newLeaveDetectionList = difference(previousDetectionListTempIdArray, currentDetectionListTempIdArray)
+      setLeaveDetectionList(newLeaveDetectionList)
+    }
+  }, [currentDetectionListTempIdArray, previousDetectionListTempIdArray])
+
+  useEffect(() => {
+    if (leaveDetectionList.length > 0) {
+      const newDetectionItemLogInTimer = omit(detectionItemLogInTimer, leaveDetectionList)
+      console.warn('omitttttttttt')
+      console.log('omit detectionItemLogInTimer 22222222', newDetectionItemLogInTimer)
+      setDetectionItemLogInTimer(newDetectionItemLogInTimer)
+    }
+  }, [leaveDetectionList])
+
   console.log('detectionItemLogInTimer 000000000', detectionItemLogInTimer)
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
   const itemSpacing = 20
@@ -129,6 +187,7 @@ function Detection (props) {
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
   console.warn('detectionList', detectionList)
+
   return (
     <div className={cx('home-table-detection')}>
       {detectionList.length > 0 && (
@@ -143,25 +202,45 @@ function Detection (props) {
           speed={800}
         >
           {detectionList.map((detectionItem, index) => {
-            // console.log('detection list item', detectionItem)
+            const detectionItemTempId = get(detectionItem, 'probableList[0].tempId').toString()
+            // currentDetectionListTempIdArray = detectionList.map(item => {
+            //   return item.probableList[0].tempId
+            // })
+
+            // previousDetectionListTempIdArray = previousDetectionList.map(item => {
+            //   return item.probableList[0].tempId
+            // })
+
+            // leaveDetectionList = difference(previousDetectionListTempIdArray, currentDetectionListTempIdArray)
+
+            // console.log('detectionItemLogInTimer 00000000', detectionItemLogInTimer)
+            // console.log('currentDetectionListTempIdArray', currentDetectionListTempIdArray)
+            // console.log('previousDetectionListTempIdArray', previousDetectionListTempIdArray)
+            // if (leaveDetectionList.length > 0) {
+            //   detectionItemLogInTimer = omit(detectionItemLogInTimer, leaveDetectionList)
+            //   console.warn('omitttttttttt')
+            //   console.log('omit detectionItemLogInTimer 22222222', detectionItemLogInTimer)
+            // }
+            // console.warn('detectionList.length', detectionList.length)
+
+            // console.log('detectionItemLogInTimer 111111', detectionItemLogInTimer)
+            // console.log('leaveDetectionList', leaveDetectionList)
+
             const person = getPersonByType(detectionItem.type, detectionItem)
             if (seatedList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
               return null
             } else if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
-              console.warn('有了啊 000000000')
               return null
             } else if (clockState !== 'manualClock') {
-              const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
-              const hasAccount = findIndex(detectionItemLogInTimer, ['tempId', detectionItemTempId]) === -1
-              console.log('hasAccount', hasAccount)
-              console.warn('detectionItemTempId', detectionItemTempId)
+              console.log('detectionItemLogInTimer 99999999999', detectionItemLogInTimer)
+              // const detectionItemTempId = get(detectionItem, 'probableList[0].tempId').toString()
+              const hasAccount = typeof detectionItemLogInTimer[detectionItemTempId] === 'undefined'
+              console.warn('detectionItemTempId hasAccounttttttt', detectionItemTempId, hasAccount)
               if (hasAccount) {
-                detectionItemLogInTimer.push({ tempId: detectionItemTempId, detectedTime: new Date().getTime() })
+                detectionItemLogInTimer[detectionItemTempId] = new Date().getTime()
               } else {
-                const currentDetectItemTimerIndex = findIndex(detectionItemLogInTimer, ['tempId', detectionItemTempId])
-                const detectionItemExistingTime = new Date().getTime() - get(detectionItemLogInTimer[currentDetectItemTimerIndex], 'detectedTime')
-                console.log('detectionItem existing time', detectionItemExistingTime)
-                console.log('clockState', clockState)
+                const detectionItemExistingTime = new Date().getTime() - detectionItemLogInTimer[detectionItemTempId]
+                console.log(detectionItemTempId + 'detectionItem existing time', detectionItemExistingTime)
                 switch (clockState) {
                   case 'autoAnonymous':
                     if (detectionItemExistingTime > 8000 && detectionItem.type === 'anonymous') {
@@ -176,18 +255,13 @@ function Detection (props) {
                     }
                     break
                   case 'autoClock':
+                    if (detectionItemExistingTime > 8000) {
+                      // console.log('autoClock detectionItemLogInTimer', detectionItemLogInTimer)
+                      // onItemActionClick(event, detectionItem, detectionItemTempId, true)
+                    }
                     break
                 }
-                if (detectionItemExistingTime > 8000) {
-                  console.warn('onItemActionClick gogo!!!!!!!')
-                  if (detectionItem.type === 'member') {
-                    console.warn('detection auto clock 000000000')
-                    // onItemActionClick(event, detectionItem, detectionItemTempId, true)
-                  }
-                }
               }
-              // console.log('detectionItemLogInTimer', detectionItemLogInTimer)
-              // if (detectionItem.type === 'member') onItemActionClick(event, detectionItem, true)
             }
 
             return (

@@ -44,3 +44,17 @@ export const changeClockState = clockState => ({
     clockState,
   },
 })
+
+export const changeClockInTriggerTime = clockInTriggerTime => ({
+  type: actionTypes.CHANGE_CLOCK_IN_TRIGGER_TIME,
+  payload: {
+    clockInTriggerTime,
+  },
+})
+
+export const changeClockOutTriggerTime = clockOutTriggerTime => ({
+  type: actionTypes.CHANGE_CLOCK_OUT_TRIGGER_TIME,
+  payload: {
+    clockOutTriggerTime,
+  },
+})
