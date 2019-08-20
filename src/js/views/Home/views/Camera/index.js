@@ -61,7 +61,7 @@ function Camera (props) {
               Camera {index + 1} : {id}
             </h2>
             <div className={cx('home-camera__video-wrapper')}>
-              <canvas className={cx('home-camera__video')} src={`/camera${index + 1}/index.html`} frameBorder='0' />
+              <iframe className={cx('home-camera__video')} src={`/camera${index + 1}/index.html`} frameBorder='0' />
             </div>
           </div>
         ))}
