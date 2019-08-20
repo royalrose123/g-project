@@ -1,9 +1,9 @@
 // import Service from '../service'
 
 class Normalizer {
-  static DataName ({ responseKey }) {
+  static GetAnnoymousCid ({ data }) {
     return {
-      frontEndKey: responseKey,
+      cid: data,
     }
   }
 }

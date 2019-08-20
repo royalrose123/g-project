@@ -72,7 +72,7 @@ const confirmModalText = {
 }
 
 function Settings (props) {
-  const { tableNumber, clockState, changeTableNumber, changeClockState, changeClockInTriggerTime } = props
+  const { tableNumber, changeTableNumber, changeClockState, changeClockInTriggerTime } = props
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
 
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
@@ -85,7 +85,7 @@ function Settings (props) {
   const [tableList, setTableList] = useState([])
   const [confirmModalTextPack, setConfirmModalTextPack] = useState({})
   const [isConfirmModalOpened, setIsConfirmModalOpened] = useState(false)
-  const [autoClockInTriggerTime, setAutoClockInTriggerTime] = useState([60, 60])
+  // const [autoClockInTriggerTime, setAutoClockInTriggerTime] = useState([60, 60])
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
   const openConfirmModal = () => setIsConfirmModalOpened(true)
@@ -174,11 +174,11 @@ function Settings (props) {
 
     if (detail) {
       setPreviousClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
-      setAutoClockInTriggerTime([detail.autoSettings.autoClockInMemberSec, detail.autoSettings.autoClockInAnonymousSec])
+      // setAutoClockInTriggerTime([detail.autoSettings.autoClockInMemberSec, detail.autoSettings.autoClockInAnonymousSec])
       // if (isLoaded) changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
     // if (autoClockInTriggerTime) changeClockInTriggerTime(autoClockInTriggerTime)
-  }, [autoClockInTriggerTime, changeClockInTriggerTime, changeClockState, clockState, detail, isLoaded, tableList, tableListTemp])
+  }, [detail, tableList, tableListTemp])
 
   return isLoaded ? (
     <div className={cx('home-settings')}>

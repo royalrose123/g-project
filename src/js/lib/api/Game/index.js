@@ -1,9 +1,10 @@
 import Denormalizer from './denormalizer'
+import Normalizer from './normalizer'
 
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ tempId, name, snapshot, tableNumber }) {
+  static anonymousClockIn ({ tempId, name, snapshot, tableNumber, cid }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
@@ -13,10 +14,12 @@ class Game {
           name,
           snapshot,
           tableNumber,
+          cid,
         },
       },
       {
         denormalizer: Denormalizer.AnonymousClockIn,
+        normalizer: Normalizer.GetAnnoymousCid,
       }
     )
 
