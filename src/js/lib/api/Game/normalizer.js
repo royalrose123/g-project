@@ -1,11 +1,5 @@
 // import Service from '../service'
 
-class Normalizer {
-  static GetAnnoymousCid ({ data }) {
-    return {
-      cid: data,
-    }
-  }
-}
+class Normalizer {}
 
 export default Normalizer

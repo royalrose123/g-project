@@ -84,10 +84,10 @@ class Service {
   }
 
   handleSuccess (response) {
-    const casedResponse = toCaseKeys(response.data.data, Service.option.toResponseCase)
-    const normalizedResponse = this.normalizer(casedResponse)
+    const casedData = toCaseKeys(response.data.data, Service.option.toResponseCase)
+    const normalizedData = this.normalizer(casedData)
 
-    return normalizedResponse
+    return normalizedData
   }
 
   handleFailure (error) {
@@ -109,7 +109,6 @@ class Service {
   callApi () {
     const axiosInstance = this.getAxiosInstance()
     const requestConfig = this.getRequestConfig()
-
     return axiosInstance(requestConfig).then(response => this.handleSuccess(response), error => this.handleFailure(error))
   }
 }

@@ -71,7 +71,6 @@ function Table (props) {
 
   const localStorageStandingList = JSON.parse(localStorage.getItem('standingList'))
   const isLocalStorageStandingListNull = some(localStorageStandingList, 'id')
-  console.warn('isLocalStorageStandingListNull', isLocalStorageStandingListNull)
 
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
@@ -136,9 +135,6 @@ function Table (props) {
 
   // Detection
   const onDetectionItemActionClick = (event, detectionItem, detectionItemTempId, isAuto = false) => {
-    console.warn('table open clockInModal 1111111111', detectionItem)
-    console.log('table detectionItemTempId', detectionItemTempId)
-    console.log('standingList', standingList)
     openClockInModal()
 
     setIsAutoClocking(isAuto)
@@ -156,26 +152,18 @@ function Table (props) {
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify } = person
     console.log('onClockIn person 11111', person)
-
-    // 根據是否站立，設定位置列表的內容
-    if (isAutoClocking) {
-      const standingIndex = findIndex(standingList, item => {
-        return item === undefined
-      })
-      console.warn('standingIndex 000000000000', standingIndex)
-      addStandingItem({ id: String(id), image }, standingIndex)
-      initializeCurrentDetectionItem()
-    } else if (isSelectedPlaceStanding) {
-      addStandingItem({ id: String(id), image }, selectedPlaceIndex)
-    } else {
-      addSeatItem({ id: String(id), image }, selectedPlaceIndex)
-    }
+    console.warn('tempId', tempId)
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
-      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+      const memberId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+      // console.warn('response 111111111', response)
+      if (memberId) id = memberId
+      // id = response.data.data
+      console.log('clockIn anonymous 99999999  id', id)
+      // console.warn('clock anonymous id', response)
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
@@ -190,6 +178,21 @@ function Table (props) {
       closeClockInModal()
       await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
+    }
+
+    // 根據是否站立，設定位置列表的內容
+    if (isAutoClocking) {
+      const standingIndex = findIndex(standingList, item => {
+        return item === undefined
+      })
+      console.warn('standingIndex 000000000000', standingIndex)
+      addStandingItem({ id: String(id), image, isAuto: isAutoClocking }, standingIndex)
+      initializeCurrentDetectionItem()
+    } else if (isSelectedPlaceStanding) {
+      console.log('clockIn anonymous 000000000  id', id)
+      addStandingItem({ id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
+    } else {
+      addSeatItem({ id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
     }
 
     await closeClockInModal()

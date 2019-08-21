@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get } from 'lodash'
+import { difference, get } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -33,7 +33,6 @@ export const propTypes = {
   standingList: PropTypes.array,
   tableNumber: PropTypes.string,
   clockState: PropTypes.string,
-  // isOpened: PropTypes.bool,
   isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
   // autoMemberTriggerTime: PropTypes.array,
@@ -51,35 +50,37 @@ function Detection (props) {
     // autoMemberTriggerTime,
     // autoAnonymousTriggerTime,
   } = props
-  console.warn('detection')
+  // console.warn('detection')
   const [detectionList, setDetectionList] = useState([])
-  console.log('detectionList 000000000', detectionList)
-  const [detectionItemLogInTimer, setDetectionItemLogInTimer] = useState({}) //
-  // const [currentDetectionListTempId, setCurrentDetectionListTempId] = useState([]) //
-  // const [previousDetectionListTempId, setPreviousDetectionListTempId] = useState([])
-  // const [currentDetectionListTempIdArray, setCurrentDetectionListTempIdArray] = useState([])
-  // const [previousDetectionListTempIdArray, setPreviousDetectionListTempIdArray] = useState([])
-  // const [leaveDetectionList, setLeaveDetectionList] = useState([]) //
+  const detectionListRecordTime = useRef({})
   const previousDetectionList = usePrevious(detectionList)
-  // const previousDetectionItemLogInTimer = usePrevious(detectionItemLogInTimer)
-  console.log('previousDetectionList', previousDetectionList)
-  // console.log('previousDetectionItemLogInTimer', previousDetectionItemLogInTimer)
-  console.warn('detectionList', detectionList)
-  // if(detectionList.length > 0)
-  // console.log('detectionListTempId', currentDetectionListTempId)
-  // console.log('previousDetectionListTempId', previousDetectionListTempId)
-  // if (previousDetectionList && previousDetectionList.length > 0) {
-  //   const currentDetectionListTempIdArray = detectionList.map(item => {
-  //     return item.probableList[0].tempId
-  //   })
-  //   const previousDetectionListTempIdArray = previousDetectionList.map(item => {
-  //     return item.probableList[0].tempId
-  //   })
+  // console.log('previousDetectionList', previousDetectionList)
 
-  //   const leaveDetectionList = difference(previousDetectionListTempIdArray, currentDetectionListTempIdArray)
-  //   const newDetectionItemLogInTimer = omit(detectionItemLogInTimer, leaveDetectionList)
-  //   setDetectionItemLogInTimer(newDetectionItemLogInTimer)
-  // }
+  if (detectionList.length > 0 && previousDetectionList && previousDetectionList.length > 0) {
+    const currentDetectionListTempId = detectionList.map(item => item.probableList[0].tempId)
+    const previousDetectionListTempId = previousDetectionList.map(item => item.probableList[0].tempId)
+
+    currentDetectionListTempId.forEach(itemTempId => {
+      const hasAccount = typeof detectionListRecordTime.current[itemTempId] !== 'undefined'
+
+      if (!hasAccount) {
+        detectionListRecordTime.current[itemTempId] = new Date().getTime()
+      }
+    })
+
+    const leaveDetectionList = difference(previousDetectionListTempId, currentDetectionListTempId)
+
+    leaveDetectionList.map(tempId => {
+      delete detectionListRecordTime.current[tempId]
+    })
+    // console.log('currentDetectionListTempId', currentDetectionListTempId)
+    // console.log('previousDetectionListTempId', previousDetectionListTempId)
+    // console.log('leaveDetectionList', leaveDetectionList)
+    // console.log('a 000000000', detectionListRecordTime.current)
+
+    // console.log('a 111111111', detectionListRecordTime.current)
+  }
+  // console.warn('detectionListRecordTime 9999999999999', detectionListRecordTime.current)
 
   // polling
   // const detectionList = [
@@ -130,54 +131,14 @@ function Detection (props) {
     }
   }, [tableNumber])
 
-  // useEffect(() => {
-  //   if (detectionList) {
-  //     setCurrentDetectionListTempId(detectionList.map(item => item.probableList[0].tempId))
-  //     setPreviousDetectionListTempId(previousDetectionList.map(item => item.probableList[0].tempId))
-  //   }
-  // }, [detectionList, previousDetectionList])
+  const CLOCK_IN_TRIGGER_TIME = 8000
 
-  // useEffect(() => {
-  //   if (previousDetectionList && previousDetectionList.length > 0) {
-  //     const newCurrentDetectionListTempIdArray = detectionList.map(item => {
-  //       return item.probableList[0].tempId
-  //     })
-  //     const newPreviousDetectionListTempIdArray = previousDetectionList.map(item => {
-  //       return item.probableList[0].tempId
-  //     })
-
-  //     setCurrentDetectionListTempIdArray(newCurrentDetectionListTempIdArray)
-  //     setPreviousDetectionListTempIdArray(newPreviousDetectionListTempIdArray)
-  //   }
-  // }, [currentDetectionListTempIdArray, detectionList, previousDetectionList, previousDetectionListTempIdArray])
-
-  // useEffect(() => {
-  //   if (previousDetectionListTempIdArray.length > 0) {
-  //     const newLeaveDetectionList = difference(previousDetectionListTempIdArray, currentDetectionListTempIdArray)
-  //     setLeaveDetectionList(newLeaveDetectionList)
-  //   }
-  // }, [currentDetectionListTempIdArray, previousDetectionListTempIdArray])
-
-  // useEffect(() => {
-  //   if (leaveDetectionList.length > 0) {
-  //     const newDetectionItemLogInTimer = JSON.stringify(detectionItemLogInTimer)
-  //     console.warn('omitttttttttt')
-  //     console.log('omit detectionItemLogInTimer 22222222', newDetectionItemLogInTimer)
-  //     setDetectionItemLogInTimer(newDetectionItemLogInTimer, leaveDetectionList)
-  //   }
-  // }, [leaveDetectionList, detectionItemLogInTimer])
-
-  useEffect(() => {
-    setDetectionItemLogInTimer(detectionItemLogInTimer)
-  }, [detectionItemLogInTimer])
-
-  console.log('detectionItemLogInTimer 000000000', detectionItemLogInTimer)
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
   const itemSpacing = 20
   const itemBorder = 30
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
-  console.warn('detectionList', detectionList)
+  // console.warn('detectionList', detectionList)
 
   return (
     <div className={cx('home-table-detection')}>
@@ -194,57 +155,51 @@ function Detection (props) {
         >
           {detectionList.map((detectionItem, index) => {
             const person = getPersonByType(detectionItem.type, detectionItem)
+
             if (seatedList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
               return null
             } else if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
               return null
             } else if (clockState !== 'manualClock') {
-              console.log('detectionItemLogInTimer 99999999999', detectionItemLogInTimer)
               const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
-              // const hasAccount = typeof detectionItemLogInTimer[detectionItemTempId] === 'undefined'
-              // console.warn('detectionItemTempId hasAccounttttttt', detectionItemTempId, hasAccount)
-              // if (hasAccount) {
-              // setDetectionItemLogInTimer({ ...detectionItemLogInTimer, detectionItemTempId: new Date().getTime() })
-              // detectionItemLogInTimer[detectionItemTempId] = new Date().getTime()
-              // } else {
-              // const detectionItemExistingTime = new Date().getTime() - detectionItemLogInTimer[detectionItemTempId]
-              // console.log(detectionItemTempId + 'detectionItem existing time', detectionItemExistingTime)
+              // console.log('detectionListRecordTime[detectionItemTempId] 8888888', detectionListRecordTime.current[detectionItemTempId])
+              const detectionItemExistingTime = new Date().getTime() - detectionListRecordTime.current[detectionItemTempId]
+              // console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
 
               switch (clockState) {
                 case 'autoAnonymous':
-                  if (detectionItem.type === 'anonymous') {
-                    console.log('autoAnonymous detectionItemLogInTimer', detectionItemLogInTimer)
-                    onItemActionClick(event, detectionItem, detectionItemTempId, true)
+                  if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
+                    // console.log('autoAnonymous detectionListRecordTime', detectionListRecordTime)
+                    // onItemActionClick(event, detectionItem, detectionItemTempId, true)
                   }
                   break
                 case 'autoMember':
-                  if (detectionItem.type === 'member') {
-                    // console.log('autoMember detectionItemLogInTimer', detectionItemLogInTimer)
-                    onItemActionClick(event, detectionItem, detectionItemTempId, true)
+                  if (detectionItem.type === 'member' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
+                    // console.log('autoMember detectionListRecordTime', detectionListRecordTime)
+                    // onItemActionClick(event, detectionItem, detectionItemTempId, true)
                   }
                   break
                 case 'autoClock':
                   // if (detectionItemExistingTime > 8000) {
-                  // console.log('autoClock detectionItemLogInTimer', detectionItemLogInTimer)
+                  // console.log('autoClock detectionListRecordTime', detectionListRecordTime)
                   // onItemActionClick(event, detectionItem, detectionItemTempId, true)
                   // }
                   break
               }
-              // }
             }
 
             return (
               <div
                 key={index}
                 style={{ padding: `${itemBorder}px ${itemSpacing}px`, outline: 0 }}
-                onClick={isPlaceSelected ? event => onItemActionClick(event, detectionItem) : null}
+                onClick={isPlaceSelected ? event => onItemActionClick(event, detectionItem, false) : null}
               >
                 <Person
                   title='level'
                   type={detectionItem.type}
                   person={person}
                   renderFooter={() => (
-                    <Button isBlock disabled={!isPlaceSelected} onClick={event => onItemActionClick(event, detectionItem)}>
+                    <Button isBlock disabled={!isPlaceSelected} onClick={event => onItemActionClick(event, detectionItem, false)}>
                       Clock-In
                     </Button>
                   )}

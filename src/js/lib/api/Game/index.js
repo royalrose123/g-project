@@ -1,10 +1,10 @@
 import Denormalizer from './denormalizer'
-import Normalizer from './normalizer'
+// import Normalizer from './normalizer'
 
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ tempId, name, snapshot, tableNumber, cid }) {
+  static anonymousClockIn ({ tempId, name, snapshot, tableNumber }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
@@ -14,12 +14,10 @@ class Game {
           name,
           snapshot,
           tableNumber,
-          cid,
         },
       },
       {
         denormalizer: Denormalizer.AnonymousClockIn,
-        normalizer: Normalizer.GetAnnoymousCid,
       }
     )
 
@@ -68,12 +66,12 @@ class Game {
         url: '/clock-out',
         method: 'POST',
         data: {
-          id,
+          id, // requird
           playType,
           propPlay,
           averageBet,
           whoWin,
-          actualWin,
+          actualWin, // requird
           drop,
           overage,
         },

@@ -4,8 +4,8 @@ import * as actionTypes from './actionTypes'
 const initialState = {
   tableNumber: 'Please select',
   // clockState: 'manualClock',
-  clockState: 'autoMember',
-  // clockState: 'autoAnonymous',
+  // clockState: 'autoMember',
+  clockState: 'autoAnonymous',
   clockInTriggerTime: 60,
 }
 
