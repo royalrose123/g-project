@@ -36,7 +36,8 @@ export const propTypes = {
   clockState: PropTypes.string,
   changeTableNumber: PropTypes.func,
   changeClockState: PropTypes.func,
-  changeClockInTriggerTime: PropTypes.func,
+  changeAutoSettings: PropTypes.func,
+  changeDefaultRecord: PropTypes.func,
 }
 
 export const checkClockState = (memberClock, anonymousClock) => {
@@ -72,9 +73,9 @@ const confirmModalText = {
 }
 
 function Settings (props) {
-  const { tableNumber, changeTableNumber, changeClockState, changeClockInTriggerTime } = props
-  const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
+  const { tableNumber, changeClockState, changeTableNumber, changeAutoSettings, changeDefaultRecord } = props
 
+  const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
   // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
   const [currentTab, setCurrentTab] = useState(TABS.SYSTEM_SETTINGS)
@@ -92,7 +93,7 @@ function Settings (props) {
   const closeConfirmModal = () => setIsConfirmModalOpened(false)
   const saveConfirmModal = formikValues => {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    changeClockInTriggerTime([formikValues.autoSettings.autoClockInMemberSec, formikValues.autoSettings.autoClockInAnonymousSec])
+    // changeClockInTriggerTime([formikValues.autoSettings.autoClockInMemberSec, formikValues.autoSettings.autoClockInAnonymousSec])
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
     SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
@@ -142,6 +143,7 @@ function Settings (props) {
 
   const onOptionChange = async event => {
     const selectedTableName = event.target.value
+
     setTableList(
       tableList.map(tableItem => {
         if (tableItem.tableName === 'Please select') {
@@ -156,9 +158,9 @@ function Settings (props) {
       })
     )
     if (selectedTableName !== 'Please select') SettingsApi.activeTable({ selectedTableName })
+    changeTableNumber(selectedTableName)
     SettingsApi.deactiveTable({ tableNumber })
     window.localStorage.setItem('tableNumber', selectedTableName)
-    changeTableNumber(selectedTableName)
   }
 
   useEffect(() => {
@@ -178,7 +180,16 @@ function Settings (props) {
       // if (isLoaded) changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
     // if (autoClockInTriggerTime) changeClockInTriggerTime(autoClockInTriggerTime)
-  }, [detail, tableList, tableListTemp])
+  }, [detail, tableList, tableListTemp, changeTableNumber, changeClockState])
+
+  useEffect(() => {
+    if (isLoaded) {
+      changeAutoSettings(detail.autoSettings)
+      changeDefaultRecord(detail.defaultRecord)
+      changeTableNumber(detail.systemSettings.tbName)
+      changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+    }
+  }, [detail, isLoaded, changeTableNumber, changeClockState, changeAutoSettings, changeDefaultRecord])
 
   return isLoaded ? (
     <div className={cx('home-settings')}>
@@ -229,8 +240,9 @@ function Settings (props) {
                   autoSettings: values.autoSettings,
                   defaultRecord: values.defaultRecord,
                 })
-                changeClockInTriggerTime([values.autoSettings.autoClockInMemberSec, values.autoSettings.autoClockInAnonymousSec])
+
                 setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+                // changeClockInTriggerTime([values.autoSettings.autoClockInMemberSec, values.autoSettings.autoClockInAnonymousSec])
                 changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
               } else {
                 setConfirmModalTextPack(confirmModalText[checkClockState(currentMemberClock, currentAnonymousClock)])
@@ -895,8 +907,8 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   changeTableNumber: tableOperations.changeTableNumber,
   changeClockState: tableOperations.changeClockState,
-  changeClockInTriggerTime: tableOperations.changeClockInTriggerTime,
-  changeClockOutTriggerTime: tableOperations.changeClockOutTriggerTime,
+  changeAutoSettings: tableOperations.changeAutoSettings,
+  changeDefaultRecord: tableOperations.changeDefaultRecord,
 }
 
 export default connect(

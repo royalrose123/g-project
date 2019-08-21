@@ -38,6 +38,8 @@ function Seated (props) {
           className={cx('home-table-seated__seat')}
           onClick={event => onPlaceSelect(event, { index, place: seatedItem, isStanding: false })}
           data-is-selected={index === selectedIndex}
+          data-has-image={typeof seatedItem === 'object'}
+          data-is-auto-clock={typeof seatedItem === 'object' && seatedItem.isAuto}
         >
           {typeof seatedItem === 'object' ? (
             <img className={cx('home-table-seated__seat-image')} src={seatedItem.image} />

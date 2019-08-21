@@ -27,6 +27,26 @@ $desk-height: 105px;
       background-color: $gray-white;
     }
 
+    &[data-has-image="true"] {
+      border: none;
+    }
+
+    &[data-is-auto-clock="true"] {
+      overflow: inherit;
+      border: none;
+
+      &:after {
+        content: "Auto";
+        position: absolute;
+        left: 0;
+        bottom: -13px;
+        color: #fff;
+        background-color: #20b470;
+        font-size: $font-size-sm;
+        width: 100%;
+      }
+    }
+
     &:nth-of-type(1) {
       left: 0;
       bottom: $desk-height / 2;

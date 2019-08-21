@@ -5,8 +5,11 @@ const initialState = {
   tableNumber: 'Please select',
   // clockState: 'manualClock',
   // clockState: 'autoMember',
-  clockState: 'autoAnonymous',
-  clockInTriggerTime: 60,
+  // clockState: 'autoClock',
+  clockState: 'manualClock',
+  // clockInTriggerTime: 60,
+  autoSettings: {},
+  defaultRecord: {},
 }
 
 const tableData = createReducer(initialState, {
@@ -14,22 +17,30 @@ const tableData = createReducer(initialState, {
     ...state,
     ...payload,
   }),
+
   [actionTypes.CHANGE_TABLE_NUMBER]: (state, { payload }) => ({
     ...state,
     tableNumber: payload.tableNumber,
   }),
+
   [actionTypes.INIT_CLOCK_STATE]: (state, { payload }) => ({
     ...state,
     ...payload,
   }),
+
   [actionTypes.CHANGE_CLOCK_STATE]: (state, { payload }) => ({
     ...state,
     clockState: payload.clockState,
   }),
 
-  [actionTypes.CHANGE_CLOCK_IN_TRIGGER_TIME]: (state, { payload }) => ({
+  [actionTypes.CHANGE_AUTO_SETTINGS]: (state, { payload }) => ({
     ...state,
-    clockInTriggerTime: payload.clockInTriggerTime,
+    autoSettings: payload.autoSettings,
+  }),
+
+  [actionTypes.CHANGE_DEFAULT_RECORD]: (state, { payload }) => ({
+    ...state,
+    defaultRecord: payload.defaultRecord,
   }),
 })
 

@@ -45,16 +45,16 @@ export const changeClockState = clockState => ({
   },
 })
 
-export const changeClockInTriggerTime = clockInTriggerTime => ({
-  type: actionTypes.CHANGE_CLOCK_IN_TRIGGER_TIME,
+export const changeAutoSettings = autoSettings => ({
+  type: actionTypes.CHANGE_AUTO_SETTINGS,
   payload: {
-    clockInTriggerTime,
+    autoSettings,
   },
 })
 
-export const changeClockOutTriggerTime = clockOutTriggerTime => ({
-  type: actionTypes.CHANGE_CLOCK_OUT_TRIGGER_TIME,
+export const changeDefaultRecord = defaultRecord => ({
+  type: actionTypes.CHANGE_DEFAULT_RECORD,
   payload: {
-    clockOutTriggerTime,
+    defaultRecord,
   },
 })

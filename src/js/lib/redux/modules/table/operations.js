@@ -12,4 +12,6 @@ export const initClockState = actions.initClockState
 
 export const changeClockState = actions.changeClockState
 
-export const changeClockInTriggerTime = actions.changeClockInTriggerTime
+export const changeAutoSettings = actions.changeAutoSettings
+
+export const changeDefaultRecord = actions.changeDefaultRecord
