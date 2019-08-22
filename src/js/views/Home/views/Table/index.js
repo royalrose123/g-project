@@ -192,11 +192,23 @@ function Table (props) {
     await history.push(findStaticPath(path))
   }
 
+  const renderAutomaticNotice = clockState => {
+    switch (clockState) {
+      case 'manualClock' || 'autoClock':
+        return null
+      case 'autoAnonymous':
+        return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Anonymous</div>
+      case 'autoMember':
+        return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Member</div>
+    }
+  }
+
   return isDetailVisible ? (
     <MemberDetail onClockOut={onClockOut} {...props} />
   ) : (
     <div className={cx('home-table')}>
       <div className={cx('home-table__seating-plan')}>
+        {renderAutomaticNotice(clockState)}
         <div className={cx('home-table__seated-wrapper')}>
           <Seated
             seatedList={seatedList}

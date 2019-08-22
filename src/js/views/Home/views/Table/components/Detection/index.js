@@ -21,6 +21,7 @@ import { selectors as seatedSelectors } from '../../../../../../lib/redux/module
 import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
 import usePrevious from '../../../../../../lib/effects/usePrevious'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
+import automaticInfoSVG from '../../../../../../../assets/images/icons/automatic-info.svg'
 
 // Style
 import styles from './style.module.scss'
@@ -35,27 +36,27 @@ export const propTypes = {
   clockState: PropTypes.string,
   isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
-  // autoMemberTriggerTime: PropTypes.array,
-  // autoAnonymousTriggerTime: PropTypes.array,
 }
 
 function Detection (props) {
-  const {
-    seatedList,
-    standingList,
-    tableNumber,
-    isPlaceSelected,
-    onItemActionClick,
-    clockState,
-    // autoMemberTriggerTime,
-    // autoAnonymousTriggerTime,
-  } = props
-  // console.warn('detection')
+  const { seatedList, standingList, tableNumber, isPlaceSelected, onItemActionClick, clockState } = props
   const [detectionList, setDetectionList] = useState([])
   const detectionListRecordTime = useRef({})
   const previousDetectionList = usePrevious(detectionList)
-  // console.log('previousDetectionList', previousDetectionList)
 
+  useEffect(() => {
+    const timerSecond = 2
+    const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(flatMap(index => from(DeviceApi.fetchDetectionList({ tableNumber }))))
+    const fetchDataSubscription = fetchDataObservable.subscribe(response => {
+      setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
+    })
+
+    return () => {
+      fetchDataSubscription.unsubscribe()
+    }
+  }, [tableNumber])
+
+  // 記錄每個人員的時間及移除離開人員
   if (detectionList.length > 0 && previousDetectionList && previousDetectionList.length > 0) {
     const currentDetectionListTempId = detectionList.map(item => item.probableList[0].tempId)
     const previousDetectionListTempId = previousDetectionList.map(item => item.probableList[0].tempId)
@@ -112,30 +113,51 @@ function Detection (props) {
   //   },
   // ]
 
-  useEffect(() => {
-    const timerSecond = 2
-    const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(flatMap(index => from(DeviceApi.fetchDetectionList({ tableNumber }))))
-    const fetchDataSubscription = fetchDataObservable.subscribe(response => {
-      setDetectionList(response.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])))
-    })
-
-    return () => {
-      fetchDataSubscription.unsubscribe()
-    }
-  }, [tableNumber])
-
   const CLOCK_IN_TRIGGER_TIME = 8000
+
+  const executeAutoClockInByClockState = (detectionItem, detectionItemExistingTime) => {
+    switch (clockState) {
+      case 'autoAnonymous':
+        if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
+          // console.log('autoAnonymous detectionListRecordTime', detectionListRecordTime)
+          // onItemActionClick(event, detectionItem, detectionItemTempId, true)
+        }
+        break
+      case 'autoMember':
+        if (detectionItem.type === 'member' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
+          // console.log('autoMember detectionListRecordTime', detectionListRecordTime)
+          // onItemActionClick(event, detectionItem, detectionItemTempId, true)
+        }
+        break
+      case 'autoClock':
+        // if (detectionItemExistingTime > 8000) {
+        // console.log('autoClock detectionListRecordTime', detectionListRecordTime)
+        // onItemActionClick(event, detectionItem, detectionItemTempId, true)
+        // }
+        break
+    }
+  }
+
+  const renderAutomaticInfo = () => (
+    <div className={cx('home-table-detection-automatic')}>
+      <img className={cx('home-table-detection-automatic__image')} src={automaticInfoSVG} alt='automaticInfo' />
+      <p className={cx('home-table-detection-automatic__title')}>Automatic Clock-In/Out Member and Anonymous is Active</p>
+      <p className={cx('home-table-detection-automatic__description')}>The system is automatically clocking-in/out member and amomymous.</p>
+      <p className={cx('home-table-detection-automatic__description')}>
+        If you want to manually clock-in/out players, please change it in the “SETTINGS” page.
+      </p>
+    </div>
+  )
 
   const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
   const itemSpacing = 20
   const itemBorder = 30
   const slideWidth = `${itemWidth + itemSpacing * 2}px`
   const slideSpacing = -itemSpacing
-  // console.warn('detectionList', detectionList)
 
-  return (
-    <div className={cx('home-table-detection')}>
-      {detectionList.length > 0 && (
+  const renderDetectionCarousel = () =>
+    detectionList.length > 0 && (
+      <div className={cx('home-table-detection')}>
         <Carousel
           autoGenerateStyleTag={false}
           withoutControls
@@ -149,34 +171,19 @@ function Detection (props) {
           {detectionList.map((detectionItem, index) => {
             const person = getPersonByType(detectionItem.type, detectionItem)
             const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
-            if (seatedList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
-              return null
-            } else if (standingList.find(seatedItem => seatedItem && (seatedItem.id === person.id || seatedItem.tempId === person.tempId))) {
-              return null
-            } else if (clockState !== 'manualClock') {
-              const detectionItemExistingTime = new Date().getTime() - detectionListRecordTime.current[detectionItemTempId]
-              // console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
+            const detectionItemExistingTime = new Date().getTime() - detectionListRecordTime.current[detectionItemTempId]
+            const isExistedSeated = seatedList.find(seatedItem => (seatedItem && seatedItem.id === person.id) || seatedItem.tempId === person.tempId)
+            const isExistedStanding = standingList.find(
+              seatedItem => (seatedItem && seatedItem.id === person.id) || seatedItem.tempId === person.tempId
+            )
 
-              switch (clockState) {
-                case 'autoAnonymous':
-                  if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
-                    // console.log('autoAnonymous detectionListRecordTime', detectionListRecordTime)
-                    // onItemActionClick(event, detectionItem, detectionItemTempId, true)
-                  }
-                  break
-                case 'autoMember':
-                  if (detectionItem.type === 'member' && detectionItemExistingTime >= CLOCK_IN_TRIGGER_TIME) {
-                    // console.log('autoMember detectionListRecordTime', detectionListRecordTime)
-                    // onItemActionClick(event, detectionItem, detectionItemTempId, true)
-                  }
-                  break
-                case 'autoClock':
-                  // if (detectionItemExistingTime > 8000) {
-                  // console.log('autoClock detectionListRecordTime', detectionListRecordTime)
-                  // onItemActionClick(event, detectionItem, detectionItemTempId, true)
-                  // }
-                  break
-              }
+            switch (true) {
+              case isExistedSeated:
+                return null
+              case isExistedStanding:
+                return null
+              case clockState !== 'manualClock':
+                executeAutoClockInByClockState(detectionItem, detectionItemExistingTime)
             }
 
             return (
@@ -200,9 +207,10 @@ function Detection (props) {
             //
           })}
         </Carousel>
-      )}
-    </div>
-  )
+      </div>
+    )
+
+  return <div>{clockState === 'autoClock' ? renderAutomaticInfo() : renderDetectionCarousel()}</div>
 }
 
 Detection.propTypes = propTypes

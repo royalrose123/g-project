@@ -18,9 +18,9 @@
 
   &--error {
     position: absolute;
-    top: 62px;
+    top: 30px;
     left: 0;
-    font-size: 26px;
+    font-size: $font-size-sm;
     color: #e52d2d;
     margin-top: 5px;
   }

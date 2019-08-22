@@ -3,7 +3,6 @@ import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
 import * as Yup from 'yup'
-import { isEmpty } from 'lodash'
 import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
 
@@ -110,16 +109,16 @@ function Settings (props) {
       systemSettings: Yup.object().shape({}),
       autoSettings: Yup.object().shape({
         autoClockInMemberSec: Yup.string()
-          .notOneOf(['0'], 'Duration must be above 0')
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
           .required('Duration must be entered'),
         autoClockOutMemberSec: Yup.string()
-          .notOneOf(['0'], 'Duration must be above 0')
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
           .required('Duration must be entered'),
         autoClockInAnonymousSec: Yup.string()
-          .notOneOf(['0'], 'Duration must be above 0')
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
           .required('Duration must be entered'),
         autoClockOutAnonymousSec: Yup.string()
-          .notOneOf(['0'], 'Duration must be above 0')
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
           .required('Duration must be entered'),
       }),
       defaultRecord: Yup.object().shape({
@@ -130,14 +129,6 @@ function Settings (props) {
           value => Number(value) < API_NUMBER
         ),
       }),
-    })
-  }
-
-  const validateFormData = (validateForm, submitForm) => {
-    validateForm().then(errors => {
-      if (isEmpty(errors)) {
-        submitForm()
-      }
     })
   }
 
@@ -881,7 +872,7 @@ function Settings (props) {
                     </Form.Group>
                   </div>
                   <div className={cx('home-settings__footer')}>
-                    <Button type='button' disabled={tableNumber === 'Please select'} onClick={() => validateFormData(validateForm, submitForm)}>
+                    <Button type='submit' disabled={tableNumber === 'Please select'}>
                       Save
                     </Button>
                   </div>

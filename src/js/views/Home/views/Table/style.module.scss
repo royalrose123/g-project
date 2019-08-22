@@ -5,8 +5,19 @@
   &__seating-plan {
     display: flex;
     height: 373px;
-    border-bottom: 1px solid $gray-white;
+    border-bottom: 1px solid $gray-light;
     justify-content: space-between;
+
+    &__notice {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 6px 10px;
+      font-size: $font-size-sm;
+      background-color: #20b470;
+      color: #fff;
+      border-radius: 0 0 0 4px;
+    }
   }
 
   &__seated-wrapper {

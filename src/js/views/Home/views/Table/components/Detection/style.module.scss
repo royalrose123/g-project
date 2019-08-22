@@ -3,3 +3,34 @@
   align-items: center;
   @include size(100%);
 }
+
+.home-table-detection-automatic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-direction: column;
+  margin-top: 80px;
+
+  &__image {
+    width: 85px;
+    height: auto;
+  }
+
+  &__title {
+    font-weight: bold;
+    font-size: $font-size-lg;
+    margin-top: 23px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+
+  &__description {
+    font-weight: 300;
+    width: 520px;
+    font-size: $font-size-sm;
+    text-align: center;
+    line-height: 1.4;
+    letter-spacing: 1px;
+  }
+}
