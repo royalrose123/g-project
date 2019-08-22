@@ -11,6 +11,7 @@ import { difference, get } from 'lodash'
 // Components
 import Person from '../Person'
 import Button from '../../../../../../components/Button'
+import Icon from '../../../../../../components/Icon'
 
 // Modules
 import { selectors as tableSelectors } from '../../../../../../lib/redux/modules/table'
@@ -21,7 +22,7 @@ import { selectors as seatedSelectors } from '../../../../../../lib/redux/module
 import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
 import usePrevious from '../../../../../../lib/effects/usePrevious'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
-import automaticInfoSVG from '../../../../../../../assets/images/icons/automatic-info.svg'
+import personSVG from '../../../../../../../assets/images/icons/person.svg'
 
 // Style
 import styles from './style.module.scss'
@@ -140,7 +141,18 @@ function Detection (props) {
 
   const renderAutomaticInfo = () => (
     <div className={cx('home-table-detection-automatic')}>
-      <img className={cx('home-table-detection-automatic__image')} src={automaticInfoSVG} alt='automaticInfo' />
+      <div className={cx('home-table-detection-automatic__image-wrapper')}>
+        <img className={cx('home-table-detection-automatic__image')} src={personSVG} alt='automaticInfo' />
+        <Icon
+          className={cx('home-table-detection-automatic__icon')}
+          name='gear'
+          mode='01'
+          width={80}
+          height={80}
+          viewBox={`0 0 60 60`}
+          preserveAspectRatio='xMinYMin slice'
+        />
+      </div>
       <p className={cx('home-table-detection-automatic__title')}>Automatic Clock-In/Out Member and Anonymous is Active</p>
       <p className={cx('home-table-detection-automatic__description')}>The system is automatically clocking-in/out member and amomymous.</p>
       <p className={cx('home-table-detection-automatic__description')}>

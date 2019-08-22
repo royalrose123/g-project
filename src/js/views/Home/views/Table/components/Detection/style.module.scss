@@ -1,3 +1,12 @@
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .home-table-detection {
   display: flex;
   align-items: center;
@@ -12,9 +21,21 @@
   flex-direction: column;
   margin-top: 80px;
 
+  &__image-wrapper {
+    position: relative;
+  }
+
   &__image {
     width: 85px;
     height: auto;
+  }
+
+  &__icon {
+    position: absolute;
+    top: 10px;
+    left: 30px;
+    fill: #20b470;
+    animation: rotate 5000ms linear infinite;
   }
 
   &__title {
