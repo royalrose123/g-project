@@ -63,7 +63,6 @@ function MemberDetail (props) {
   return isLoaded ? (
     <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut}>
       {({ values, setFieldValue }) => {
-        console.log('detail', detail)
         return (
           <FormikForm>
             <Layout className={cx('home-table-member-detail')}>

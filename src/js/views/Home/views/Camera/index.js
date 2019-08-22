@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import PropTypes from 'prop-types'
+// import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 import { connect } from 'react-redux'
 
@@ -19,15 +19,12 @@ import styles from './style.module.scss'
 // Variables / Functions
 const cx = classnames.bind(styles)
 
-export const propTypes = {
-  tableNumber: PropTypes.string,
-}
+// export const propTypes = {
+// tableNumber: PropTypes.string,
+// }
 
 function Camera (props) {
-  const { tableNumber } = props
   const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
-  console.log('camera list', cameraList)
-  console.log('camera tableNumber', tableNumber)
   // TODO: 先用 iframe，待播放器問題解決後再用正規方式處理
   useEffect(() => {
     // if (!isLoaded) return
@@ -69,7 +66,7 @@ function Camera (props) {
   )
 }
 
-Camera.propTypes = propTypes
+// Camera.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {

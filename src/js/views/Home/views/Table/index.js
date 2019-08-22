@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex, some } from 'lodash'
+import { findIndex } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -59,7 +59,6 @@ function Table (props) {
     standingList,
     addSeatItem,
     removeSeatItem,
-    initStandingList,
     addStandingItem,
     removeStandingItem,
     tableNumber,
@@ -69,16 +68,13 @@ function Table (props) {
   const { path, params } = match
   const { memberId } = params
 
-  const localStorageStandingList = JSON.parse(localStorage.getItem('standingList'))
-  const isLocalStorageStandingListNull = some(localStorageStandingList, 'id')
-
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
   const [isAutoClocking, setIsAutoClocking] = useState(false)
-  console.log('this is table')
+  // console.log('this is table')
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -86,24 +82,8 @@ function Table (props) {
   const closeClockInModal = () => setIsClockInModalOpened(false)
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
-  // const setLocalStorageStandingList = async (standingList, itemIndex) => {
-  //   //
-  //   await localStorage.setItem('standingList', JSON.stringify(standingList))
-  //   console.warn('setLocalStorage standingList', standingList)
-  // }
-
-  useEffect(() => {
-    // if (isLocalStorageStandingListNull) {
-    //   initStandingList(localStorageStandingList)
-    // }
-  }, [initStandingList, isLocalStorageStandingListNull, localStorageStandingList])
-
   // 設定初始值
   useEffect(() => {
-    // if (isLocalStorageStandingListNull) {
-    //   initStandingList(localStorageStandingList)
-    // }
-
     document.documentElement.style.setProperty('--seated-seat-size', SEATED_CONSTANTS.SIZE)
 
     document.documentElement.style.setProperty('--standing-row', STANDING_CONSTANTS.ROW)
@@ -146,23 +126,20 @@ function Table (props) {
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
   const onClockIn = async (event, person, isAutoClocking) => {
-    console.warn('table onClockIn 2222222222')
-    console.log('onClockIn person 00000', person)
-    if (!person) return
+    if (!person) return closeClockInModal()
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify } = person
-    console.log('onClockIn person 11111', person)
-    console.warn('tempId', tempId)
+
+    // if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id|| seatedItem.id)) {
+    // }
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
-      const memberId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
       // console.warn('response 111111111', response)
-      if (memberId) id = memberId
       // id = response.data.data
-      console.log('clockIn anonymous 99999999  id', id)
       // console.warn('clock anonymous id', response)
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
@@ -185,12 +162,10 @@ function Table (props) {
       const standingIndex = findIndex(standingList, item => {
         return item === undefined
       })
-      console.warn('standingIndex 000000000000', standingIndex)
-      addStandingItem({ id: String(id), image, isAuto: isAutoClocking }, standingIndex)
+      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, standingIndex)
       initializeCurrentDetectionItem()
     } else if (isSelectedPlaceStanding) {
-      console.log('clockIn anonymous 000000000  id', id)
-      addStandingItem({ id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
+      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
     } else {
       addSeatItem({ id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
     }
@@ -202,7 +177,7 @@ function Table (props) {
 
   // MemberDetail
   const onClockOut = async (values, actions) => {
-    await GameApi.clockOut({ id: memberId, ...values })
+    await GameApi.clockOut({ id: memberId, ...values, tableNumber })
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {

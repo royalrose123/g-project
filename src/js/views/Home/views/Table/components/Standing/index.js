@@ -29,11 +29,9 @@ export const defaultProps = {
 
 function Standing (props) {
   const { standingList, selectedIndex, onPlaceSelect } = props
-  // console.log('standing standingList', standingList)
   return (
     <div className={cx('home-table-standing')}>
       {standingList.map((standingItem, index) => {
-        console.log('standingItem :', standingItem, typeof standingItem)
         return (
           <button
             key={index}

@@ -73,14 +73,7 @@ function Detection (props) {
     leaveDetectionList.map(tempId => {
       delete detectionListRecordTime.current[tempId]
     })
-    // console.log('currentDetectionListTempId', currentDetectionListTempId)
-    // console.log('previousDetectionListTempId', previousDetectionListTempId)
-    // console.log('leaveDetectionList', leaveDetectionList)
-    // console.log('a 000000000', detectionListRecordTime.current)
-
-    // console.log('a 111111111', detectionListRecordTime.current)
   }
-  // console.warn('detectionListRecordTime 9999999999999', detectionListRecordTime.current)
 
   // polling
   // const detectionList = [
@@ -155,14 +148,12 @@ function Detection (props) {
         >
           {detectionList.map((detectionItem, index) => {
             const person = getPersonByType(detectionItem.type, detectionItem)
-
+            const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
             if (seatedList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
               return null
-            } else if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id)) {
+            } else if (standingList.find(seatedItem => seatedItem && (seatedItem.id === person.id || seatedItem.tempId === person.tempId))) {
               return null
             } else if (clockState !== 'manualClock') {
-              const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
-              // console.log('detectionListRecordTime[detectionItemTempId] 8888888', detectionListRecordTime.current[detectionItemTempId])
               const detectionItemExistingTime = new Date().getTime() - detectionListRecordTime.current[detectionItemTempId]
               // console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
 

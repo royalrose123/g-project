@@ -27,8 +27,6 @@ export const propTypes = {
 
 function Seated (props) {
   const { seatedList, selectedIndex, onPlaceSelect, tableNumber } = props
-  // const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
-  // console.log(isLoaded, cameraList)
   return (
     <div className={cx('home-table-seated')}>
       {seatedList.map((seatedItem, index) => (

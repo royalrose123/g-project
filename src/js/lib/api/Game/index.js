@@ -60,20 +60,23 @@ class Game {
     return service.callApi()
   }
 
-  static clockOut ({ id, playType, propPlay, averageBet, whoWin, actualWin, drop, overage }) {
+  static clockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner }) {
+    console.log('gameApi clockout tableName', tableNumber)
+    console.log('gameApi clockout overallWinner', overallWinner)
     const service = new Service(
       {
         url: '/clock-out',
         method: 'POST',
         data: {
-          id, // requird
+          id, // requierd
           playType,
           propPlay,
           averageBet,
-          whoWin,
-          actualWin, // requird
+          overallWinner,
+          actualWin, // requierd
           drop,
           overage,
+          tableNumber,
         },
       },
       {
