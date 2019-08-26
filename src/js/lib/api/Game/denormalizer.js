@@ -34,7 +34,6 @@ class Denormalizer {
       ovg: overage.length === 0 ? null : Number(overage),
       tableName: tableNumber,
       whoWin: overallWinner,
-      // whoWin:
     }
   }
 }

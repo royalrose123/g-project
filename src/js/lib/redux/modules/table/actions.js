@@ -58,3 +58,17 @@ export const changeDefaultRecord = defaultRecord => ({
     defaultRecord,
   },
 })
+
+export const addClockOutPlayer = clockOutPlayer => ({
+  type: actionTypes.ADD_CLOCK_OUT_PLAYER,
+  payload: {
+    clockOutPlayer,
+  },
+})
+
+export const removeClockOutPlayer = clockOutPlayer => ({
+  type: actionTypes.REMOVE_CLOCK_OUT_PLAYER,
+  payload: {
+    clockOutPlayer,
+  },
+})

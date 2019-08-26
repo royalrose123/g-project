@@ -52,6 +52,24 @@ export const checkClockState = (memberClock, anonymousClock) => {
   }
 }
 
+const setTableListActiveStatus = (setTableList, tableList, selectedTableName, tableNumber) => {
+  setTableList(
+    tableList.map(tableItem => {
+      if (tableItem.tableName === 'Please select') {
+        return tableItem
+      } else if (tableItem.tableName === selectedTableName) {
+        return { ...tableItem, disabled: true }
+      } else if (tableItem.tableName === tableNumber) {
+        return { ...tableItem, disabled: false }
+      } else {
+        return tableItem
+      }
+    })
+  )
+  if (selectedTableName !== 'Please select') SettingsApi.activeTable({ selectedTableName })
+  SettingsApi.deactiveTable({ tableNumber })
+}
+
 const confirmModalText = {
   manualClock: {
     title: 'Manually Clock-In/Out Member and Anonymous',
@@ -85,24 +103,21 @@ function Settings (props) {
   const [tableList, setTableList] = useState([])
   const [confirmModalTextPack, setConfirmModalTextPack] = useState({})
   const [isConfirmModalOpened, setIsConfirmModalOpened] = useState(false)
-  // const [autoClockInTriggerTime, setAutoClockInTriggerTime] = useState([60, 60])
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
   const openConfirmModal = () => setIsConfirmModalOpened(true)
   const closeConfirmModal = () => setIsConfirmModalOpened(false)
-  const saveConfirmModal = formikValues => {
+  const saveConfirmModal = async formikValues => {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    // changeClockInTriggerTime([formikValues.autoSettings.autoClockInMemberSec, formikValues.autoSettings.autoClockInAnonymousSec])
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    SettingsApi.postSettingDetail({
+    await SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
       autoSettings: formikValues.autoSettings,
       defaultRecord: formikValues.defaultRecord,
     })
-    closeConfirmModal()
-  }
 
-  const API_NUMBER = 25
+    await closeConfirmModal()
+  }
 
   const getValidationSchema = () => {
     return Yup.object().shape({
@@ -122,11 +137,15 @@ function Settings (props) {
           .required('Duration must be entered'),
       }),
       defaultRecord: Yup.object().shape({
-        memberPropPlay: Yup.string().test('more-than-api', 'Amounnt cannot be larger than proportion of games', value => Number(value) < API_NUMBER),
+        memberPropPlay: Yup.string().test(
+          'more-than-api',
+          'Amounnt cannot be larger than proportion of games',
+          value => Number(value) < detail.defaultRecord.memberPropPlayMother
+        ),
         anonymousPropPlay: Yup.string().test(
           'more-than-api',
           'Amounnt cannot be larger than proportion of games',
-          value => Number(value) < API_NUMBER
+          value => Number(value) < detail.defaultRecord.anonymousPropPlayMother
         ),
       }),
     })
@@ -135,22 +154,8 @@ function Settings (props) {
   const onOptionChange = async event => {
     const selectedTableName = event.target.value
 
-    setTableList(
-      tableList.map(tableItem => {
-        if (tableItem.tableName === 'Please select') {
-          return tableItem
-        } else if (tableItem.tableName === selectedTableName) {
-          return { ...tableItem, disabled: true }
-        } else if (tableItem.tableName === tableNumber) {
-          return { ...tableItem, disabled: false }
-        } else {
-          return tableItem
-        }
-      })
-    )
-    if (selectedTableName !== 'Please select') SettingsApi.activeTable({ selectedTableName })
+    setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
     changeTableNumber(selectedTableName)
-    SettingsApi.deactiveTable({ tableNumber })
     window.localStorage.setItem('tableNumber', selectedTableName)
   }
 
@@ -167,10 +172,7 @@ function Settings (props) {
 
     if (detail) {
       setPreviousClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
-      // setAutoClockInTriggerTime([detail.autoSettings.autoClockInMemberSec, detail.autoSettings.autoClockInAnonymousSec])
-      // if (isLoaded) changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
-    // if (autoClockInTriggerTime) changeClockInTriggerTime(autoClockInTriggerTime)
   }, [detail, tableList, tableListTemp, changeTableNumber, changeClockState])
 
   useEffect(() => {
@@ -233,7 +235,6 @@ function Settings (props) {
                 })
 
                 setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
-                // changeClockInTriggerTime([values.autoSettings.autoClockInMemberSec, values.autoSettings.autoClockInAnonymousSec])
                 changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
               } else {
                 setConfirmModalTextPack(confirmModalText[checkClockState(currentMemberClock, currentAnonymousClock)])
@@ -649,10 +650,14 @@ function Settings (props) {
                               />
                             )}
                           />
-                          <Form.InputText>{`/ ${API_NUMBER}`}</Form.InputText>
+                          <Form.InputText>{`/ ${values.defaultRecord.memberPropPlayMother}`}</Form.InputText>
                           <Form.Label data-text-align='right'>
                             {values.defaultRecord.memberPropPlay.length > 0 &&
-                              Math.floor(new BigNumber(values.defaultRecord.memberPropPlay).dividedBy(API_NUMBER).multipliedBy(100))}
+                              Math.floor(
+                                new BigNumber(values.defaultRecord.memberPropPlay)
+                                  .dividedBy(values.defaultRecord.memberPropPlayMother)
+                                  .multipliedBy(100)
+                              )}
                             %
                           </Form.Label>
                         </Form.Column>
@@ -779,10 +784,14 @@ function Settings (props) {
                               />
                             )}
                           />
-                          <Form.InputText>{`/ ${API_NUMBER}`}</Form.InputText>
+                          <Form.InputText>{`/ ${values.defaultRecord.anonymousAverageBet}`}</Form.InputText>
                           <Form.Label data-text-align='right'>
-                            {values.defaultRecord.memberPropPlay.length > 0 &&
-                              Math.floor(new BigNumber(values.defaultRecord.memberPropPlay).dividedBy(API_NUMBER).multipliedBy(100))}
+                            {values.defaultRecord.anonymousPropPlay.length > 0 &&
+                              Math.floor(
+                                new BigNumber(values.defaultRecord.anonymousPropPlay)
+                                  .dividedBy(values.defaultRecord.anonymousAverageBet)
+                                  .multipliedBy(100)
+                              )}
                             %
                           </Form.Label>
                         </Form.Column>

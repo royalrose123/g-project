@@ -15,3 +15,7 @@ export const changeClockState = actions.changeClockState
 export const changeAutoSettings = actions.changeAutoSettings
 
 export const changeDefaultRecord = actions.changeDefaultRecord
+
+export const addClockOutPlayer = actions.addClockOutPlayer
+
+export const removeClockOutPlayer = actions.removeClockOutPlayer

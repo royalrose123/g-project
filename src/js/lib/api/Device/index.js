@@ -7,7 +7,7 @@ class Device {
   static fetchDetectionList ({ tableNumber } = {}) {
     const service = new Service(
       {
-        url: '/people-detection',
+        url: '/people-detection-enhance',
         method: 'GET',
         params: {
           tableNumber,

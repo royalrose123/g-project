@@ -33,7 +33,11 @@ class Normalizer {
   }
 
   static DetectionList (payload) {
-    return Service.normalizeList(payload, Normalizer.DetectionItem)
+    return {
+      detectionList: Service.normalizeList(payload.peopleDetectionDTO, Normalizer.DetectionItem),
+      stay: payload.stay,
+      leave: payload.leave,
+    }
   }
 
   static CameraItem ({ cameraId, url }) {
@@ -48,7 +52,6 @@ class Normalizer {
   }
 
   static CameraList (payload) {
-    console.log('nomalizer payload', payload)
     return Service.normalizeList(payload, Normalizer.CameraItem)
   }
 }

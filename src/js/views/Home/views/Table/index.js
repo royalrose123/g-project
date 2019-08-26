@@ -49,6 +49,8 @@ export const propTypes = {
   initStandingList: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
+  clockOutPlayer: PropTypes.array,
+  removeClockOutPlayer: PropTypes.func,
 }
 
 function Table (props) {
@@ -63,10 +65,12 @@ function Table (props) {
     removeStandingItem,
     tableNumber,
     clockState,
+    clockOutPlayer,
+    removeClockOutPlayer,
   } = props
 
   const { path, params } = match
-  const { memberId } = params
+  let { memberId } = params
 
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
@@ -74,7 +78,6 @@ function Table (props) {
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
   const [isAutoClocking, setIsAutoClocking] = useState(false)
-  // console.log('this is table')
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -114,7 +117,7 @@ function Table (props) {
   }
 
   // Detection
-  const onDetectionItemActionClick = (event, detectionItem, detectionItemTempId, isAuto = false) => {
+  const onDetectionItemActionClick = (event, detectionItem, isAuto = false) => {
     openClockInModal()
 
     setIsAutoClocking(isAuto)
@@ -130,17 +133,14 @@ function Table (props) {
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify } = person
 
-    // if (standingList.find(seatedItem => seatedItem && seatedItem.id === person.id|| seatedItem.id)) {
-    // }
-
+    const isClockInSeated = Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+    const isClockInStanding = Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+    if (isClockInSeated || isClockInStanding) return
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
       id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
-      // console.warn('response 111111111', response)
-      // id = response.data.data
-      // console.warn('clock anonymous id', response)
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
@@ -159,11 +159,10 @@ function Table (props) {
 
     // 根據是否站立，設定位置列表的內容
     if (isAutoClocking) {
-      const standingIndex = findIndex(standingList, item => {
-        return item === undefined
-      })
-      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, standingIndex)
-      initializeCurrentDetectionItem()
+      const standingIndex = findIndex(standingList, item => item === undefined)
+
+      await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, standingIndex)
+      await initializeCurrentDetectionItem()
     } else if (isSelectedPlaceStanding) {
       addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
     } else {
@@ -176,20 +175,31 @@ function Table (props) {
   }
 
   // MemberDetail
-  const onClockOut = async (values, actions) => {
-    await GameApi.clockOut({ id: memberId, ...values, tableNumber })
+  const onClockOut = async (values, player, isAutoClocking = false) => {
+    let isPlayerInClockOutPlayer = await Boolean(findIndex(clockOutPlayer, player) !== -1)
+    if (isAutoClocking && isPlayerInClockOutPlayer) {
+      await GameApi.clockOut({ id: player.memberId, ...values, tableNumber })
+      await removeClockOutPlayer(player)
 
-    // 根據是否站立，設定位置列表的內容
-    if (isSelectedPlaceStanding) {
-      removeStandingItem(selectedPlaceIndex)
+      const isSeated = player.seatedIndex !== -1
+      const isStanding = player.standingIndex !== -1
+
+      if (isSeated) removeSeatItem(player.seatedIndex)
+      if (isStanding) removeStandingItem(player.standingIndex)
     } else {
-      removeSeatItem(selectedPlaceIndex)
+      await GameApi.clockOut({ id: memberId, ...values, tableNumber })
+
+      // 根據是否站立，設定位置列表的內容
+      if (isSelectedPlaceStanding) {
+        removeStandingItem(selectedPlaceIndex)
+      } else {
+        removeSeatItem(selectedPlaceIndex)
+      }
+      initializeIsSelectedPlaceStanding()
+      initializeSelectedPlaceIndex()
+
+      await history.push(findStaticPath(path))
     }
-
-    initializeIsSelectedPlaceStanding()
-    initializeSelectedPlaceIndex()
-
-    await history.push(findStaticPath(path))
   }
 
   const renderAutomaticNotice = clockState => {
@@ -227,6 +237,7 @@ function Table (props) {
         <Detection
           isPlaceSelected={selectedPlaceIndex !== null}
           onItemActionClick={onDetectionItemActionClick}
+          onClockOut={onClockOut}
           isOpened={isClockInModalOpened}
           clockState={clockState}
         />
@@ -251,6 +262,7 @@ const mapStateToProps = (state, props) => {
     standingList: standingSelectors.getStandingList(state, props),
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),
+    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
   }
 }
 
@@ -261,6 +273,7 @@ const mapDispatchToProps = {
   addStandingItem: standingOperations.addItemToList,
   removeStandingItem: standingOperations.removeItemFromList,
   changeTableNumber: tableOperations.changeTableNumber,
+  removeClockOutPlayer: tableOperations.removeClockOutPlayer,
 }
 
 export default connect(

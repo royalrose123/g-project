@@ -51,6 +51,7 @@ function MemberDetail (props) {
     overage: '',
     tableName: '',
   }
+
   const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)

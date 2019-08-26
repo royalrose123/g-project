@@ -25,7 +25,6 @@ class Game {
   }
 
   static memberClockInById ({ id, tableNumber }) {
-    console.warn('clockMember', tableNumber)
     const service = new Service(
       {
         url: '/clock-in/member',
@@ -61,8 +60,6 @@ class Game {
   }
 
   static clockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner }) {
-    console.log('gameApi clockout tableName', tableNumber)
-    console.log('gameApi clockout overallWinner', overallWinner)
     const service = new Service(
       {
         url: '/clock-out',

@@ -7,9 +7,9 @@ const initialState = {
   // clockState: 'autoMember',
   // clockState: 'autoClock',
   clockState: 'manualClock',
-  // clockInTriggerTime: 60,
   autoSettings: {},
   defaultRecord: {},
+  clockOutPlayer: [],
 }
 
 const tableData = createReducer(initialState, {
@@ -41,6 +41,16 @@ const tableData = createReducer(initialState, {
   [actionTypes.CHANGE_DEFAULT_RECORD]: (state, { payload }) => ({
     ...state,
     defaultRecord: payload.defaultRecord,
+  }),
+
+  [actionTypes.ADD_CLOCK_OUT_PLAYER]: (state, { payload }) => ({
+    ...state,
+    clockOutPlayer: [...state.clockOutPlayer, payload.clockOutPlayer],
+  }),
+
+  [actionTypes.REMOVE_CLOCK_OUT_PLAYER]: (state, { payload }) => ({
+    ...state,
+    clockOutPlayer: state.clockOutPlayer.filter(item => item !== payload.clockOutPlayer),
   }),
 })
 
