@@ -39,3 +39,10 @@ export const removeItemFromList = index => ({
     index,
   },
 })
+
+export const removeAllFromStanding = index => ({
+  type: actionTypes.REMOVE_ALL_FROM_STANDING,
+  payload: {
+    index,
+  },
+})

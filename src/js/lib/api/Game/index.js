@@ -59,7 +59,7 @@ class Game {
     return service.callApi()
   }
 
-  static clockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner }) {
+  static clockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner, type }) {
     const service = new Service(
       {
         url: '/clock-out',
@@ -74,10 +74,29 @@ class Game {
           drop,
           overage,
           tableNumber,
+          type,
         },
       },
       {
         denormalizer: Denormalizer.ClockOut,
+      }
+    )
+
+    return service.callApi()
+  }
+
+  static clockOutAll ({ memberIdList, tableNumber }) {
+    const service = new Service(
+      {
+        url: '/clock-out/batch',
+        method: 'POST',
+        data: {
+          memberIdList,
+          tableNumber,
+        },
+      },
+      {
+        denormalizer: Denormalizer.ClockOutAll,
       }
     )
 

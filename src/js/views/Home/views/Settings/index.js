@@ -5,6 +5,8 @@ import classnames from 'classnames/bind'
 import * as Yup from 'yup'
 import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
+import { map, concat, compact, findKey } from 'lodash'
+import CARD_TYPE from '../../../../constants/CardType'
 
 // Components
 import Modal from '../../../../components/Modal'
@@ -13,10 +15,13 @@ import Form from '../../components/Form'
 import Keyboard, { keys } from '../../components/Keyboard'
 
 // Modules
+import { operations as seatedOperations, selectors as seatedSelectors } from '../../../../lib/redux/modules/seated'
+import { operations as standingOperations, selectors as standingSelectors } from '../../../../lib/redux/modules/standing'
 import { operations as tableOperations, selectors as tableSelectors } from '../../../../lib/redux/modules/table'
 
 // Lib MISC
 import SettingsApi from '../../../../lib/api/Setting'
+import GameApi from '../../../../lib/api/Game'
 import useFetcher from '../../../../lib/effects/useFetcher'
 
 // Style
@@ -37,6 +42,10 @@ export const propTypes = {
   changeClockState: PropTypes.func,
   changeAutoSettings: PropTypes.func,
   changeDefaultRecord: PropTypes.func,
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
+  removeAllFromSeated: PropTypes.func,
+  removeAllFromStanding: PropTypes.func,
 }
 
 export const checkClockState = (memberClock, anonymousClock) => {
@@ -90,7 +99,17 @@ const confirmModalText = {
 }
 
 function Settings (props) {
-  const { tableNumber, changeClockState, changeTableNumber, changeAutoSettings, changeDefaultRecord } = props
+  const {
+    tableNumber,
+    changeClockState,
+    changeTableNumber,
+    changeAutoSettings,
+    changeDefaultRecord,
+    seatedList,
+    standingList,
+    removeAllFromSeated,
+    removeAllFromStanding,
+  } = props
 
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
@@ -116,7 +135,43 @@ function Settings (props) {
       defaultRecord: formikValues.defaultRecord,
     })
 
+    await clearTable()
     await closeConfirmModal()
+  }
+
+  const clearTable = async () => {
+    const seatedMemberData = map(seatedList, item => {
+      let newItem
+
+      if (typeof item === 'object') {
+        newItem = {
+          cid: item.id,
+          level: findKey(CARD_TYPE, cardType => cardType === item.cardType),
+          type: item.type,
+        }
+      }
+
+      return newItem
+    })
+
+    const standingMemberData = map(standingList, item => {
+      let newItem
+
+      if (typeof item === 'object') {
+        newItem = {
+          cid: item.id,
+          level: findKey(CARD_TYPE, cardType => cardType === item.cardType),
+          type: item.type,
+        }
+      }
+
+      return newItem
+    })
+    const memberIdList = compact(concat(seatedMemberData, standingMemberData))
+
+    await removeAllFromSeated()
+    await removeAllFromStanding()
+    await GameApi.clockOutAll({ memberIdList, tableNumber })
   }
 
   const getValidationSchema = () => {
@@ -173,7 +228,7 @@ function Settings (props) {
     if (detail) {
       setPreviousClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
-  }, [detail, tableList, tableListTemp, changeTableNumber, changeClockState])
+  }, [detail, tableList, changeTableNumber, changeClockState, tableListTemp])
 
   useEffect(() => {
     if (isLoaded) {
@@ -899,6 +954,8 @@ Settings.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),
   }
@@ -909,6 +966,8 @@ const mapDispatchToProps = {
   changeClockState: tableOperations.changeClockState,
   changeAutoSettings: tableOperations.changeAutoSettings,
   changeDefaultRecord: tableOperations.changeDefaultRecord,
+  removeAllFromSeated: seatedOperations.removeAllFromSeated,
+  removeAllFromStanding: standingOperations.removeAllFromStanding,
 }
 
 export default connect(

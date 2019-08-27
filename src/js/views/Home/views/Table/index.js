@@ -21,13 +21,10 @@ import {
   selectors as standingSelectors,
   constants as STANDING_CONSTANTS,
 } from '../../../../lib/redux/modules/standing'
-// import { useLocalStorage } from '../../../../lib/effects/useLocalStorage'
 
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
-// import SettingsApi from '../../../../lib/api/Setting'
-// import useFetcher from '../../../../lib/effects/useFetcher'
 
 // Style
 import styles from './style.module.scss'
@@ -70,7 +67,7 @@ function Table (props) {
   } = props
 
   const { path, params } = match
-  let { memberId } = params
+  let { memberId, type } = params
 
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
@@ -102,10 +99,9 @@ function Table (props) {
   const onPlaceClick = (event, { index, place, isStanding }) => {
     setIsSelectedPlaceStanding(isStanding)
     setSelectedPlaceIndex(index)
-
     // 如果位置已經有人，打開 detail
     if (typeof place === 'object') {
-      history.push(`${match.url}/${place.id}`)
+      history.push(`${match.url}/${place.type}/${place.id}`)
       return
     }
 
@@ -131,7 +127,7 @@ function Table (props) {
   const onClockIn = async (event, person, isAutoClocking) => {
     if (!person) return closeClockInModal()
     let { id, image } = person
-    const { tempId, name, compareImage, memberCard, identify } = person
+    const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
 
     const isClockInSeated = Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
     const isClockInStanding = Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
@@ -156,17 +152,16 @@ function Table (props) {
       await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
     }
-
     // 根據是否站立，設定位置列表的內容
     if (isAutoClocking) {
       const standingIndex = findIndex(standingList, item => item === undefined)
 
-      await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, standingIndex)
+      await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, standingIndex)
       await initializeCurrentDetectionItem()
     } else if (isSelectedPlaceStanding) {
-      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
+      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, selectedPlaceIndex)
     } else {
-      addSeatItem({ id: String(id), image, isAuto: isAutoClocking }, selectedPlaceIndex)
+      addSeatItem({ id: String(id), image, isAuto: isAutoClocking, type, cardType }, selectedPlaceIndex)
     }
 
     await closeClockInModal()
@@ -177,8 +172,9 @@ function Table (props) {
   // MemberDetail
   const onClockOut = async (values, player, isAutoClocking = false) => {
     let isPlayerInClockOutPlayer = await Boolean(findIndex(clockOutPlayer, player) !== -1)
+
     if (isAutoClocking && isPlayerInClockOutPlayer) {
-      await GameApi.clockOut({ id: player.memberId, ...values, tableNumber })
+      await GameApi.clockOut({ id: player.memberId, ...values, tableNumber, type: player.type })
       await removeClockOutPlayer(player)
 
       const isSeated = player.seatedIndex !== -1
@@ -187,7 +183,7 @@ function Table (props) {
       if (isSeated) removeSeatItem(player.seatedIndex)
       if (isStanding) removeStandingItem(player.standingIndex)
     } else {
-      await GameApi.clockOut({ id: memberId, ...values, tableNumber })
+      await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
 
       // 根據是否站立，設定位置列表的內容
       if (isSelectedPlaceStanding) {
@@ -212,7 +208,6 @@ function Table (props) {
         return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Member</div>
     }
   }
-
   return isDetailVisible ? (
     <MemberDetail onClockOut={onClockOut} {...props} />
   ) : (

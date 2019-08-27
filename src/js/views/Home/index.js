@@ -14,8 +14,6 @@ import Menu from './components/Menu'
 // Modules
 import { operations as tableOperations, selectors as tableSelectors } from '../../lib/redux/modules/table'
 
-// import { operations as standingOperations } from '../../lib/redux/modules/standing'
-
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
 
@@ -31,7 +29,7 @@ const Table = Loadable({ loader: () => import('./views/Table'), loading })
 
 const navigations = [
   {
-    path: ['table', 'table/:memberId'],
+    path: ['table', 'table/:type/:memberId'],
     name: 'Table',
     icon: {
       data:
@@ -70,7 +68,6 @@ export const propTypes = {
   match: PropTypes.object,
   tableNumber: PropTypes.string,
   initTableNumber: PropTypes.func,
-  // initStandingList: PropTypes.func,
 }
 
 function Home (props) {
@@ -128,8 +125,6 @@ const mapStateToProps = (state, props) => {
 
 const mapDispatchToProps = {
   initTableNumber: tableOperations.initTableNumber,
-  // initStandingList: standingOperations.initStandingList,
-  // changeTableNumber: tableOperations.changeTableNumber,
 }
 
 export default connect(

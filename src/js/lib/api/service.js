@@ -56,7 +56,7 @@ class Service {
     }
 
     if (isPlainObject(data)) {
-      requestConfig.data = this.handleParameter(data)
+      requestConfig.data = { body: this.handleParameter(data) }
     }
 
     return requestConfig

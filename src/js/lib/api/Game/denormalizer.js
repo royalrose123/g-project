@@ -23,7 +23,7 @@ class Denormalizer {
     }
   }
 
-  static ClockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, overallWinner, tableNumber }) {
+  static ClockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, overallWinner, tableNumber, type }) {
     return {
       cid: Number(id),
       ptn: Number(playType),
@@ -34,6 +34,14 @@ class Denormalizer {
       ovg: overage.length === 0 ? null : Number(overage),
       tableName: tableNumber,
       whoWin: overallWinner,
+      type,
+    }
+  }
+
+  static ClockOutAll ({ memberIdList, tableNumber }) {
+    return {
+      clockOutDtl: memberIdList,
+      tableName: tableNumber,
     }
   }
 }

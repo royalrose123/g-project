@@ -66,6 +66,10 @@ function ClockInModal (props) {
       setSelectedPerson({
         ...person,
         identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
+        rect: detectionItem.rect,
+        cameraId: detectionItem.cameraId,
+        type: detectionItem.type,
+        cardType: detectionItem.probableList[0].level,
       })
     } else {
       setMode(MODE.CLOCK_IN)
