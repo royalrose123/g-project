@@ -25,6 +25,7 @@ import {
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
+import CLOCK_STATUS from '../../../../constants/ClockStatus'
 
 // Style
 import styles from './style.module.scss'
@@ -200,11 +201,11 @@ function Table (props) {
 
   const renderAutomaticNotice = clockState => {
     switch (clockState) {
-      case 'manualClock' || 'autoClock':
+      case CLOCK_STATUS.MANUALLY_CLOCK || CLOCK_STATUS.AUTO_CLOCK:
         return null
-      case 'autoAnonymous':
+      case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
         return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Anonymous</div>
-      case 'autoMember':
+      case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
         return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Member</div>
     }
   }

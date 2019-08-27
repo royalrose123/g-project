@@ -1,12 +1,11 @@
 import { createReducer } from 'redux-create-reducer'
 import * as actionTypes from './actionTypes'
 
+import CLOCK_STATUS from '../../../../constants/ClockStatus'
+
 const initialState = {
   tableNumber: 'Please select',
-  // clockState: 'manualClock',
-  // clockState: 'autoMember',
-  // clockState: 'autoClock',
-  clockState: 'manualClock',
+  clockState: CLOCK_STATUS.MANUALLY_CLOCK,
   autoSettings: {},
   defaultRecord: {},
   clockOutPlayer: [],
