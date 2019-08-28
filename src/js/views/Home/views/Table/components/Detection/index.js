@@ -42,6 +42,7 @@ export const propTypes = {
   defaultRecord: PropTypes.object,
   clockOutPlayer: PropTypes.array,
   addClockOutPlayer: PropTypes.func,
+  removeClockOutPlayer: PropTypes.func,
 }
 
 function Detection (props) {
@@ -57,11 +58,11 @@ function Detection (props) {
     defaultRecord,
     clockOutPlayer,
     addClockOutPlayer,
+    removeClockOutPlayer,
   } = props
 
   const [detectionData, setDetectionData] = useState({})
   const clockInPlayer = useRef({})
-  // const clockInPlayer = useRef({})
 
   const clockOutDefaultValue = {
     anonymous: {
@@ -115,32 +116,50 @@ function Detection (props) {
       clockState !== CLOCK_STATUS.MANUALLY_CLOCK
     ) {
       detectionData.leave.forEach(player => {
-        const isLeavePlayerInSeatedList = Boolean(find(standingList, { tempId: player.tempId }))
-        const isLeavePlayerInStandingList = Boolean(find(seatedList, { tempId: player.tempId }))
+        const isLeavePlayerInSeated = Boolean(find(seatedList, { tempId: player.tempId }))
+        const isLeavePlayerInStanding = Boolean(find(standingList, { tempId: player.tempId }))
 
-        if (isLeavePlayerInSeatedList || isLeavePlayerInStandingList) {
-          const leavePlayerInSeatedList = find(seatedList, { tempId: player.tempId })
-          const leavePlayerSeatedIndex = findIndex(seatedList, leavePlayerInSeatedList)
+        switch (true) {
+          case isLeavePlayerInSeated:
+            const leavePlayerInSeatedList = find(seatedList, { tempId: player.tempId })
+            const leavePlayerSeatedIndex = findIndex(seatedList, leavePlayerInSeatedList)
+            const seatedMemberId = leavePlayerInSeatedList.id
+            const seatedLeavePlayer = {
+              ...player,
+              memberId: seatedMemberId,
+              seatedIndex: leavePlayerSeatedIndex,
+            }
 
-          const leavePlayerInStandingList = find(standingList, { tempId: player.tempId })
-          const leavePlayerStandingIndex = findIndex(standingList, leavePlayerInStandingList)
+            addClockOutPlayer(seatedLeavePlayer)
+            break
+          case isLeavePlayerInStanding:
+            const leavePlayerInStandingList = find(standingList, { tempId: player.tempId })
+            const leavePlayerStandingIndex = findIndex(standingList, leavePlayerInStandingList)
+            const standingMemberId = leavePlayerInStandingList.id
+            const standingLeavePlayer = {
+              ...player,
+              memberId: standingMemberId,
+              standingIndex: leavePlayerStandingIndex,
+            }
 
-          const memberId = leavePlayerInStandingList.id || leavePlayerInSeatedList.id
-
-          const leavePlayer = { ...player, memberId: memberId, seatedIndex: leavePlayerSeatedIndex, standingIndex: leavePlayerStandingIndex }
-
-          addClockOutPlayer(leavePlayer)
+            addClockOutPlayer(standingLeavePlayer)
+            break
         }
       })
     }
   }, [addClockOutPlayer, clockState, detectionData, seatedList, standingList])
 
-  // 如果clockOutPlayer的item超過clock-out triggrt time就clock-out
+  // 如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
+  // 如果 clockOutPlayer 的 item 還沒被 clock-out 就再次出現在 stay，必須從 clockOutPlayer 移除
   if (clockOutPlayer.length > 0) {
     clockOutPlayer.forEach(player => {
       const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳date，前端轉毫秒
       const alreadyLeaveTime = (new Date().getTime() - playerLeaveTime) / 1000
-      // console.warn('alreadyLeaveTime', alreadyLeaveTime)
+      // console.warn(player.tempId + 'alreadyLeaveTime', alreadyLeaveTime)
+      const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId }))
+      // console.log(player.tempId + 'isBackToStay', isBackToStay)
+
+      if (isBackToStay) removeClockOutPlayer(player)
 
       switch (player.type) {
         case 'anonymous':
@@ -330,6 +349,7 @@ const mapStateToProps = (state, props) => {
 
 const mapDispatchToProps = {
   addClockOutPlayer: tableOperations.addClockOutPlayer,
+  removeClockOutPlayer: tableOperations.removeClockOutPlayer,
 }
 
 export default connect(

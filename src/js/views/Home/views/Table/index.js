@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex } from 'lodash'
+import { findIndex, trim, findKey } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -26,6 +26,7 @@ import {
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
+import SEATED_COORDINATE from '../../../../constants/seatedCoordinate'
 
 // Style
 import styles from './style.module.scss'
@@ -121,17 +122,43 @@ function Table (props) {
     setCurrentDetectionItem(detectionItem)
   }
 
+  const getSeatedCoordinate = async person => {
+    const cameraId = trim(person.cameraId, tableNumber) // Ex: Table-0813-A => A
+    const personXCoordinate = person.rect[0]
+    const personYCoordinate = person.rect[1]
+    const personWidth = person.rect[2]
+    const personHeight = person.rect[3]
+    const personMidPoint = [personXCoordinate + personWidth / 2, personYCoordinate + personHeight / 2]
+
+    const seatedIndex = await Number(
+      findKey(SEATED_COORDINATE[cameraId], seated => {
+        return (
+          personMidPoint[0] >= seated.leftTop[0] && // 中心點的x大於位子的左上角x座標
+          personMidPoint[0] <= seated.rightBottom[0] && // 中心點的x小於位子的右下角x座標
+          personMidPoint[1] >= seated.leftTop[1] && // 中心點的y大於位子的左上角y座標
+          personMidPoint[1] <= seated.rightBottom[1] // 中心點的y小於位子的右下角y座標
+        )
+      })
+    )
+
+    const isSeated = !isNaN(seatedIndex)
+
+    return { isSeated, seatedIndex }
+  }
+
   // ClockInModal
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
   const onClockIn = async (event, person, isAutoClocking) => {
     if (!person) return closeClockInModal()
+
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
 
-    const isClockInSeated = Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
-    const isClockInStanding = Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+    const isClockInSeated = await Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+    const isClockInStanding = await Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+
     if (isClockInSeated || isClockInStanding) return
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
@@ -143,21 +170,28 @@ function Table (props) {
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      // closeClockInModal()
       await GameApi.memberClockInByMemberCard({ memberCard })
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
-      closeClockInModal()
       await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
     }
+    closeClockInModal()
+
     // 根據是否站立，設定位置列表的內容
     if (isAutoClocking) {
-      const standingIndex = findIndex(standingList, item => item === undefined)
+      const { isSeated, seatedIndex } = await getSeatedCoordinate(person)
 
-      await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, standingIndex)
+      if (isSeated) {
+        await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, seatedIndex)
+      } else {
+        const standingIndex = findIndex(standingList, item => item === undefined)
+
+        await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, standingIndex)
+      }
+
       await initializeCurrentDetectionItem()
     } else if (isSelectedPlaceStanding) {
       addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, selectedPlaceIndex)
@@ -166,8 +200,8 @@ function Table (props) {
     }
 
     await closeClockInModal()
-    initializeIsSelectedPlaceStanding()
-    initializeSelectedPlaceIndex()
+    await initializeIsSelectedPlaceStanding()
+    await initializeSelectedPlaceIndex()
   }
 
   // MemberDetail
