@@ -37,6 +37,7 @@ export const propTypes = {
   clockState: PropTypes.string,
   isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
+  autoClockIn: PropTypes.func,
   onClockOut: PropTypes.func,
   autoSettings: PropTypes.object,
   defaultRecord: PropTypes.object,
@@ -52,6 +53,7 @@ function Detection (props) {
     tableNumber,
     isPlaceSelected,
     onItemActionClick,
+    autoClockIn,
     clockState,
     onClockOut,
     autoSettings,
@@ -63,7 +65,6 @@ function Detection (props) {
 
   const [detectionData, setDetectionData] = useState({})
   const clockInPlayer = useRef({})
-
   const clockOutDefaultValue = {
     anonymous: {
       playType: defaultRecord.anonymousPlayType,
@@ -116,12 +117,11 @@ function Detection (props) {
       clockState !== CLOCK_STATUS.MANUALLY_CLOCK
     ) {
       detectionData.leave.forEach(player => {
-        const isLeavePlayerInSeated = Boolean(find(seatedList, { tempId: player.tempId }))
-        const isLeavePlayerInStanding = Boolean(find(standingList, { tempId: player.tempId }))
-
+        const isLeavePlayerInSeated = Boolean(find(seatedList, { tempId: player.tempId })) || Boolean(find(seatedList, { id: player.cid }))
+        const isLeavePlayerInStanding = Boolean(find(standingList, { tempId: player.tempId })) || Boolean(find(standingList, { id: player.cid }))
         switch (true) {
           case isLeavePlayerInSeated:
-            const leavePlayerInSeatedList = find(seatedList, { tempId: player.tempId })
+            const leavePlayerInSeatedList = find(seatedList, { tempId: player.tempId }) || find(seatedList, { id: player.cid })
             const leavePlayerSeatedIndex = findIndex(seatedList, leavePlayerInSeatedList)
             const seatedMemberId = leavePlayerInSeatedList.id
             const seatedLeavePlayer = {
@@ -133,7 +133,7 @@ function Detection (props) {
             addClockOutPlayer(seatedLeavePlayer)
             break
           case isLeavePlayerInStanding:
-            const leavePlayerInStandingList = find(standingList, { tempId: player.tempId })
+            const leavePlayerInStandingList = find(standingList, { tempId: player.tempId }) || find(standingList, { id: player.cid })
             const leavePlayerStandingIndex = findIndex(standingList, leavePlayerInStandingList)
             const standingMemberId = leavePlayerInStandingList.id
             const standingLeavePlayer = {
@@ -155,10 +155,11 @@ function Detection (props) {
     clockOutPlayer.forEach(player => {
       const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳date，前端轉毫秒
       const alreadyLeaveTime = (new Date().getTime() - playerLeaveTime) / 1000
-      // console.warn(player.tempId + 'alreadyLeaveTime', alreadyLeaveTime)
-      const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId }))
-      // console.log(player.tempId + 'isBackToStay', isBackToStay)
+      // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
+      const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId })) || Boolean(find(detectionData.stay, { cid: player.cid }))
+      // console.log(player.tempId + '  isBackToStay', isBackToStay)
+      if (!player.cid) removeClockOutPlayer(player)
       if (isBackToStay) removeClockOutPlayer(player)
 
       switch (player.type) {
@@ -206,28 +207,42 @@ function Detection (props) {
     }
   }
 
-  const executeAutoClockInByClockState = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
+  const executeAutoClockInByClockState = async (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
     switch (clockState) {
       case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
         if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
-          clockInPlayer.current[detectionItemTempId] = true
-          onItemActionClick(event, detectionItem, true)
+          autoClockIn(event, detectionItem)
+            .then(result => {
+              // 成功訊息 (需要 3 秒)
+              clockInPlayer.current[detectionItemTempId] = true
+            })
+            .catch(err => {
+              // 失敗訊息 (立即)
+              console.log(err)
+            })
         }
         break
       case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
         if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
-          clockInPlayer.current[detectionItemTempId] = true
-          onItemActionClick(event, detectionItem, true)
+          autoClockIn(event, detectionItem)
+            .then(result => {
+              // 成功訊息 (需要 3 秒)
+              clockInPlayer.current[detectionItemTempId] = true
+            })
+            .catch(err => {
+              // 失敗訊息 (立即)
+              console.log(err)
+            })
         }
         break
       case CLOCK_STATUS.AUTO_CLOCK:
         if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
+          autoClockIn(event, detectionItem)
           clockInPlayer.current[detectionItemTempId] = true
-          onItemActionClick(event, detectionItem, true)
         }
         if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
+          autoClockIn(event, detectionItem)
           clockInPlayer.current[detectionItemTempId] = true
-          onItemActionClick(event, detectionItem, true)
         }
         break
     }
@@ -238,8 +253,16 @@ function Detection (props) {
     detectionData.detectionList.length >= 0 && (
       <>
         {detectionData.detectionList.map(detectionItem => {
-          const { detectionItemTempId, detectionItemExistingTime, isAlreadyClockIn } = setDetectionItemExstingTime(detectionItem)
-          if (!isAlreadyClockIn) executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId)
+          const {
+            detectionItemTempId,
+            detectionItemExistingTime,
+            isAlreadyClockIn,
+            isDetectItemInSeated,
+            isDetectItemInStanding,
+          } = setDetectionItemExstingTime(detectionItem)
+          if (!isAlreadyClockIn && !isDetectItemInSeated && !isDetectItemInStanding) {
+            executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId)
+          }
         })}
 
         <div className={cx('home-table-detection-automatic')}>

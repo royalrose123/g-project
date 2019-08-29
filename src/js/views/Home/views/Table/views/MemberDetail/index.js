@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
 import { format, formatDistanceStrict } from 'date-fns'
@@ -12,6 +13,10 @@ import Form from '../../../../components/Form'
 import Layout from '../../../../components/Layout'
 import Button from '../../../../../../components/Button'
 import Icon from '../../../../../../components/Icon'
+
+// Modules
+import { selectors as seatedSelectors } from '../../../../../../lib/redux/modules/seated'
+import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
 
 // Lib MISC
 import MemberApi from '../../../../../../lib/api/Member'
@@ -34,12 +39,22 @@ export const propTypes = {
   history: PropTypes.object,
   match: PropTypes.object,
   onClockOut: PropTypes.func,
+  // seatedList: PropTypes.array,
+  // standingList: PropTypes.array,
+  isSelectedPlaceStanding: PropTypes.bool,
+  selectedPlaceIndex: PropTypes.number,
 }
 
 function MemberDetail (props) {
-  const { history, match, onClockOut } = props
+  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex } = props
   const { path, params } = match
   const { memberId: id } = params
+  // const isStanding = useRef('')
+  // const selectedIndex = useRef('')
+
+  console.log('memberDetail')
+  console.log('isSelectedPlaceStanding', isSelectedPlaceStanding)
+  console.log('selectedPlaceIndex', selectedPlaceIndex)
 
   const initialValues = {
     playType: '0',
@@ -58,6 +73,34 @@ function MemberDetail (props) {
   const [lastFocusField, setLastFocusField] = useState('actualWin')
 
   const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
+
+  // const [isStanding, setIsStanding] = useState()
+  // const [selectedIndex, setSelectedIndex] = useState()
+  // const isStanding = useRef('')
+  // const selectedIndex = useRef('')
+
+  // setIsStanding(isSelectedPlaceStanding)
+  // setSelectedIndex(selectedPlaceIndex)
+
+  // useEffect(() => {
+  //   if (isSelectedPlaceStanding !== undefined && selectedPlaceIndex !== undefined) {
+  //     isStanding.current = isSelectedPlaceStanding
+  //     selectedIndex.current = selectedPlaceIndex
+  //     console.log(' isStanding.current ', isStanding.current)
+  //     console.log('seatedList', seatedList)
+  //     console.log('standingList', standingList)
+  //   }
+  // }, [isSelectedPlaceStanding, seatedList, selectedPlaceIndex, standingList])
+
+  // if (isStanding.current !== undefined && selectedIndex.current !== undefined) {
+  //   const memberImg = standingList[selectedIndex.current].image
+  //   console.log('standing memberImg', memberImg)
+  //   detail.image = memberImg
+  // } else {
+  //   const memberImg = seatedList[selectedIndex.current].image
+  //   console.log('seated memberImg', memberImg)
+  //   detail.image = memberImg
+  // }
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
 
@@ -333,4 +376,16 @@ function MemberDetail (props) {
 
 MemberDetail.propTypes = propTypes
 
-export default MemberDetail
+const mapStateToProps = (state, props) => {
+  return {
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
+  }
+}
+
+const mapDispatchToProps = {}
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(MemberDetail)

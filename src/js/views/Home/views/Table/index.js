@@ -25,8 +25,9 @@ import {
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
+import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
-import SEATED_COORDINATE from '../../../../constants/seatedCoordinate'
+import SEATED_COORDINATE from '../../../../constants/SeatedCoordinate'
 
 // Style
 import styles from './style.module.scss'
@@ -122,6 +123,7 @@ function Table (props) {
     setCurrentDetectionItem(detectionItem)
   }
 
+  // 判斷座標是否在seated中
   const getSeatedCoordinate = async person => {
     const cameraId = trim(person.cameraId, tableNumber) // Ex: Table-0813-A => A
     const personXCoordinate = person.rect[0]
@@ -141,9 +143,78 @@ function Table (props) {
       })
     )
 
-    const isSeated = !isNaN(seatedIndex)
+    const isInSeatedPlace = !isNaN(seatedIndex)
+    return { isInSeatedPlace, seatedIndex }
+  }
 
-    return { isSeated, seatedIndex }
+  // auto clock in
+  const executeAutoClockIn = async (event, detectionItem) => {
+    const person = getPersonByType(detectionItem.type, detectionItem)
+    const newPerson = {
+      ...person,
+      identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
+      rect: detectionItem.rect,
+      cameraId: detectionItem.cameraId,
+      type: detectionItem.type,
+      cardType: detectionItem.probableList[0].level,
+    }
+
+    let { id, image } = newPerson
+    const { tempId, name, compareImage, memberCard, identify, type, cardType } = newPerson
+    const isClockInSeated = Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+    const isClockInStanding = Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
+
+    if (isClockInSeated || isClockInStanding) return
+
+    const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
+    const isSomeoneOnSeated = seatedList[seatedIndex] !== undefined
+
+    if (identify === PERSON_TYPE.ANONYMOUS) {
+      // 若是 anonymous
+      // 即自動建立臨時帳號
+      // 並以取得的 id 放進 seat / standing list 中
+      const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+      if (isInSeatedPlace && !isSomeoneOnSeated) {
+        await addSeatItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, seatedIndex)
+      } else {
+        const standingIndex = findIndex(standingList, item => item === undefined)
+
+        await addStandingItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, standingIndex)
+      }
+      return apiId && true
+    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
+      // 若是 member card
+      // 即為會員，使用荷官輸入的 member card
+      // 立刻關掉 modal
+      // 圖片改用資料庫中的照片
+      await GameApi.memberClockInByMemberCard({ memberCard })
+    } else {
+      // 若不是 anonymous 或者 member card
+      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
+      // 圖片改用資料庫中的照片
+      const apiId = await GameApi.memberClockInById({ id, tableNumber })
+      image = compareImage
+
+      if (isInSeatedPlace && !isSomeoneOnSeated) {
+        await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, seatedIndex)
+      } else {
+        const standingIndex = findIndex(standingList, item => item === undefined)
+
+        await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, standingIndex)
+      }
+
+      return new Promise((resolve, reject) => {
+        // 傳入 resolve 與 reject，表示資料成功與失敗
+        if (apiId && true) {
+          setTimeout(function () {
+            // 3 秒時間後，透過 resolve 來表示完成
+            resolve(apiId && true)
+          }, 200)
+        } else {
+          // 回傳失敗
+        }
+      })
+    }
   }
 
   // ClockInModal
@@ -183,7 +254,6 @@ function Table (props) {
     // 根據是否站立，設定位置列表的內容
     if (isAutoClocking) {
       const { isSeated, seatedIndex } = await getSeatedCoordinate(person)
-
       if (isSeated) {
         await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, seatedIndex)
       } else {
@@ -244,7 +314,7 @@ function Table (props) {
     }
   }
   return isDetailVisible ? (
-    <MemberDetail onClockOut={onClockOut} {...props} />
+    <MemberDetail onClockOut={onClockOut} isSelectedPlaceStanding={isSelectedPlaceStanding} selectedPlaceIndex={selectedPlaceIndex} {...props} />
   ) : (
     <div className={cx('home-table')}>
       <div className={cx('home-table__seating-plan')}>
@@ -267,6 +337,7 @@ function Table (props) {
         <Detection
           isPlaceSelected={selectedPlaceIndex !== null}
           onItemActionClick={onDetectionItemActionClick}
+          autoClockIn={executeAutoClockIn}
           onClockOut={onClockOut}
           isOpened={isClockInModalOpened}
           clockState={clockState}
