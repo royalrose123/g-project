@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
@@ -39,22 +39,16 @@ export const propTypes = {
   history: PropTypes.object,
   match: PropTypes.object,
   onClockOut: PropTypes.func,
-  // seatedList: PropTypes.array,
-  // standingList: PropTypes.array,
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
   isSelectedPlaceStanding: PropTypes.bool,
   selectedPlaceIndex: PropTypes.number,
 }
 
 function MemberDetail (props) {
-  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex } = props
+  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList } = props
   const { path, params } = match
   const { memberId: id } = params
-  // const isStanding = useRef('')
-  // const selectedIndex = useRef('')
-
-  console.log('memberDetail')
-  console.log('isSelectedPlaceStanding', isSelectedPlaceStanding)
-  console.log('selectedPlaceIndex', selectedPlaceIndex)
 
   const initialValues = {
     playType: '0',
@@ -71,36 +65,26 @@ function MemberDetail (props) {
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
+  const [memberImage, setMemberImage] = useState('')
 
   const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
 
-  // const [isStanding, setIsStanding] = useState()
-  // const [selectedIndex, setSelectedIndex] = useState()
-  // const isStanding = useRef('')
-  // const selectedIndex = useRef('')
+  // 把 member imgage 換成 seated / standing 的 image
+  useEffect(() => {
+    const isSelected = !isNaN(selectedPlaceIndex)
+    const isInSeated = Boolean(seatedList[selectedPlaceIndex])
+    const isInStanding = Boolean(standingList[selectedPlaceIndex])
 
-  // setIsStanding(isSelectedPlaceStanding)
-  // setSelectedIndex(selectedPlaceIndex)
+    if (isLoaded && isSelected && (isInSeated || isInStanding)) {
+      if (isSelectedPlaceStanding) {
+        setMemberImage(standingList[selectedPlaceIndex].image)
+      } else {
+        setMemberImage(seatedList[selectedPlaceIndex].image)
+      }
+    }
+  }, [isLoaded, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList])
 
-  // useEffect(() => {
-  //   if (isSelectedPlaceStanding !== undefined && selectedPlaceIndex !== undefined) {
-  //     isStanding.current = isSelectedPlaceStanding
-  //     selectedIndex.current = selectedPlaceIndex
-  //     console.log(' isStanding.current ', isStanding.current)
-  //     console.log('seatedList', seatedList)
-  //     console.log('standingList', standingList)
-  //   }
-  // }, [isSelectedPlaceStanding, seatedList, selectedPlaceIndex, standingList])
-
-  // if (isStanding.current !== undefined && selectedIndex.current !== undefined) {
-  //   const memberImg = standingList[selectedIndex.current].image
-  //   console.log('standing memberImg', memberImg)
-  //   detail.image = memberImg
-  // } else {
-  //   const memberImg = seatedList[selectedIndex.current].image
-  //   console.log('seated memberImg', memberImg)
-  //   detail.image = memberImg
-  // }
+  if (isLoaded) detail.image = memberImage
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
 
