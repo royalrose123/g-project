@@ -31,3 +31,10 @@ export const removeItemFromList = index => ({
     index,
   },
 })
+
+export const removeAllFromSeated = index => ({
+  type: actionTypes.REMOVE_ALL_FROM_SEATED,
+  payload: {
+    index,
+  },
+})

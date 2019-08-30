@@ -7,3 +7,5 @@ import * as actions from './actions'
 export const addItemToList = actions.addItemToList
 
 export const removeItemFromList = actions.removeItemFromList
+
+export const removeAllFromSeated = actions.removeAllFromSeated

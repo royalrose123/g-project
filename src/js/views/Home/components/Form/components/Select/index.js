@@ -18,8 +18,7 @@ export const propTypes = {
 
 function Select (props) {
   const { className, ...restProps } = props
-
-  return <select type='text' className={cx('home-form-select', className)} {...restProps} />
+  return <select className={cx('home-form-select', className)} {...restProps} />
 }
 
 Select.propTypes = propTypes

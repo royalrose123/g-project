@@ -42,7 +42,6 @@ const useFetcher = (initialResponse, fetcher, variables = {}) => {
 
       try {
         const response = await fetcher(parameters)
-
         if (!didCancel) {
           dispatch({ type: actionTypes.FETCH_SUCCESS, response })
         }
@@ -56,7 +55,7 @@ const useFetcher = (initialResponse, fetcher, variables = {}) => {
     fetchData()
 
     return () => (didCancel = true)
-  }, [fetcher, parameters])
+  }, [fetcher, initialResponse, parameters])
 
   useDeepCompareEffect(() => {
     setParameters(variables)

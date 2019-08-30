@@ -1,9 +1,10 @@
 import Denormalizer from './denormalizer'
+// import Normalizer from './normalizer'
 
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ tempId, name, snapshot }) {
+  static anonymousClockIn ({ tempId, name, snapshot, tableNumber }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
@@ -12,6 +13,7 @@ class Game {
           tempId,
           name,
           snapshot,
+          tableNumber,
         },
       },
       {
@@ -22,13 +24,14 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInById ({ id }) {
+  static memberClockInById ({ id, tableNumber }) {
     const service = new Service(
       {
         url: '/clock-in/member',
         method: 'POST',
         data: {
           id,
+          tableNumber,
         },
       },
       {
@@ -56,24 +59,44 @@ class Game {
     return service.callApi()
   }
 
-  static clockOut ({ id, playType, propPlay, averageBet, whoWin, actualWin, drop, overage }) {
+  static clockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner, type }) {
     const service = new Service(
       {
         url: '/clock-out',
         method: 'POST',
         data: {
-          id,
+          id, // requierd
           playType,
           propPlay,
           averageBet,
-          whoWin,
-          actualWin,
+          overallWinner,
+          actualWin, // requierd
           drop,
           overage,
+          tableNumber,
+          type,
         },
       },
       {
         denormalizer: Denormalizer.ClockOut,
+      }
+    )
+
+    return service.callApi()
+  }
+
+  static clockOutAll ({ memberIdList, tableNumber }) {
+    const service = new Service(
+      {
+        url: '/clock-out/batch',
+        method: 'POST',
+        data: {
+          memberIdList,
+          tableNumber,
+        },
+      },
+      {
+        denormalizer: Denormalizer.ClockOutAll,
       }
     )
 

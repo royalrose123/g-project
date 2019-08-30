@@ -20,26 +20,33 @@ class Normalizer {
     return Service.normalizeList(payload, Normalizer.ProbableItem)
   }
 
-  static DetectionItem ({ type, faceImage, background, rect, result }) {
+  static DetectionItem ({ type, faceImage, background, rect, result, dateTime, cameraId }) {
     return {
       type,
       snapshot: faceImage,
       background,
       rect,
       probableList: Normalizer.ProbableList(result),
+      dateTime,
+      cameraId,
     }
   }
 
   static DetectionList (payload) {
-    return Service.normalizeList(payload, Normalizer.DetectionItem)
+    return {
+      detectionList: Service.normalizeList(payload.peopleDetectionDTO, Normalizer.DetectionItem),
+      stay: payload.stay,
+      leave: payload.leave,
+    }
   }
 
   static CameraItem ({ cameraId, url }) {
-    const serverIp = '192.168.100.18:10080'
+    const serverIp = '10.1.1.19:10080'
 
     return {
       id: cameraId,
       rtspUrl: url,
+      // websocketUrl: `ws://${window.encodeURIComponent(url.replace('rtsp://', ''))}/camera_relay?tcpaddr=${serverIp}`,
       websocketUrl: `ws://${serverIp}/camera_relay?tcpaddr=${window.encodeURIComponent(url.replace('rtsp://', ''))}`,
     }
   }

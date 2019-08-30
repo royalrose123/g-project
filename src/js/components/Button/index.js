@@ -19,6 +19,7 @@ export const propTypes = {
   contentProps: PropTypes.object,
   className: PropTypes.string,
   children: PropTypes.node.isRequired,
+  disabled: PropTypes.bool,
 }
 
 export const defaultProps = {
@@ -30,7 +31,7 @@ export const defaultProps = {
 }
 
 function Button (props) {
-  const { isRounded, isFilled, isBlock, size, setRef, prefix, suffix, contentProps, className, children, ...restProps } = props
+  const { isRounded, isFilled, isBlock, disabled, size, setRef, prefix, suffix, contentProps, className, children, ...restProps } = props
   const { className: contentClassName } = contentProps
 
   return (
@@ -39,6 +40,7 @@ function Button (props) {
       data-is-rounded={isRounded}
       data-is-filled={isFilled}
       data-is-block={isBlock}
+      disabled={disabled}
       data-size={size}
       ref={setRef}
       {...restProps}

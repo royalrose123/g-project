@@ -7,16 +7,38 @@
   &__place {
     overflow: hidden;
     position: relative;
+    // top: 25px;
+    // left: 10px;
     margin: var(--standing-place-margin);
     padding: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid rgba($gray-white, 0.5);
+    border: 1px solid rgba($gray-white, 0.5);
     @include size(var(--standing-place-size));
 
     &[data-is-selected="true"] {
       background-color: rgba($gray-white, 0.5);
+    }
+
+    &[data-has-image="true"] {
+      border: none;
+    }
+
+    &[data-is-auto-clock="true"] {
+      overflow: inherit;
+      border: none;
+
+      &:after {
+        content: "Auto";
+        position: absolute;
+        left: 0;
+        bottom: -13px;
+        color: #fff;
+        background-color: #20b470;
+        font-size: $font-size-sm;
+        width: 100%;
+      }
     }
   }
 

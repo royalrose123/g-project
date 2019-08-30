@@ -58,7 +58,6 @@ function ClockInModal (props) {
 
   const shouldRenderContent = detectionItem !== null
   const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : {}
-
   // 打開時給預設值
   // 關掉時重設狀態
   useDeepCompareEffect(() => {
@@ -66,6 +65,10 @@ function ClockInModal (props) {
       setSelectedPerson({
         ...person,
         identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
+        rect: detectionItem.rect,
+        cameraId: detectionItem.cameraId,
+        type: detectionItem.type,
+        cardType: detectionItem.probableList[0].level,
       })
     } else {
       setMode(MODE.CLOCK_IN)
@@ -77,6 +80,10 @@ function ClockInModal (props) {
       // === TEMP ===
     }
   }, [shouldRenderContent, detectionItem, person])
+
+  // if (shouldRenderContent && isAutoClocking) {
+  //   onClockIn(event, selectedPerson, isAutoClocking)
+  // }
 
   // Clock in
   const renderClockInHeader = () => (
@@ -119,6 +126,7 @@ function ClockInModal (props) {
                   // 濾出相似度高於 80% 的結果
                   .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
                   .map((probableItem, index) => (
+                    // Auto anonymous clock in 時需自動setSelectedPerson
                     <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
                       <Person
                         type={PERSON_TYPE.MEMBER}

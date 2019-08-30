@@ -1,5 +1,57 @@
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
 .home-table-detection {
   display: flex;
   align-items: center;
   @include size(100%);
+}
+
+.home-table-detection-automatic {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  flex-direction: column;
+  margin-top: 80px;
+
+  &__image-wrapper {
+    position: relative;
+  }
+
+  &__image {
+    width: 85px;
+    height: auto;
+  }
+
+  &__icon {
+    position: absolute;
+    top: 10px;
+    left: 30px;
+    fill: #20b470;
+    animation: rotate 5000ms linear infinite;
+  }
+
+  &__title {
+    font-weight: bold;
+    font-size: $font-size-lg;
+    margin-top: 23px;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+
+  &__description {
+    font-weight: 300;
+    width: 520px;
+    font-size: $font-size-sm;
+    text-align: center;
+    line-height: 1.4;
+    letter-spacing: 1px;
+  }
 }

@@ -17,6 +17,14 @@
 
 import * as actionTypes from './actionTypes'
 
+export const initStandingList = (item, index) => ({
+  type: actionTypes.INIT_STANDING_LIST,
+  payload: {
+    item,
+    index,
+  },
+})
+
 export const addItemToList = (item, index) => ({
   type: actionTypes.ADD_ITEM_TO_LIST,
   payload: {
@@ -27,6 +35,13 @@ export const addItemToList = (item, index) => ({
 
 export const removeItemFromList = index => ({
   type: actionTypes.REMOVE_ITEM_FROM_LIST,
+  payload: {
+    index,
+  },
+})
+
+export const removeAllFromStanding = index => ({
+  type: actionTypes.REMOVE_ALL_FROM_STANDING,
   payload: {
     index,
   },

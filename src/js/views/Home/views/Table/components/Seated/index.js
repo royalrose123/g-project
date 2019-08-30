@@ -5,8 +5,8 @@ import classnames from 'classnames/bind'
 // Components
 
 // Lib MISC
-import DeviceApi from '../../../../../../lib/api/Device'
-import useFetcher from '../../../../../../lib/effects/useFetcher'
+// import DeviceApi from '../../../../../../lib/api/Device'
+// import useFetcher from '../../../../../../lib/effects/useFetcher'
 
 // Style
 import styles from './style.module.scss'
@@ -22,13 +22,11 @@ export const propTypes = {
   ).isRequired,
   selectedIndex: PropTypes.number,
   onPlaceSelect: PropTypes.func,
+  tableNumber: PropTypes.string,
 }
 
 function Seated (props) {
-  const { seatedList, selectedIndex, onPlaceSelect } = props
-
-  const { isLoaded, response: cameraList } = useFetcher(null, DeviceApi.fetchCameraList)
-
+  const { seatedList, selectedIndex, onPlaceSelect, tableNumber } = props
   return (
     <div className={cx('home-table-seated')}>
       {seatedList.map((seatedItem, index) => (
@@ -38,6 +36,8 @@ function Seated (props) {
           className={cx('home-table-seated__seat')}
           onClick={event => onPlaceSelect(event, { index, place: seatedItem, isStanding: false })}
           data-is-selected={index === selectedIndex}
+          data-has-image={typeof seatedItem === 'object'}
+          data-is-auto-clock={typeof seatedItem === 'object' && seatedItem.isAuto}
         >
           {typeof seatedItem === 'object' ? (
             <img className={cx('home-table-seated__seat-image')} src={seatedItem.image} />
@@ -46,7 +46,11 @@ function Seated (props) {
           )}
         </button>
       ))}
-      <div className={cx('home-table-seated__desk')}>{isLoaded && cameraList[0].id.slice(0, -2)}</div>
+      <div className={cx('home-table-seated__desk')}>
+        {/* {isLoaded && cameraList[0].id.slice(0, -2)} */}
+        {tableNumber}
+        <p className={cx('home-table-seated__desk__number')} />
+      </div>
     </div>
   )
 }

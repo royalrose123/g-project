@@ -3,9 +3,9 @@
   display: inline-flex;
   justify-content: center;
   align-items: center;
-  height: 80px;
+  height: 37.5px;
   text-transform: uppercase;
-  font-size: $font-size-md;
+  font-size: $font-size-sm;
   font-weight: 500;
   vertical-align: middle;
   border-width: 1px;
@@ -52,11 +52,11 @@
   }
 
   &[data-is-block="false"][data-size="md"] {
-    width: 400px;
+    width: 190px;
   }
 
   &[data-is-block="false"][data-size="lg"] {
-    width: 120px;
+    width: 220px;
   }
 
   &:disabled {

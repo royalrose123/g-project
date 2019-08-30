@@ -2,7 +2,7 @@ import CARD_TYPE from '../../../constants/CardType'
 import toBase64Src from '../../utils/to-base64-src'
 
 class Normalizer {
-  static MemberDetail ({ cid, cnm, pic, ctc, pgpDen, gen, dob, idDocNo }) {
+  static MemberDetail ({ cid, cnm, ctc, dob, gen, idDocNo, pgpDen, pic }) {
     return {
       id: String(cid),
       name: cnm,

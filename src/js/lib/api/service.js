@@ -1,5 +1,9 @@
 import axios from 'axios'
-import { omitBy, isUndefined, isPlainObject } from 'lodash'
+import flow from 'lodash/fp/flow'
+import omitBy from 'lodash/fp/omitBy'
+import mapValues from 'lodash/fp/mapValues'
+import isUndefined from 'lodash/fp/isUndefined'
+import isPlainObject from 'lodash/fp/isPlainObject'
 
 import toCaseKeys, { CASES } from '../utils/to-case-keys'
 import toPredicateValues from '../utils/to-predicate-values'
@@ -20,6 +24,7 @@ class Service {
 
   static apiConfig = {
     baseURL: process.env.API_URL,
+    // baseURL: 'http://10.1.1.19:45088/v1',
   }
 
   static normalizeList (list, normalizer) {
@@ -76,30 +81,40 @@ class Service {
     const denormalizedParameter = this.denormalizer(parameter)
     const casedParameter = toCaseKeys(denormalizedParameter, Service.option.toRequestCase)
 
-    const predicator = value => omitBy(value, isUndefined)
+    const predicator = object =>
+      Array.isArray(object)
+        ? object.filter(value => !isUndefined(value))
+        : flow(
+          omitBy(isUndefined),
+          mapValues(value => (typeof value === 'string' ? value.trim() : value))
+        )(object)
     const predicatedParameter = toPredicateValues(casedParameter, predicator)
 
     return predicatedParameter
   }
 
   handleSuccess (response) {
-    const casedResponse = toCaseKeys(response.data.data, Service.option.toResponseCase)
-    const normalizedResponse = this.normalizer(casedResponse)
+    const casedData = toCaseKeys(response.data.data, Service.option.toResponseCase)
+    const normalizedData = this.normalizer(casedData)
 
-    return normalizedResponse
+    const predicator = object => (Array.isArray(object) ? object.filter(value => !isUndefined(value)) : flow(omitBy(isUndefined))(object))
+    const predicatedData = toPredicateValues(normalizedData, predicator)
+    response = predicatedData
+
+    return response
   }
 
   handleFailure (error) {
     let reason = null
 
-    if (isUndefined(error.response)) {
-      reason = error
-    } else {
+    if (!isUndefined(error.response)) {
       const { response } = error
       const message = this.getErrorMessage(response)
       reason = Object.assign(error, Object.assign(response, { message }))
 
       this.debug(reason)
+    } else {
+      reason = error
     }
 
     return Promise.reject(reason)
@@ -108,7 +123,6 @@ class Service {
   callApi () {
     const axiosInstance = this.getAxiosInstance()
     const requestConfig = this.getRequestConfig()
-
     return axiosInstance(requestConfig).then(response => this.handleSuccess(response), error => this.handleFailure(error))
   }
 }

@@ -1,11 +1,5 @@
 // import Service from '../service'
 
-class Normalizer {
-  static DataName ({ responseKey }) {
-    return {
-      frontEndKey: responseKey,
-    }
-  }
-}
+class Normalizer {}
 
 export default Normalizer
