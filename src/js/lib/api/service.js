@@ -23,8 +23,8 @@ class Service {
   }
 
   static apiConfig = {
-    // baseURL: process.env.API_URL,
-    baseURL: 'http://10.1.1.19:45088/v1',
+    baseURL: process.env.API_URL,
+    // baseURL: 'http://10.1.1.19:45088/v1',
   }
 
   static normalizeList (list, normalizer) {
