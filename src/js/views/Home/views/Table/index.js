@@ -44,13 +44,12 @@ export const propTypes = {
   standingList: PropTypes.array,
   tableNumber: PropTypes.string,
   clockState: PropTypes.string,
+  defaultRecord: PropTypes.object,
   addSeatItem: PropTypes.func,
   removeSeatItem: PropTypes.func,
   initStandingList: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
-  clockOutPlayer: PropTypes.array,
-  removeClockOutPlayer: PropTypes.func,
 }
 
 function Table (props) {
@@ -59,14 +58,13 @@ function Table (props) {
     history,
     seatedList,
     standingList,
+    tableNumber,
+    clockState,
+    defaultRecord,
     addSeatItem,
     removeSeatItem,
     addStandingItem,
     removeStandingItem,
-    tableNumber,
-    clockState,
-    clockOutPlayer,
-    removeClockOutPlayer,
   } = props
 
   const { path, params } = match
@@ -77,7 +75,7 @@ function Table (props) {
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
-  const [isAutoClocking, setIsAutoClocking] = useState(false)
+
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -116,10 +114,9 @@ function Table (props) {
   }
 
   // Detection
-  const onDetectionItemActionClick = (event, detectionItem, isAuto = false) => {
+  const onDetectionItemActionClick = (event, detectionItem) => {
     openClockInModal()
 
-    setIsAutoClocking(isAuto)
     setCurrentDetectionItem(detectionItem)
   }
 
@@ -147,8 +144,10 @@ function Table (props) {
     return { isInSeatedPlace, seatedIndex }
   }
 
-  // auto clock in
+  // execute auto clock-in
   const executeAutoClockIn = async (event, detectionItem) => {
+    // 從 detectionItem 的 probableList 挑出 similarity 最高者
+    // 解構成 frond-end key
     const person = getPersonByType(detectionItem.type, detectionItem)
     const newPerson = {
       ...person,
@@ -159,28 +158,26 @@ function Table (props) {
       cardType: detectionItem.probableList[0].level,
     }
 
-    let { id, image } = newPerson
+    let { id, image } = await newPerson
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = newPerson
-    const isClockInSeated = Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
-    const isClockInStanding = Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
-
-    if (isClockInSeated || isClockInStanding) return
 
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
-    const isSomeoneOnSeated = seatedList[seatedIndex] !== undefined
+    const isSeated = typeof seatedList[seatedIndex] === 'object'
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
       const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
-      if (isInSeatedPlace && !isSomeoneOnSeated) {
+
+      if (isInSeatedPlace && !isSeated) {
         await addSeatItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
-        const standingIndex = findIndex(standingList, item => item === undefined)
+        const standingIndex = await findIndex(standingList, item => item === undefined)
 
         await addStandingItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, standingIndex)
       }
+
       return apiId && true
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
@@ -195,25 +192,14 @@ function Table (props) {
       const apiId = await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
 
-      if (isInSeatedPlace && !isSomeoneOnSeated) {
+      if (isInSeatedPlace && !isSeated) {
         await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
         const standingIndex = findIndex(standingList, item => item === undefined)
 
         await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, standingIndex)
       }
-
-      return new Promise((resolve, reject) => {
-        // 傳入 resolve 與 reject，表示資料成功與失敗
-        if (apiId && true) {
-          setTimeout(function () {
-            // 3 秒時間後，透過 resolve 來表示完成
-            resolve(apiId && true)
-          }, 200)
-        } else {
-          // 回傳失敗
-        }
-      })
+      return apiId && true
     }
   }
 
@@ -221,16 +207,10 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
-  const onClockIn = async (event, person, isAutoClocking) => {
-    if (!person) return closeClockInModal()
-
+  const onManuallyClockIn = async (event, person) => {
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
 
-    const isClockInSeated = await Boolean(seatedList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
-    const isClockInStanding = await Boolean(standingList.find(seatedItem => seatedItem && seatedItem.tempId === person.tempId))
-
-    if (isClockInSeated || isClockInStanding) return
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
@@ -249,58 +229,46 @@ function Table (props) {
       await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
     }
-    closeClockInModal()
 
     // 根據是否站立，設定位置列表的內容
-    if (isAutoClocking) {
-      const { isSeated, seatedIndex } = await getSeatedCoordinate(person)
-      if (isSeated) {
-        await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, seatedIndex)
-      } else {
-        const standingIndex = findIndex(standingList, item => item === undefined)
-
-        await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, standingIndex)
-      }
-
-      await initializeCurrentDetectionItem()
-    } else if (isSelectedPlaceStanding) {
-      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: isAutoClocking, type, cardType }, selectedPlaceIndex)
+    if (isSelectedPlaceStanding) {
+      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }, selectedPlaceIndex)
     } else {
-      addSeatItem({ id: String(id), image, isAuto: isAutoClocking, type, cardType }, selectedPlaceIndex)
+      addSeatItem({ id: String(id), image, isAuto: false, type, cardType }, selectedPlaceIndex)
     }
 
-    await closeClockInModal()
-    await initializeIsSelectedPlaceStanding()
-    await initializeSelectedPlaceIndex()
+    closeClockInModal()
+    initializeIsSelectedPlaceStanding()
+    initializeSelectedPlaceIndex()
   }
 
-  // MemberDetail
-  const onClockOut = async (values, player, isAutoClocking = false) => {
-    let isPlayerInClockOutPlayer = await Boolean(findIndex(clockOutPlayer, player) !== -1)
+  // Auto clock out
+  const executeAutoClockOut = async (values, player) => {
+    const result = await GameApi.clockOut({ id: player.memberId, ...values, tableNumber, type: player.type })
 
-    if (isAutoClocking && isPlayerInClockOutPlayer) {
-      await GameApi.clockOut({ id: player.memberId, ...values, tableNumber, type: player.type })
-      await removeClockOutPlayer(player)
+    const isSeated = player.seatedIndex >= 0
 
-      const isSeated = player.seatedIndex !== -1
-      const isStanding = player.standingIndex !== -1
-
-      if (isSeated) removeSeatItem(player.seatedIndex)
-      if (isStanding) removeStandingItem(player.standingIndex)
+    if (isSeated) {
+      removeSeatItem(player.seatedIndex)
     } else {
-      await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
-
-      // 根據是否站立，設定位置列表的內容
-      if (isSelectedPlaceStanding) {
-        removeStandingItem(selectedPlaceIndex)
-      } else {
-        removeSeatItem(selectedPlaceIndex)
-      }
-      initializeIsSelectedPlaceStanding()
-      initializeSelectedPlaceIndex()
-
-      await history.push(findStaticPath(path))
+      removeStandingItem(player.standingIndex)
     }
+    return result && true
+  }
+
+  // Manually clock out
+  const onClockOut = async (values, player) => {
+    await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
+    // 根據是否站立，設定位置列表的內容
+    if (isSelectedPlaceStanding) {
+      removeStandingItem(selectedPlaceIndex)
+    } else {
+      removeSeatItem(selectedPlaceIndex)
+    }
+    initializeIsSelectedPlaceStanding()
+    initializeSelectedPlaceIndex()
+
+    await history.push(findStaticPath(path))
   }
 
   const renderAutomaticNotice = clockState => {
@@ -313,8 +281,15 @@ function Table (props) {
         return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Member</div>
     }
   }
+
   return isDetailVisible ? (
-    <MemberDetail onClockOut={onClockOut} isSelectedPlaceStanding={isSelectedPlaceStanding} selectedPlaceIndex={selectedPlaceIndex} {...props} />
+    <MemberDetail
+      onClockOut={onClockOut}
+      isSelectedPlaceStanding={isSelectedPlaceStanding}
+      selectedPlaceIndex={selectedPlaceIndex}
+      {...props}
+      memberPropPlayMother={defaultRecord.memberPropPlayMother}
+    />
   ) : (
     <div className={cx('home-table')}>
       <div className={cx('home-table__seating-plan')}>
@@ -337,7 +312,8 @@ function Table (props) {
         <Detection
           isPlaceSelected={selectedPlaceIndex !== null}
           onItemActionClick={onDetectionItemActionClick}
-          autoClockIn={executeAutoClockIn}
+          executeAutoClockIn={executeAutoClockIn}
+          executeAutoClockOut={executeAutoClockOut}
           onClockOut={onClockOut}
           isOpened={isClockInModalOpened}
           clockState={clockState}
@@ -348,8 +324,7 @@ function Table (props) {
         isOpened={isClockInModalOpened}
         onClose={onClockInModalClose}
         afterClose={afterClockInModalClose}
-        onClockIn={onClockIn}
-        isAutoClocking={isAutoClocking}
+        onClockIn={onManuallyClockIn}
       />
     </div>
   )
@@ -363,7 +338,7 @@ const mapStateToProps = (state, props) => {
     standingList: standingSelectors.getStandingList(state, props),
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),
-    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
+    defaultRecord: tableSelectors.getDefaultRecord(state, props),
   }
 }
 
@@ -374,7 +349,6 @@ const mapDispatchToProps = {
   addStandingItem: standingOperations.addItemToList,
   removeStandingItem: standingOperations.removeItemFromList,
   changeTableNumber: tableOperations.changeTableNumber,
-  removeClockOutPlayer: tableOperations.removeClockOutPlayer,
 }
 
 export default connect(

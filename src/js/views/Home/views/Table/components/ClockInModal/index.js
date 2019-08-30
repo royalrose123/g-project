@@ -40,11 +40,10 @@ export const propTypes = {
   onClose: PropTypes.func.isRequired,
   afterClose: PropTypes.func.isRequired,
   onClockIn: PropTypes.func,
-  isAutoClocking: PropTypes.bool,
 }
 
 function ClockInModal (props) {
-  const { detectionItem, isOpened, onClose, afterClose, onClockIn, isAutoClocking } = props
+  const { detectionItem, isOpened, onClose, afterClose, onClockIn } = props
 
   // TODO: 暫時做成一秒後自動帶入密碼
   // === TEMP ===
@@ -82,9 +81,9 @@ function ClockInModal (props) {
     }
   }, [shouldRenderContent, detectionItem, person])
 
-  if (shouldRenderContent && isAutoClocking) {
-    onClockIn(event, selectedPerson, isAutoClocking)
-  }
+  // if (shouldRenderContent && isAutoClocking) {
+  //   onClockIn(event, selectedPerson, isAutoClocking)
+  // }
 
   // Clock in
   const renderClockInHeader = () => (
@@ -185,7 +184,7 @@ function ClockInModal (props) {
       >
         Swipe Membercard
       </Button>
-      <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson, isAutoClocking)}>
+      <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson)}>
         Confirm Clock-In
       </Button>
     </Modal.Footer>

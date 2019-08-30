@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get, find, findIndex } from 'lodash'
+import { get, find, findIndex, uniqBy } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -37,8 +37,8 @@ export const propTypes = {
   clockState: PropTypes.string,
   isPlaceSelected: PropTypes.bool,
   onItemActionClick: PropTypes.func,
-  autoClockIn: PropTypes.func,
-  onClockOut: PropTypes.func,
+  executeAutoClockIn: PropTypes.func,
+  executeAutoClockOut: PropTypes.func,
   autoSettings: PropTypes.object,
   defaultRecord: PropTypes.object,
   clockOutPlayer: PropTypes.array,
@@ -51,11 +51,11 @@ function Detection (props) {
     seatedList,
     standingList,
     tableNumber,
+    clockState,
     isPlaceSelected,
     onItemActionClick,
-    autoClockIn,
-    clockState,
-    onClockOut,
+    executeAutoClockIn,
+    executeAutoClockOut,
     autoSettings,
     defaultRecord,
     clockOutPlayer,
@@ -65,6 +65,9 @@ function Detection (props) {
 
   const [detectionData, setDetectionData] = useState({})
   const clockInPlayer = useRef({})
+  // console.log('clockInPlayer', clockInPlayer.current)
+  // console.log('detectionData.leave', detectionData.leave)
+  // console.log('clockOutPlayer', clockOutPlayer)
   const clockOutDefaultValue = {
     anonymous: {
       playType: defaultRecord.anonymousPlayType,
@@ -117,13 +120,15 @@ function Detection (props) {
       clockState !== CLOCK_STATUS.MANUALLY_CLOCK
     ) {
       detectionData.leave.forEach(player => {
-        const isLeavePlayerInSeated = Boolean(find(seatedList, { tempId: player.tempId })) || Boolean(find(seatedList, { id: player.cid }))
-        const isLeavePlayerInStanding = Boolean(find(standingList, { tempId: player.tempId })) || Boolean(find(standingList, { id: player.cid }))
+        const isLeavePlayerInSeated = Boolean(find(seatedList, { id: player.cid }))
+        const isLeavePlayerInStanding = Boolean(find(standingList, { id: player.cid }))
+
         switch (true) {
           case isLeavePlayerInSeated:
-            const leavePlayerInSeatedList = find(seatedList, { tempId: player.tempId }) || find(seatedList, { id: player.cid })
+            const leavePlayerInSeatedList = find(seatedList, { id: player.cid })
             const leavePlayerSeatedIndex = findIndex(seatedList, leavePlayerInSeatedList)
             const seatedMemberId = leavePlayerInSeatedList.id
+
             const seatedLeavePlayer = {
               ...player,
               memberId: seatedMemberId,
@@ -133,7 +138,7 @@ function Detection (props) {
             addClockOutPlayer(seatedLeavePlayer)
             break
           case isLeavePlayerInStanding:
-            const leavePlayerInStandingList = find(standingList, { tempId: player.tempId }) || find(standingList, { id: player.cid })
+            const leavePlayerInStandingList = find(standingList, { id: player.cid })
             const leavePlayerStandingIndex = findIndex(standingList, leavePlayerInStandingList)
             const standingMemberId = leavePlayerInStandingList.id
             const standingLeavePlayer = {
@@ -149,30 +154,34 @@ function Detection (props) {
     }
   }, [addClockOutPlayer, clockState, detectionData, seatedList, standingList])
 
-  // 如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
-  // 如果 clockOutPlayer 的 item 還沒被 clock-out 就再次出現在 stay，必須從 clockOutPlayer 移除
+  // 每次 call detection api 都要確認如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
   if (clockOutPlayer.length > 0) {
-    clockOutPlayer.forEach(player => {
-      const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳date，前端轉毫秒
+    // 有 leave 時 detection 被 re-render 時，clockOutPlayer 就會重複
+    // 暫時用 uniqBy 解
+    uniqBy(clockOutPlayer).forEach(player => {
+      const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳 date，前端轉毫秒
       const alreadyLeaveTime = (new Date().getTime() - playerLeaveTime) / 1000
       // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
+      // 如果 clockOutPlayer 的 item 在 clock-out 時間內出現在 stay，必須從 clockOutPlayer 移除
       const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId })) || Boolean(find(detectionData.stay, { cid: player.cid }))
-      // console.log(player.tempId + '  isBackToStay', isBackToStay)
-      if (!player.cid) removeClockOutPlayer(player)
       if (isBackToStay) removeClockOutPlayer(player)
 
       switch (player.type) {
         case 'anonymous':
           if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
-            delete clockInPlayer.current[player.tempId]
-            onClockOut(clockOutDefaultValue[player.type], player, true)
+            if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
+              removeClockOutPlayer(player)
+              delete clockInPlayer.current[player.tempId]
+            }
           }
           break
         case 'member':
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
-            delete clockInPlayer.current[player.tempId]
-            onClockOut(clockOutDefaultValue[player.type], player, true)
+            if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
+              delete clockInPlayer.current[player.tempId]
+              removeClockOutPlayer(player)
+            }
           }
           break
       }
@@ -211,38 +220,20 @@ function Detection (props) {
     switch (clockState) {
       case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
         if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
-          autoClockIn(event, detectionItem)
-            .then(result => {
-              // 成功訊息 (需要 3 秒)
-              clockInPlayer.current[detectionItemTempId] = true
-            })
-            .catch(err => {
-              // 失敗訊息 (立即)
-              console.log(err)
-            })
+          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
         }
         break
       case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
         if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
-          autoClockIn(event, detectionItem)
-            .then(result => {
-              // 成功訊息 (需要 3 秒)
-              clockInPlayer.current[detectionItemTempId] = true
-            })
-            .catch(err => {
-              // 失敗訊息 (立即)
-              console.log(err)
-            })
+          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
         }
         break
       case CLOCK_STATUS.AUTO_CLOCK:
         if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
-          autoClockIn(event, detectionItem)
-          clockInPlayer.current[detectionItemTempId] = true
+          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
         }
         if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
-          autoClockIn(event, detectionItem)
-          clockInPlayer.current[detectionItemTempId] = true
+          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
         }
         break
     }
@@ -317,7 +308,6 @@ function Detection (props) {
               isAutoClockIn,
               isAlreadyClockIn,
             } = setDetectionItemExstingTime(detectionItem)
-
             switch (true) {
               case isDetectItemInSeated:
                 return null
