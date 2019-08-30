@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Switch, Route, Redirect } from 'react-router-dom'
@@ -66,16 +66,17 @@ const defaultNavigation = navigations[0]
 
 export const propTypes = {
   match: PropTypes.object,
-  tableNumber: PropTypes.string,
-  initTableNumber: PropTypes.func,
+  // tableNumber: PropTypes.string,
+  // initTableNumber: PropTypes.func,
 }
 
 function Home (props) {
-  const { match, tableNumber, initTableNumber } = props
-  const localStorageTableNumber = localStorage.getItem('tableNumber')
-  useEffect(() => {
-    if (localStorageTableNumber && tableNumber === 'Please select') initTableNumber(localStorageTableNumber)
-  }, [initTableNumber, localStorageTableNumber, tableNumber])
+  const { match } = props
+
+  // const localStorageTableNumber = localStorage.getItem('tableNumber')
+  // useEffect(() => {
+  //   if (localStorageTableNumber && tableNumber === 'Please select') initTableNumber(localStorageTableNumber)
+  // }, [initTableNumber, localStorageTableNumber, tableNumber])
 
   return (
     <Layout className={cx('home')}>

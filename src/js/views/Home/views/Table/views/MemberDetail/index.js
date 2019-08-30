@@ -71,6 +71,7 @@ function MemberDetail (props) {
 
   const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
 
+  // fetch-gcdi API 拿不到 member image
   // 把 member imgage 換成 seated / standing 的 image
   useEffect(() => {
     const isSelected = !isNaN(selectedPlaceIndex)

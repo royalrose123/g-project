@@ -179,8 +179,8 @@ function Detection (props) {
         case 'member':
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
             if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
-              delete clockInPlayer.current[player.tempId]
               removeClockOutPlayer(player)
+              delete clockInPlayer.current[player.tempId]
             }
           }
           break

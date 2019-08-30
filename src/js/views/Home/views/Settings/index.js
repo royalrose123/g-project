@@ -195,12 +195,12 @@ function Settings (props) {
         memberPropPlay: Yup.string().test(
           'more-than-api',
           'Amounnt cannot be larger than proportion of games',
-          value => Number(value) < detail.defaultRecord.memberPropPlayMother
+          value => Number(value) <= detail.defaultRecord.memberPropPlayMother
         ),
         anonymousPropPlay: Yup.string().test(
           'more-than-api',
           'Amounnt cannot be larger than proportion of games',
-          value => Number(value) < detail.defaultRecord.anonymousPropPlayMother
+          value => Number(value) <= detail.defaultRecord.anonymousPropPlayMother
         ),
       }),
     })
@@ -427,7 +427,7 @@ function Settings (props) {
                             name='matchPercentage'
                             render={({ field }) => (
                               <Form.Select>
-                                <option value='90'>{`${values.systemSettings.matchPercentage}%`}</option>
+                                <option value='90'>{`${90}%`}</option>
                               </Form.Select>
                             )}
                           />
