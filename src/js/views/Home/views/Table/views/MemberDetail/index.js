@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { connect } from 'react-redux'
 import PropTypes from 'prop-types'
 import classnames from 'classnames/bind'
+import * as Yup from 'yup'
 import { format, formatDistanceStrict } from 'date-fns'
 import { BigNumber } from 'bignumber.js'
 import { Formik, Form as FormikForm, Field } from 'formik'
@@ -43,21 +44,22 @@ export const propTypes = {
   standingList: PropTypes.array,
   isSelectedPlaceStanding: PropTypes.bool,
   selectedPlaceIndex: PropTypes.number,
+  memberPropPlayMother: PropTypes.number,
 }
 
 function MemberDetail (props) {
-  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList } = props
+  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList, memberPropPlayMother } = props
   const { path, params } = match
   const { memberId: id } = params
 
   const initialValues = {
     playType: '0',
     propPlay: '',
-    averageBet: '',
+    averageBet: 0,
     overallWinner: 'player',
     actualWin: '',
-    drop: '',
-    overage: '',
+    drop: 0,
+    overage: 0,
     tableName: '',
   }
 
@@ -88,8 +90,18 @@ function MemberDetail (props) {
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
 
+  const getValidationSchema = () => {
+    return Yup.object().shape({
+      propPlay: Yup.number(),
+      averageBet: Yup.number().test('must be above 0', 'AverageBet must be above or equal 0', value => Number(value) >= 0),
+      actualWin: Yup.number().test('must be above 0', 'ActualWin must be above or equal 0', value => Number(value) >= 0),
+      drop: Yup.number().test('must be above 0', 'Drop must be above or equal 0', value => Number(value) >= 0),
+      overage: Yup.number().test('must be above 0', 'Overage must be above or equal 0', value => Number(value) >= 0),
+    })
+  }
+
   return isLoaded ? (
-    <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut}>
+    <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut} validationSchema={getValidationSchema}>
       {({ values, setFieldValue }) => {
         return (
           <FormikForm>
@@ -203,10 +215,11 @@ function MemberDetail (props) {
                                   />
                                 )}
                               />
-                              <div className={cx('home-table-member-detail__all-games')}>/ {detail.playTimes}</div>
+                              <div className={cx('home-table-member-detail__all-games')}>/ {memberPropPlayMother}</div>
                             </Form.Row>
                             <div className={cx('home-table-member-detail__percentage')}>
-                              {values.propPlay.length > 0 && Math.floor(new BigNumber(values.propPlay).dividedBy(detail.playTimes).multipliedBy(100))}
+                              {values.propPlay.length > 0 &&
+                                Math.floor(new BigNumber(values.propPlay).dividedBy(memberPropPlayMother).multipliedBy(100))}
                               %
                             </div>
                           </Form.Column>

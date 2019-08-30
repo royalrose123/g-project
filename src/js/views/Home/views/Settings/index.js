@@ -839,12 +839,12 @@ function Settings (props) {
                               />
                             )}
                           />
-                          <Form.InputText>{`/ ${values.defaultRecord.anonymousAverageBet}`}</Form.InputText>
+                          <Form.InputText>{`/ ${values.defaultRecord.anonymousPropPlayMother}`}</Form.InputText>
                           <Form.Label data-text-align='right'>
                             {values.defaultRecord.anonymousPropPlay.length > 0 &&
                               Math.floor(
                                 new BigNumber(values.defaultRecord.anonymousPropPlay)
-                                  .dividedBy(values.defaultRecord.anonymousAverageBet)
+                                  .dividedBy(values.defaultRecord.anonymousPropPlayMother)
                                   .multipliedBy(100)
                               )}
                             %
