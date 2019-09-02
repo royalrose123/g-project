@@ -17,6 +17,7 @@
 
 import * as actionTypes from './actionTypes'
 
+// tableNumber
 export const initTableNumber = tableNumber => ({
   type: actionTypes.INIT_TABLE_NUMBER,
   payload: {
@@ -31,6 +32,7 @@ export const changeTableNumber = tableNumber => ({
   },
 })
 
+// clockState
 export const initClockState = clockState => ({
   type: actionTypes.INIT_CLOCK_STATE,
   payload: {
@@ -45,6 +47,14 @@ export const changeClockState = clockState => ({
   },
 })
 
+// autoSettings
+export const initAutoSettings = autoSettings => ({
+  type: actionTypes.INIT_AUTO_SETTINGS,
+  payload: {
+    autoSettings,
+  },
+})
+
 export const changeAutoSettings = autoSettings => ({
   type: actionTypes.CHANGE_AUTO_SETTINGS,
   payload: {
@@ -52,10 +62,26 @@ export const changeAutoSettings = autoSettings => ({
   },
 })
 
+// defaultRecord
+export const initDefaultRecord = defaultRecord => ({
+  type: actionTypes.INIT_DEFAULT_RECORD,
+  payload: {
+    defaultRecord,
+  },
+})
+
 export const changeDefaultRecord = defaultRecord => ({
   type: actionTypes.CHANGE_DEFAULT_RECORD,
   payload: {
     defaultRecord,
+  },
+})
+
+// clockOutPlayer
+export const initClockOutPlayer = clockOutPlayer => ({
+  type: actionTypes.INIT_CLOCK_OUT_PLAYER,
+  payload: {
+    clockOutPlayer,
   },
 })
 

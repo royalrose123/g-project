@@ -5,6 +5,9 @@
 import * as actions from './actions'
 
 export const initStandingList = actions.initStandingList
+
 export const addItemToList = actions.addItemToList
+
 export const removeItemFromList = actions.removeItemFromList
+
 export const removeAllFromStanding = actions.removeAllFromStanding

@@ -85,7 +85,7 @@ function MemberDetail (props) {
         setMemberImage(seatedList[selectedPlaceIndex].image)
       }
     }
-  }, [isLoaded, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList])
+  }, [isLoaded, selectedPlaceIndex, seatedList, standingList, isSelectedPlaceStanding])
 
   if (isLoaded) detail.image = memberImage
 
@@ -93,7 +93,7 @@ function MemberDetail (props) {
 
   const getValidationSchema = () => {
     return Yup.object().shape({
-      propPlay: Yup.number(),
+      propPlay: Yup.number().max(memberPropPlayMother, `PropPlay must be less or equal ${memberPropPlayMother}`),
       averageBet: Yup.number().test('must be above 0', 'AverageBet must be above or equal 0', value => Number(value) >= 0),
       actualWin: Yup.number().test('must be above 0', 'ActualWin must be above or equal 0', value => Number(value) >= 0),
       drop: Yup.number().test('must be above 0', 'Drop must be above or equal 0', value => Number(value) >= 0),

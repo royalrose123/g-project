@@ -4,6 +4,8 @@
 
 import * as actions from './actions'
 
+export const initSeatedList = actions.initSeatedList
+
 export const addItemToList = actions.addItemToList
 
 export const removeItemFromList = actions.removeItemFromList

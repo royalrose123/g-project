@@ -23,6 +23,7 @@ import { operations as tableOperations, selectors as tableSelectors } from '../.
 import SettingsApi from '../../../../lib/api/Setting'
 import GameApi from '../../../../lib/api/Game'
 import useFetcher from '../../../../lib/effects/useFetcher'
+import { setSessionStorageItem, removeSessionStorageItem, clearSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -64,7 +65,7 @@ export const checkClockState = (memberClock, anonymousClock) => {
 const setTableListActiveStatus = (setTableList, tableList, selectedTableName, tableNumber) => {
   setTableList(
     tableList.map(tableItem => {
-      if (tableItem.tableName === 'Please select') {
+      if (tableItem.tableName === 'Please select table') {
         return tableItem
       } else if (tableItem.tableName === selectedTableName) {
         return { ...tableItem, disabled: true }
@@ -75,7 +76,7 @@ const setTableListActiveStatus = (setTableList, tableList, selectedTableName, ta
       }
     })
   )
-  if (selectedTableName !== 'Please select') SettingsApi.activeTable({ selectedTableName })
+  if (selectedTableName !== 'Please select table') SettingsApi.activeTable({ selectedTableName })
   SettingsApi.deactiveTable({ tableNumber })
 }
 
@@ -128,7 +129,15 @@ function Settings (props) {
   const closeConfirmModal = () => setIsConfirmModalOpened(false)
   const saveConfirmModal = async formikValues => {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    changeAutoSettings(formikValues.autoSettings)
+    changeDefaultRecord(formikValues.defaultRecord)
+
+    setSessionStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    setSessionStorageItem('autoSettings', formikValues.autoSettings)
+    setSessionStorageItem('defaultRecord', formikValues.defaultRecord)
+
     await SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
       autoSettings: formikValues.autoSettings,
@@ -172,6 +181,8 @@ function Settings (props) {
     await removeAllFromSeated()
     await removeAllFromStanding()
     await GameApi.clockOutAll({ memberIdList, tableNumber })
+    removeSessionStorageItem('seatedList')
+    removeSessionStorageItem('standingList')
   }
 
   const getValidationSchema = () => {
@@ -211,7 +222,8 @@ function Settings (props) {
 
     setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
     changeTableNumber(selectedTableName)
-    window.localStorage.setItem('tableNumber', selectedTableName)
+    clearSessionStorageItem()
+    setSessionStorageItem('tableNumber', selectedTableName)
   }
 
   useEffect(() => {
@@ -232,10 +244,14 @@ function Settings (props) {
 
   useEffect(() => {
     if (isLoaded) {
-      changeAutoSettings(detail.autoSettings)
-      changeDefaultRecord(detail.defaultRecord)
+      setSessionStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+      setSessionStorageItem('autoSettings', detail.autoSettings)
+      setSessionStorageItem('defaultRecord', detail.defaultRecord)
+
       changeTableNumber(detail.systemSettings.tbName)
       changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+      changeAutoSettings(detail.autoSettings)
+      changeDefaultRecord(detail.defaultRecord)
     }
   }, [detail, isLoaded, changeTableNumber, changeClockState, changeAutoSettings, changeDefaultRecord])
 
@@ -283,6 +299,10 @@ function Settings (props) {
               const currentAnonymousClock = values.autoSettings.autoClockAnonymous
 
               if (previousClockState === checkClockState(currentMemberClock, currentAnonymousClock)) {
+                setSessionStorageItem('clockState', checkClockState(currentMemberClock, currentAnonymousClock))
+                setSessionStorageItem('autoSettings', values.autoSettings)
+                setSessionStorageItem('defaultRecord', values.defaultRecord)
+
                 SettingsApi.postSettingDetail({
                   systemSettings: values.systemSettings,
                   autoSettings: values.autoSettings,
@@ -291,6 +311,8 @@ function Settings (props) {
 
                 setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
                 changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+                changeAutoSettings(values.autoSettings)
+                changeDefaultRecord(values.defaultRecord)
               } else {
                 setConfirmModalTextPack(confirmModalText[checkClockState(currentMemberClock, currentAnonymousClock)])
                 openConfirmModal()
@@ -372,7 +394,7 @@ function Settings (props) {
                             {tableList.map((tableItem, index) => (
                               <option value={tableItem.tableName} key={index} disabled={tableItem.disabled}>
                                 {tableItem.tableName}
-                                {tableItem.tableName === 'Please select' ? '' : !tableItem.disabled ? '' : '  (Active)'}
+                                {tableItem.tableName === 'Please select table' ? '' : !tableItem.disabled ? '' : '  (Active)'}
                               </option>
                             ))}
                           </Form.Select>
@@ -936,7 +958,7 @@ function Settings (props) {
                     </Form.Group>
                   </div>
                   <div className={cx('home-settings__footer')}>
-                    <Button type='submit' disabled={tableNumber === 'Please select'}>
+                    <Button type='submit' disabled={tableNumber === 'Please select table'}>
                       Save
                     </Button>
                   </div>

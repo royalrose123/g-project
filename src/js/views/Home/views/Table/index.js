@@ -27,6 +27,7 @@ import GameApi from '../../../../lib/api/Game'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
+import { setSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
 
 // Style
@@ -47,7 +48,6 @@ export const propTypes = {
   defaultRecord: PropTypes.object,
   addSeatItem: PropTypes.func,
   removeSeatItem: PropTypes.func,
-  initStandingList: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
 }
@@ -139,12 +139,11 @@ function Table (props) {
         )
       })
     )
-
     const isInSeatedPlace = !isNaN(seatedIndex)
     return { isInSeatedPlace, seatedIndex }
   }
 
-  // execute auto clock-in
+  // Execute auto clock-in
   const executeAutoClockIn = async (event, detectionItem) => {
     // 從 detectionItem 的 probableList 挑出 similarity 最高者
     // 解構成 frond-end key
@@ -171,11 +170,23 @@ function Table (props) {
       const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
 
       if (isInSeatedPlace && !isSeated) {
-        await addSeatItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, seatedIndex)
+        const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
+
+        addSeatItem(newSeatedItem, seatedIndex)
+        setSessionStorageItem('seatedList', newSeatedList)
+
+        // addSeatItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
         const standingIndex = await findIndex(standingList, item => item === undefined)
 
-        await addStandingItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, standingIndex)
+        const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
+
+        addStandingItem(newStandingItem, standingIndex)
+        setSessionStorageItem('standingList', newStandingList)
+
+        // await addStandingItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, standingIndex)
       }
 
       return apiId && true
@@ -193,11 +204,24 @@ function Table (props) {
       image = compareImage
 
       if (isInSeatedPlace && !isSeated) {
-        await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, seatedIndex)
+        const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
+
+        addSeatItem(newSeatedItem, seatedIndex)
+        setSessionStorageItem('seatedList', newSeatedList)
+
+        // await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
         const standingIndex = findIndex(standingList, item => item === undefined)
 
-        await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, standingIndex)
+        const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+
+        const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
+
+        addStandingItem(newStandingItem, standingIndex)
+        setSessionStorageItem('standingList', newStandingList)
+
+        // await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, standingIndex)
       }
       return apiId && true
     }
@@ -207,6 +231,7 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
+  // Manually clock-in
   const onManuallyClockIn = async (event, person) => {
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
@@ -232,9 +257,17 @@ function Table (props) {
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
-      addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }, selectedPlaceIndex)
+      const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
+      const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? newStandingItem : item))
+
+      addStandingItem(newStandingItem, selectedPlaceIndex)
+      setSessionStorageItem('standingList', newStandingList)
     } else {
-      addSeatItem({ id: String(id), image, isAuto: false, type, cardType }, selectedPlaceIndex)
+      const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
+      const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? newSeatedItem : item))
+
+      addSeatItem(newSeatedItem, selectedPlaceIndex)
+      setSessionStorageItem('seatedList', newSeatedList)
     }
 
     closeClockInModal()
@@ -249,8 +282,14 @@ function Table (props) {
     const isSeated = player.seatedIndex >= 0
 
     if (isSeated) {
+      const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
+
+      setSessionStorageItem('seatedList', newSeatedList)
       removeSeatItem(player.seatedIndex)
     } else {
+      const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
+
+      setSessionStorageItem('standingList', newStandingList)
       removeStandingItem(player.standingIndex)
     }
     return result && true
@@ -261,8 +300,15 @@ function Table (props) {
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
+      // For Refresh -
+      const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+
+      setSessionStorageItem('standingList', newStandingList)
       removeStandingItem(selectedPlaceIndex)
     } else {
+      const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+
+      setSessionStorageItem('seatedList', newSeatedList)
       removeSeatItem(selectedPlaceIndex)
     }
     initializeIsSelectedPlaceStanding()
@@ -345,7 +391,6 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   addSeatItem: seatedOperations.addItemToList,
   removeSeatItem: seatedOperations.removeItemFromList,
-  initStandingList: standingOperations.initStandingList,
   addStandingItem: standingOperations.addItemToList,
   removeStandingItem: standingOperations.removeItemFromList,
   changeTableNumber: tableOperations.changeTableNumber,

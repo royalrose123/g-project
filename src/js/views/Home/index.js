@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import Loadable from 'react-loadable'
 import classnames from 'classnames/bind'
+import { findIndex, isEmpty } from 'lodash'
 
 // Components
 import Svg from '../../components/Svg'
@@ -13,9 +14,12 @@ import Menu from './components/Menu'
 
 // Modules
 import { operations as tableOperations, selectors as tableSelectors } from '../../lib/redux/modules/table'
+import { operations as seatedOperations, selectors as seatedSelectors } from '..//../lib/redux/modules/seated'
+import { operations as standingOperations, selectors as standingSelectors } from '..//../lib/redux/modules/standing'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
+import { getSessionStorageItem } from '../../lib/helpers/sessionStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -66,17 +70,84 @@ const defaultNavigation = navigations[0]
 
 export const propTypes = {
   match: PropTypes.object,
-  // tableNumber: PropTypes.string,
-  // initTableNumber: PropTypes.func,
+  tableNumber: PropTypes.string,
+  initTableNumber: PropTypes.func,
+  clockState: PropTypes.string,
+  initClockState: PropTypes.func,
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
+  initSeatedList: PropTypes.func,
+  initStandingList: PropTypes.func,
+  autoSettings: PropTypes.object,
+  initAutoSettings: PropTypes.func,
+  defaultRecord: PropTypes.object,
+  initDefaultRecord: PropTypes.func,
 }
 
 function Home (props) {
-  const { match } = props
+  const {
+    match,
+    tableNumber,
+    initTableNumber,
+    clockState,
+    initClockState,
+    seatedList,
+    initSeatedList,
+    standingList,
+    initStandingList,
+    autoSettings,
+    initAutoSettings,
+    defaultRecord,
+    initDefaultRecord,
+  } = props
 
-  // const localStorageTableNumber = localStorage.getItem('tableNumber')
-  // useEffect(() => {
-  //   if (localStorageTableNumber && tableNumber === 'Please select') initTableNumber(localStorageTableNumber)
-  // }, [initTableNumber, localStorageTableNumber, tableNumber])
+  // For Refresh - initial tableNumber
+  const sessionStorageTableNumber = getSessionStorageItem('tableNumber')
+
+  useEffect(() => {
+    if (sessionStorageTableNumber && tableNumber === 'Please select table') initTableNumber(sessionStorageTableNumber)
+  }, [initTableNumber, sessionStorageTableNumber, tableNumber])
+
+  // For Refresh - initial clockState
+  const sessionStorageClockState = getSessionStorageItem('clockState')
+
+  useEffect(() => {
+    if (sessionStorageClockState && clockState === 'manualClock') initClockState(sessionStorageClockState)
+  }, [clockState, initClockState, sessionStorageClockState])
+
+  // For Refresh - initial standingList
+  const isStandingListEmpty = findIndex(standingList, item => item) === -1
+
+  const sessionStorageStandingList = getSessionStorageItem('standingList')
+  const isLocalStorageStandingListEmpty = findIndex(sessionStorageStandingList, item => item) === -1
+
+  useEffect(() => {
+    if (isStandingListEmpty && !isLocalStorageStandingListEmpty) initStandingList(sessionStorageStandingList)
+  }, [initStandingList, isLocalStorageStandingListEmpty, isStandingListEmpty, sessionStorageStandingList])
+
+  // For Refresh - initial seatedList
+  const isSeatedListEmpty = findIndex(seatedList, item => item) === -1
+
+  const sessionStorageSeatedList = getSessionStorageItem('seatedList')
+  const isLocalStorageSeatedListEmpty = findIndex(sessionStorageSeatedList, item => item) === -1
+
+  useEffect(() => {
+    if (isSeatedListEmpty && !isLocalStorageSeatedListEmpty) initSeatedList(sessionStorageSeatedList)
+  }, [initSeatedList, isLocalStorageSeatedListEmpty, isSeatedListEmpty, sessionStorageSeatedList])
+
+  // For Refresh - initial autoSettings
+  const sessionStorageAutoSettings = getSessionStorageItem('autoSettings')
+
+  useEffect(() => {
+    if (sessionStorageAutoSettings && isEmpty(autoSettings)) initAutoSettings(sessionStorageAutoSettings)
+  }, [sessionStorageAutoSettings, autoSettings, initAutoSettings])
+
+  // For Refresh - initial defaultRecord
+  const sessionStorageDefaultRecord = getSessionStorageItem('defaultRecord')
+
+  useEffect(() => {
+    if (sessionStorageDefaultRecord && isEmpty(defaultRecord)) initDefaultRecord(sessionStorageDefaultRecord)
+  }, [sessionStorageDefaultRecord, defaultRecord, initDefaultRecord])
 
   return (
     <Layout className={cx('home')}>
@@ -120,12 +191,23 @@ Home.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {
-    tableNumber: tableSelectors.getTableNumber(state, props), //
+    tableNumber: tableSelectors.getTableNumber(state, props),
+    clockState: tableSelectors.getClockState(state, props),
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
+    autoSettings: tableSelectors.getAutoSettings(state, props),
+    defaultRecord: tableSelectors.getDefaultRecord(state, props),
+    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
   }
 }
 
 const mapDispatchToProps = {
   initTableNumber: tableOperations.initTableNumber,
+  initClockState: tableOperations.initClockState,
+  initStandingList: standingOperations.initStandingList,
+  initSeatedList: seatedOperations.initSeatedList,
+  initAutoSettings: tableOperations.initAutoSettings,
+  initDefaultRecord: tableOperations.initDefaultRecord,
 }
 
 export default connect(

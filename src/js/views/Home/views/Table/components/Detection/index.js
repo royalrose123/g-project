@@ -23,6 +23,7 @@ import { selectors as standingSelectors } from '../../../../../../lib/redux/modu
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
+// import { setSessionStorageItem } from '../../../../../../lib/helpers/sessionStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -71,7 +72,7 @@ function Detection (props) {
   const clockOutDefaultValue = {
     anonymous: {
       playType: defaultRecord.anonymousPlayType,
-      propPlay: defaultRecord.anonymousPropPlay === 0 ? '' : defaultRecord.anonymousPropPlay,
+      propPlay: defaultRecord.anonymousPropPlay.length === 0 ? null : Number(defaultRecord.anonymousPropPlay),
       averageBet: defaultRecord.anonymousAverageBet,
       actualWin: defaultRecord.anonymousActualWin,
       drop: defaultRecord.anonymousDrop,
@@ -80,7 +81,7 @@ function Detection (props) {
     },
     member: {
       playType: defaultRecord.memberPlayType,
-      propPlay: defaultRecord.memberPropPlay === 0 ? '' : defaultRecord.memberPropPlay,
+      propPlay: defaultRecord.memberPropPlay.length === 0 ? null : Number(defaultRecord.memberPropPlay),
       averageBet: defaultRecord.memberAverageBet,
       actualWin: defaultRecord.memberActualWin,
       drop: defaultRecord.memberDrop,
@@ -111,7 +112,7 @@ function Detection (props) {
     }
   }, [tableNumber])
 
-  // 如果detectionData.leave的item有clock in就放進clockOutPlayer
+  // 如果 detectionData.leave 的 item 有 clock in 就放進 clockOutPlayer
   useEffect(() => {
     if (
       typeof detectionData !== 'undefined' &&
@@ -134,8 +135,7 @@ function Detection (props) {
               memberId: seatedMemberId,
               seatedIndex: leavePlayerSeatedIndex,
             }
-
-            addClockOutPlayer(seatedLeavePlayer)
+            setTimeout(() => addClockOutPlayer(seatedLeavePlayer), 10)
             break
           case isLeavePlayerInStanding:
             const leavePlayerInStandingList = find(standingList, { id: player.cid })
@@ -146,8 +146,7 @@ function Detection (props) {
               memberId: standingMemberId,
               standingIndex: leavePlayerStandingIndex,
             }
-
-            addClockOutPlayer(standingLeavePlayer)
+            setTimeout(() => addClockOutPlayer(standingLeavePlayer), 10)
             break
         }
       })
@@ -157,21 +156,24 @@ function Detection (props) {
   // 每次 call detection api 都要確認如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
   if (clockOutPlayer.length > 0) {
     // 有 leave 時 detection 被 re-render 時，clockOutPlayer 就會重複
-    // 暫時用 uniqBy 解
+    // 暫時用 uniqBy 解，但還是會多 clock-out 一次
     uniqBy(clockOutPlayer).forEach(player => {
       const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳 date，前端轉毫秒
       const alreadyLeaveTime = (new Date().getTime() - playerLeaveTime) / 1000
+
       // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
       // 如果 clockOutPlayer 的 item 在 clock-out 時間內出現在 stay，必須從 clockOutPlayer 移除
       const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId })) || Boolean(find(detectionData.stay, { cid: player.cid }))
-      if (isBackToStay) removeClockOutPlayer(player)
+      if (isBackToStay) {
+        setTimeout(() => removeClockOutPlayer(player), 10)
+      }
 
       switch (player.type) {
         case 'anonymous':
           if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
             if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
-              removeClockOutPlayer(player)
+              setTimeout(() => removeClockOutPlayer(player), 10)
               delete clockInPlayer.current[player.tempId]
             }
           }
@@ -179,7 +181,7 @@ function Detection (props) {
         case 'member':
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
             if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
-              removeClockOutPlayer(player)
+              setTimeout(() => removeClockOutPlayer(player), 10)
               delete clockInPlayer.current[player.tempId]
             }
           }
@@ -194,6 +196,7 @@ function Detection (props) {
     const detectionItemInStayList = find(detectionData['stay'], { tempId: detectionItemTempId })
     const detectionItemTime = new Date(detectionItemInStayList.detectTime).getTime() // 後端傳date，前端轉毫秒
     const detectionItemExistingTime = (new Date().getTime() - detectionItemTime) / 1000
+
     // console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
 
     const isDetectItemInSeated = Boolean(

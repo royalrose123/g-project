@@ -27,7 +27,7 @@ class Denormalizer {
     return {
       cid: Number(id),
       ptn: Number(playType),
-      pgp: propPlay.length === 0 ? null : Number(propPlay),
+      pgp: propPlay.length === 0 || propPlay === 0 ? null : Number(propPlay),
       abt: averageBet.length === 0 ? null : Number(averageBet),
       awl: actualWin.length === 0 ? null : Number(actualWin),
       drp: drop.length === 0 ? null : Number(drop),
