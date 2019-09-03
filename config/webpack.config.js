@@ -158,6 +158,7 @@ module.exports = function(webpackEnv) {
         ? (info => path.relative(paths.appSrc, info.absoluteResourcePath).replace(/\\/g, '/'))
         : isEnvDevelopment &&
           (info => path.resolve(info.absoluteResourcePath).replace(/\\/g, '/')),
+      globalObject: 'this',
     },
     optimization: {
       minimize: isEnvProduction,
@@ -278,6 +279,19 @@ module.exports = function(webpackEnv) {
     module: {
       strictExportPresence: true,
       rules: [
+        {
+          // 匹配 *.worker.js 說明：https://juejin.im/post/5acf348151882579ef4f5a77#heading-4
+          test: /\.worker\.js$/,
+          use: {
+            loader: require.resolve('worker-loader'),
+            options: {
+              name: '[name]:[hash:8].js',
+              // inline: true,
+              // fallback: false,
+              publicPath: '/'
+            }
+          }
+        },
         // Disable require.ensure as it's not a standard language feature.
         { parser: { requireEnsure: false } },
 

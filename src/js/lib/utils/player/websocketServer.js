@@ -58,8 +58,8 @@ function WebSocketServer(options) {
     constructor.prototype = {
         init() {
             console.log('WebSocketServer init');
-            console.log('WebSocketServer videoElement', videoElement);
-            console.log('WebSocketServer canvasElement :', canvasElement);
+            // console.log('WebSocketServer videoElement', videoElement);
+            // console.log('WebSocketServer canvasElement :', canvasElement);
             workerManager = new WorkerManager();
             workerManager.init(videoElement,canvasElement);
         },
@@ -126,7 +126,7 @@ function WebSocketServer(options) {
      * @constructor
      */
     function ReceiveMessage(event) {
-        console.log('onmessage');
+        // console.log('onmessage');
         let data = event.data;
         let receiveUint8 = new Uint8Array(data);
         let PreceiveUint8 = new Uint8Array(receiveUint8.length);

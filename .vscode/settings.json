@@ -1,4 +1,8 @@
 {
+  // https://medium.com/itsoktomakemistakes/babel-7-upgrade-guid-升級指南-1dcb1f35101c
+  // 「當前」IDE 的 workaround 方法，只要更改一個 VSCode 的設定
+  "javascript.validate.enable": false,
+
   // workbench
   "workbench.iconTheme": "vscode-icons",
 

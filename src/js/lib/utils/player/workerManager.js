@@ -1,7 +1,9 @@
-// import './videoWorker.js';
-import VideoMediaSource from './MediaSource.js.js';
-import MP4Remux from './MP4Remux.js.js';
-import IvsDrawer from './ivsDrawer.js.js';
+import VideoMediaSource from './MediaSource.js';
+import MP4Remux from './MP4Remux.js';
+import IvsDrawer from './ivsDrawer.js';
+
+// 用 worker loader 載入該檔
+import Worker from './video.worker.js';
 
 function WorkerManager() {
     let videoWorker;
@@ -48,13 +50,13 @@ function WorkerManager() {
 
     constructor.prototype = {
         init(video,canvas) {
-          console.log('WorkerManager init');
-            videoWorker = new Worker('./videoWorker.js');
+            // console.log('WorkerManager init');
+            videoWorker = new Worker();
             videoWorker.onmessage = videoWorkerMessage;
             videoElement = video;
             canvasElement = canvas;
-            console.log('WorkerManager videoElement :', videoElement);
-            console.log('WorkerManager canvasElement :', canvasElement);
+            // console.log('WorkerManager videoElement :', videoElement);
+            // console.log('WorkerManager canvasElement :', canvasElement);
 
             mp4Remux = new MP4Remux();
             mp4Remux.init();
@@ -156,7 +158,7 @@ function WorkerManager() {
     return new constructor();
 
     function videoWorkerMessage(event) {
-        console.log(' ===== worker manager videoWorkerMessage');
+        // console.log(' ===== worker manager videoWorkerMessage');
         let videoMessage = event.data;
         let type = videoMessage.type;
         //console.log(videoMessage.data)
@@ -165,11 +167,11 @@ function WorkerManager() {
             //     break;
             // case 'initSegment': //第一个buffer，设置SPS等
             case 'videoInit'://合并codecInfo和initSegment
-                console.log(videoMessage)
+                // console.log(videoMessage)
                 codecInfo = videoMessage.data.codecInfo;
                 //console.log(videoMessage.data)
                 initSegmentData = mp4Remux.initSegment(videoMessage.data.initSegmentData);
-//console.log(initSegmentData)
+                //console.log(initSegmentData)
                 videoMS = new VideoMediaSource(videoElement);
                 videoMS.CodecInfo = codecInfo;
                 videoMS.InitSegment = initSegmentData;
@@ -185,7 +187,7 @@ function WorkerManager() {
                 videoMS.setFirstTimeStamp(firstTimeStamp);
                 //videoMS.setDurationChangeCallBack(drawIVS);
 
-                console.log('first frame timestamp: ', firstTimeStamp);
+                // console.log('first frame timestamp: ', firstTimeStamp);
                 startDrawIVS = true;
                 window.requestAnimationFrame(()=>{
                     draw();
@@ -224,7 +226,7 @@ function WorkerManager() {
                     }
                     preBaseDecodeTime = curBaseDecodeTime;
 
-//console.log(mediaInfo);
+                    //console.log(mediaInfo);
                     mediaSegmentData = mp4Remux.mediaSegment(sequenseNum, mediaInfo, mediaFrameData);
                     sequenseNum++;
                     mediaSegNum = 0;

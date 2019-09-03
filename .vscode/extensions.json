@@ -7,8 +7,6 @@
     "msjsdiag.debugger-for-chrome",
 
     // DEVELOPMENT
-    // sass highlighting, autocomplete, snippets
-    "robinbentley.sass-indented",
     // eslint
     "dbaeumer.vscode-eslint",
     // prettier

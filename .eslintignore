@@ -4,5 +4,4 @@ scripts
 src/serviceWorker.js
 
 player
-camera1
-camera2
+public

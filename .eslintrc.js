@@ -12,7 +12,8 @@ module.exports = {
   },
   env: {
     browser: true,
-    node: true
+    node: true,
+    es6: true,
   },
   // standard:
   //   https://github.com/standard/standard/blob/master/docs/RULES-zhtw.md

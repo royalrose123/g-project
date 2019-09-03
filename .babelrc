@@ -6,6 +6,7 @@
     ["@babel/plugin-proposal-class-properties", { "loose": true }],
     "@babel/plugin-transform-runtime",
     "@babel/plugin-syntax-dynamic-import",
-    ["import", { "libraryName": "antd", "libraryDirectory": "es" }]
+    ["import", { "libraryName": "antd", "libraryDirectory": "es" }],
+    ["@babel/plugin-proposal-optional-chaining", { "loose": true }]
   ]
 }

@@ -16,8 +16,11 @@
   }
 
   &__video-wrapper {
+    display: flex;
+    align-items: center;
     overflow: hidden;
     position: relative;
+    background-color: #000;
     @include size(430px);
   }
 
