@@ -1,0 +1,4 @@
+import { MODULE_NAME } from './constants'
+
+export const INIT_SETTING_DATA = `${MODULE_NAME}/INIT_SETTING_DATA`
+export const CHANGE_SETTING_DATA = `${MODULE_NAME}/CHANGE_SETTING_DATA`

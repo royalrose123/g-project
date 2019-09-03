@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get, find, findIndex, uniqBy } from 'lodash'
+import { get, find, findIndex, uniqBy, isEmpty } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -15,6 +15,7 @@ import Icon from '../../../../../../components/Icon'
 
 // Modules
 import { operations as tableOperations, selectors as tableSelectors } from '../../../../../../lib/redux/modules/table'
+import { selectors as settingSelectors } from '../../../../../../lib/redux/modules/setting'
 
 // Lib MISC
 import DeviceApi from '../../../../../../lib/api/Device'
@@ -23,7 +24,6 @@ import { selectors as standingSelectors } from '../../../../../../lib/redux/modu
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
-// import { setSessionStorageItem } from '../../../../../../lib/helpers/sessionStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -65,30 +65,11 @@ function Detection (props) {
   } = props
 
   const [detectionData, setDetectionData] = useState({})
+  const [defaultRecordValue, setDefaultRecordValue] = useState({})
   const clockInPlayer = useRef({})
   // console.log('clockInPlayer', clockInPlayer.current)
   // console.log('detectionData.leave', detectionData.leave)
   // console.log('clockOutPlayer', clockOutPlayer)
-  const clockOutDefaultValue = {
-    anonymous: {
-      playType: defaultRecord.anonymousPlayType,
-      propPlay: defaultRecord.anonymousPropPlay.length === 0 ? null : Number(defaultRecord.anonymousPropPlay),
-      averageBet: defaultRecord.anonymousAverageBet,
-      actualWin: defaultRecord.anonymousActualWin,
-      drop: defaultRecord.anonymousDrop,
-      overage: defaultRecord.anonymousOverage,
-      overallWinner: defaultRecord.anonymousWhoWin,
-    },
-    member: {
-      playType: defaultRecord.memberPlayType,
-      propPlay: defaultRecord.memberPropPlay.length === 0 ? null : Number(defaultRecord.memberPropPlay),
-      averageBet: defaultRecord.memberAverageBet,
-      actualWin: defaultRecord.memberActualWin,
-      drop: defaultRecord.memberDrop,
-      overage: defaultRecord.memberOverage,
-      overallWinner: defaultRecord.memberWhoWin,
-    },
-  }
 
   useEffect(() => {
     const timerSecond = 2
@@ -111,6 +92,33 @@ function Detection (props) {
       fetchDataSubscription.unsubscribe()
     }
   }, [tableNumber])
+
+  // Redux 的 defaultRecord 有值才 setDefaultRecordValue
+  useEffect(() => {
+    if (!isEmpty(defaultRecord)) {
+      const clockOutDefaultValue = {
+        anonymous: {
+          playType: defaultRecord.anonymousPlayType,
+          propPlay: defaultRecord.anonymousPropPlay.length === 0 ? null : Number(defaultRecord.anonymousPropPlay),
+          averageBet: defaultRecord.anonymousAverageBet,
+          actualWin: defaultRecord.anonymousActualWin,
+          drop: defaultRecord.anonymousDrop,
+          overage: defaultRecord.anonymousOverage,
+          overallWinner: defaultRecord.anonymousWhoWin,
+        },
+        member: {
+          playType: defaultRecord.memberPlayType,
+          propPlay: defaultRecord.memberPropPlay.length === 0 ? null : Number(defaultRecord.memberPropPlay),
+          averageBet: defaultRecord.memberAverageBet,
+          actualWin: defaultRecord.memberActualWin,
+          drop: defaultRecord.memberDrop,
+          overage: defaultRecord.memberOverage,
+          overallWinner: defaultRecord.memberWhoWin,
+        },
+      }
+      setDefaultRecordValue(clockOutDefaultValue)
+    }
+  }, [defaultRecord])
 
   // 如果 detectionData.leave 的 item 有 clock in 就放進 clockOutPlayer
   useEffect(() => {
@@ -163,8 +171,8 @@ function Detection (props) {
 
       // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
-      // 如果 clockOutPlayer 的 item 在 clock-out 時間內出現在 stay，必須從 clockOutPlayer 移除
-      const isBackToStay = Boolean(find(detectionData.stay, { tempId: player.tempId })) || Boolean(find(detectionData.stay, { cid: player.cid }))
+      // 如果 clockOutPlayer 的 item 在被 clock-out 前出現在 stay，必須從 clockOutPlayer 移除
+      const isBackToStay = Boolean(find(detectionData.stay, { cid: player.cid }))
       if (isBackToStay) {
         setTimeout(() => removeClockOutPlayer(player), 10)
       }
@@ -172,7 +180,8 @@ function Detection (props) {
       switch (player.type) {
         case 'anonymous':
           if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
-            if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
+            // 執行完 clock-ou API 得到 true
+            if (executeAutoClockOut(defaultRecordValue[player.type], player)) {
               setTimeout(() => removeClockOutPlayer(player), 10)
               delete clockInPlayer.current[player.tempId]
             }
@@ -180,7 +189,8 @@ function Detection (props) {
           break
         case 'member':
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
-            if (executeAutoClockOut(clockOutDefaultValue[player.type], player)) {
+            // 執行完 clock-ou API 得到 true
+            if (executeAutoClockOut(defaultRecordValue[player.type], player)) {
               setTimeout(() => removeClockOutPlayer(player), 10)
               delete clockInPlayer.current[player.tempId]
             }
@@ -254,6 +264,7 @@ function Detection (props) {
             isDetectItemInSeated,
             isDetectItemInStanding,
           } = setDetectionItemExstingTime(detectionItem)
+
           if (!isAlreadyClockIn && !isDetectItemInSeated && !isDetectItemInStanding) {
             executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId)
           }
@@ -311,6 +322,7 @@ function Detection (props) {
               isAutoClockIn,
               isAlreadyClockIn,
             } = setDetectionItemExstingTime(detectionItem)
+
             switch (true) {
               case isDetectItemInSeated:
                 return null
@@ -354,12 +366,12 @@ Detection.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {
+    tableNumber: tableSelectors.getTableNumber(state, props),
+    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
-    tableNumber: tableSelectors.getTableNumber(state, props),
-    autoSettings: tableSelectors.getAutoSettings(state, props),
-    defaultRecord: tableSelectors.getDefaultRecord(state, props),
-    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
+    autoSettings: settingSelectors.getAutoSettings(state, props),
+    defaultRecord: settingSelectors.getDefaultRecord(state, props),
   }
 }
 

@@ -18,6 +18,7 @@ import Keyboard, { keys } from '../../components/Keyboard'
 import { operations as seatedOperations, selectors as seatedSelectors } from '../../../../lib/redux/modules/seated'
 import { operations as standingOperations, selectors as standingSelectors } from '../../../../lib/redux/modules/standing'
 import { operations as tableOperations, selectors as tableSelectors } from '../../../../lib/redux/modules/table'
+import { operations as settingOperations } from '../../../../lib/redux/modules/setting'
 
 // Lib MISC
 import SettingsApi from '../../../../lib/api/Setting'
@@ -41,8 +42,7 @@ export const propTypes = {
   clockState: PropTypes.string,
   changeTableNumber: PropTypes.func,
   changeClockState: PropTypes.func,
-  changeAutoSettings: PropTypes.func,
-  changeDefaultRecord: PropTypes.func,
+  changeSettingData: PropTypes.func,
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
   removeAllFromSeated: PropTypes.func,
@@ -104,8 +104,7 @@ function Settings (props) {
     tableNumber,
     changeClockState,
     changeTableNumber,
-    changeAutoSettings,
-    changeDefaultRecord,
+    changeSettingData,
     seatedList,
     standingList,
     removeAllFromSeated,
@@ -131,12 +130,15 @@ function Settings (props) {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
 
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    changeAutoSettings(formikValues.autoSettings)
-    changeDefaultRecord(formikValues.defaultRecord)
+    changeSettingData(formikValues.systemSettings, formikValues.autoSettings, formikValues.defaultRecord)
 
+    const newSettingData = {
+      systemSettings: formikValues.systemSettings,
+      autoSettings: formikValues.autoSettings,
+      defaultRecord: formikValues.defaultRecord,
+    }
+    setSessionStorageItem('settingData', newSettingData)
     setSessionStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    setSessionStorageItem('autoSettings', formikValues.autoSettings)
-    setSessionStorageItem('defaultRecord', formikValues.defaultRecord)
 
     await SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
@@ -178,11 +180,11 @@ function Settings (props) {
     })
     const memberIdList = compact(concat(seatedMemberData, standingMemberData))
 
+    await removeSessionStorageItem('seatedList')
     await removeAllFromSeated()
+    await removeSessionStorageItem('standingList')
     await removeAllFromStanding()
     await GameApi.clockOutAll({ memberIdList, tableNumber })
-    removeSessionStorageItem('seatedList')
-    removeSessionStorageItem('standingList')
   }
 
   const getValidationSchema = () => {
@@ -244,16 +246,19 @@ function Settings (props) {
 
   useEffect(() => {
     if (isLoaded) {
-      setSessionStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
-      setSessionStorageItem('autoSettings', detail.autoSettings)
-      setSessionStorageItem('defaultRecord', detail.defaultRecord)
-
-      changeTableNumber(detail.systemSettings.tbName)
       changeClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
-      changeAutoSettings(detail.autoSettings)
-      changeDefaultRecord(detail.defaultRecord)
+      changeSettingData(detail.systemSettings, detail.autoSettings, detail.defaultRecord)
+      changeTableNumber(detail.systemSettings.tbName)
+
+      const newSettingData = {
+        systemSettings: detail.systemSettings,
+        autoSettings: detail.autoSettings,
+        defaultRecord: detail.defaultRecord,
+      }
+      setSessionStorageItem('settingData', newSettingData)
+      setSessionStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
-  }, [detail, isLoaded, changeTableNumber, changeClockState, changeAutoSettings, changeDefaultRecord])
+  }, [detail, isLoaded, changeTableNumber, changeClockState, changeSettingData])
 
   return isLoaded ? (
     <div className={cx('home-settings')}>
@@ -299,20 +304,24 @@ function Settings (props) {
               const currentAnonymousClock = values.autoSettings.autoClockAnonymous
 
               if (previousClockState === checkClockState(currentMemberClock, currentAnonymousClock)) {
+                setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+
+                changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+                changeSettingData(values.systemSettings, values.autoSettings, values.defaultRecord)
+
+                const newSettingData = {
+                  systemSettings: values.systemSettings,
+                  autoSettings: values.autoSettings,
+                  defaultRecord: values.defaultRecord,
+                }
+                setSessionStorageItem('settingData', newSettingData)
                 setSessionStorageItem('clockState', checkClockState(currentMemberClock, currentAnonymousClock))
-                setSessionStorageItem('autoSettings', values.autoSettings)
-                setSessionStorageItem('defaultRecord', values.defaultRecord)
 
                 SettingsApi.postSettingDetail({
                   systemSettings: values.systemSettings,
                   autoSettings: values.autoSettings,
                   defaultRecord: values.defaultRecord,
                 })
-
-                setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
-                changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
-                changeAutoSettings(values.autoSettings)
-                changeDefaultRecord(values.defaultRecord)
               } else {
                 setConfirmModalTextPack(confirmModalText[checkClockState(currentMemberClock, currentAnonymousClock)])
                 openConfirmModal()
@@ -986,10 +995,10 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   changeTableNumber: tableOperations.changeTableNumber,
   changeClockState: tableOperations.changeClockState,
-  changeAutoSettings: tableOperations.changeAutoSettings,
-  changeDefaultRecord: tableOperations.changeDefaultRecord,
   removeAllFromSeated: seatedOperations.removeAllFromSeated,
   removeAllFromStanding: standingOperations.removeAllFromStanding,
+
+  changeSettingData: settingOperations.changeSettingData,
 }
 
 export default connect(

@@ -10,12 +10,6 @@ export const changeTableNumber = actions.changeTableNumber
 export const initClockState = actions.initClockState
 export const changeClockState = actions.changeClockState
 
-export const initAutoSettings = actions.initAutoSettings
-export const changeAutoSettings = actions.changeAutoSettings
-
-export const initDefaultRecord = actions.initDefaultRecord
-export const changeDefaultRecord = actions.changeDefaultRecord
-
 export const initClockOutPlayer = actions.initClockOutPlayer
 export const addClockOutPlayer = actions.addClockOutPlayer
 export const removeClockOutPlayer = actions.removeClockOutPlayer

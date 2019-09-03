@@ -14,8 +14,9 @@ import Menu from './components/Menu'
 
 // Modules
 import { operations as tableOperations, selectors as tableSelectors } from '../../lib/redux/modules/table'
-import { operations as seatedOperations, selectors as seatedSelectors } from '..//../lib/redux/modules/seated'
+import { operations as seatedOperations, selectors as seatedSelectors } from '../../lib/redux/modules/seated'
 import { operations as standingOperations, selectors as standingSelectors } from '..//../lib/redux/modules/standing'
+import { operations as settingOperations, selectors as settingSelectors } from '..//../lib/redux/modules/setting'
 
 // Lib MISC
 import findStaticPath from '../../lib/utils/find-static-path'
@@ -78,10 +79,10 @@ export const propTypes = {
   standingList: PropTypes.array,
   initSeatedList: PropTypes.func,
   initStandingList: PropTypes.func,
+  systemSettings: PropTypes.object,
   autoSettings: PropTypes.object,
-  initAutoSettings: PropTypes.func,
   defaultRecord: PropTypes.object,
-  initDefaultRecord: PropTypes.func,
+  initSettingData: PropTypes.func,
 }
 
 function Home (props) {
@@ -95,11 +96,12 @@ function Home (props) {
     initSeatedList,
     standingList,
     initStandingList,
+    systemSettings,
     autoSettings,
-    initAutoSettings,
     defaultRecord,
-    initDefaultRecord,
+    initSettingData,
   } = props
+  console.warn('home')
 
   // For Refresh - initial tableNumber
   const sessionStorageTableNumber = getSessionStorageItem('tableNumber')
@@ -135,19 +137,16 @@ function Home (props) {
     if (isSeatedListEmpty && !isLocalStorageSeatedListEmpty) initSeatedList(sessionStorageSeatedList)
   }, [initSeatedList, isLocalStorageSeatedListEmpty, isSeatedListEmpty, sessionStorageSeatedList])
 
-  // For Refresh - initial autoSettings
-  const sessionStorageAutoSettings = getSessionStorageItem('autoSettings')
+  // // For Refresh - initial settingData
+  const sessionStorageSettingData = getSessionStorageItem('settingData')
+
+  const isSettingDataEmpty = isEmpty(systemSettings) || isEmpty(autoSettings) || isEmpty(defaultRecord)
 
   useEffect(() => {
-    if (sessionStorageAutoSettings && isEmpty(autoSettings)) initAutoSettings(sessionStorageAutoSettings)
-  }, [sessionStorageAutoSettings, autoSettings, initAutoSettings])
-
-  // For Refresh - initial defaultRecord
-  const sessionStorageDefaultRecord = getSessionStorageItem('defaultRecord')
-
-  useEffect(() => {
-    if (sessionStorageDefaultRecord && isEmpty(defaultRecord)) initDefaultRecord(sessionStorageDefaultRecord)
-  }, [sessionStorageDefaultRecord, defaultRecord, initDefaultRecord])
+    if (sessionStorageSettingData && isSettingDataEmpty) {
+      initSettingData(sessionStorageSettingData.systemSettings, sessionStorageSettingData.autoSettings, sessionStorageSettingData.defaultRecord)
+    }
+  }, [initSettingData, isSettingDataEmpty, sessionStorageSettingData])
 
   return (
     <Layout className={cx('home')}>
@@ -193,11 +192,12 @@ const mapStateToProps = (state, props) => {
   return {
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),
+    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
-    autoSettings: tableSelectors.getAutoSettings(state, props),
-    defaultRecord: tableSelectors.getDefaultRecord(state, props),
-    clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
+    systemSettings: settingSelectors.getSystemSettings(state, props),
+    autoSettings: settingSelectors.getAutoSettings(state, props),
+    defaultRecord: settingSelectors.getDefaultRecord(state, props),
   }
 }
 
@@ -206,8 +206,7 @@ const mapDispatchToProps = {
   initClockState: tableOperations.initClockState,
   initStandingList: standingOperations.initStandingList,
   initSeatedList: seatedOperations.initSeatedList,
-  initAutoSettings: tableOperations.initAutoSettings,
-  initDefaultRecord: tableOperations.initDefaultRecord,
+  initSettingData: settingOperations.initSettingData,
 }
 
 export default connect(

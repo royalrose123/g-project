@@ -21,6 +21,7 @@ import {
   selectors as standingSelectors,
   constants as STANDING_CONSTANTS,
 } from '../../../../lib/redux/modules/standing'
+import { selectors as settingSelectors } from '../../../../lib/redux/modules/setting'
 
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
@@ -41,30 +42,32 @@ const person = { width: '130px', height: '170px' }
 export const propTypes = {
   match: PropTypes.object,
   history: PropTypes.object,
-  seatedList: PropTypes.array,
-  standingList: PropTypes.array,
   tableNumber: PropTypes.string,
   clockState: PropTypes.string,
-  defaultRecord: PropTypes.object,
+  seatedList: PropTypes.array,
+  standingList: PropTypes.array,
   addSeatItem: PropTypes.func,
   removeSeatItem: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
+  systemSettings: PropTypes.object,
+  defaultRecord: PropTypes.object,
 }
 
 function Table (props) {
   const {
     match,
     history,
-    seatedList,
-    standingList,
     tableNumber,
     clockState,
-    defaultRecord,
+    seatedList,
+    standingList,
     addSeatItem,
     removeSeatItem,
     addStandingItem,
     removeStandingItem,
+    systemSettings,
+    defaultRecord,
   } = props
 
   const { path, params } = match
@@ -170,23 +173,19 @@ function Table (props) {
       const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
 
       if (isInSeatedPlace && !isSeated) {
-        const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
         addSeatItem(newSeatedItem, seatedIndex)
         setSessionStorageItem('seatedList', newSeatedList)
-
-        // addSeatItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
         const standingIndex = await findIndex(standingList, item => item === undefined)
 
-        const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
         addStandingItem(newStandingItem, standingIndex)
         setSessionStorageItem('standingList', newStandingList)
-
-        // await addStandingItem({ tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }, standingIndex)
       }
 
       return apiId && true
@@ -204,24 +203,20 @@ function Table (props) {
       image = compareImage
 
       if (isInSeatedPlace && !isSeated) {
-        const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
         addSeatItem(newSeatedItem, seatedIndex)
         setSessionStorageItem('seatedList', newSeatedList)
-
-        // await addSeatItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, seatedIndex)
       } else {
         const standingIndex = findIndex(standingList, item => item === undefined)
 
-        const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }
+        const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
 
         const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
         addStandingItem(newStandingItem, standingIndex)
         setSessionStorageItem('standingList', newStandingList)
-
-        // await addStandingItem({ tempId: String(tempId), id: String(id), image, isAuto: true, type, cardType }, standingIndex)
       }
       return apiId && true
     }
@@ -333,6 +328,8 @@ function Table (props) {
       onClockOut={onClockOut}
       isSelectedPlaceStanding={isSelectedPlaceStanding}
       selectedPlaceIndex={selectedPlaceIndex}
+      clockMemberToDynamiq={systemSettings.clockInOutMemDynamiq}
+      clockAnonymousToDynamiq={systemSettings.clockInOutAnonymousDynamiq}
       {...props}
       memberPropPlayMother={defaultRecord.memberPropPlayMother}
     />
@@ -380,11 +377,12 @@ Table.propTypes = propTypes
 
 const mapStateToProps = (state, props) => {
   return {
-    seatedList: seatedSelectors.getSeatedList(state, props),
-    standingList: standingSelectors.getStandingList(state, props),
     tableNumber: tableSelectors.getTableNumber(state, props),
     clockState: tableSelectors.getClockState(state, props),
-    defaultRecord: tableSelectors.getDefaultRecord(state, props),
+    seatedList: seatedSelectors.getSeatedList(state, props),
+    standingList: standingSelectors.getStandingList(state, props),
+    defaultRecord: settingSelectors.getDefaultRecord(state, props),
+    systemSettings: settingSelectors.getSystemSettings(state, props),
   }
 }
 

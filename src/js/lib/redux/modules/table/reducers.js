@@ -6,8 +6,6 @@ import CLOCK_STATUS from '../../../../constants/ClockStatus'
 const initialState = {
   tableNumber: 'Please select table',
   clockState: CLOCK_STATUS.MANUALLY_CLOCK,
-  autoSettings: {},
-  defaultRecord: {},
   clockOutPlayer: [],
 }
 
@@ -32,28 +30,6 @@ const tableData = createReducer(initialState, {
   [actionTypes.CHANGE_CLOCK_STATE]: (state, { payload }) => ({
     ...state,
     clockState: payload.clockState,
-  }),
-
-  // autoSettings
-  [actionTypes.INIT_AUTO_SETTINGS]: (state, { payload }) => ({
-    ...state,
-    ...payload,
-  }),
-
-  [actionTypes.CHANGE_AUTO_SETTINGS]: (state, { payload }) => ({
-    ...state,
-    autoSettings: payload.autoSettings,
-  }),
-
-  // defaultRecord
-  [actionTypes.INIT_DEFAULT_RECORD]: (state, { payload }) => ({
-    ...state,
-    ...payload,
-  }),
-
-  [actionTypes.CHANGE_DEFAULT_RECORD]: (state, { payload }) => ({
-    ...state,
-    defaultRecord: payload.defaultRecord,
   }),
 
   // clockOutPlayer
