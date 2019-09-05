@@ -50,7 +50,6 @@ export const propTypes = {
   removeSeatItem: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
-  systemSettings: PropTypes.object,
   defaultRecord: PropTypes.object,
 }
 
@@ -66,7 +65,6 @@ function Table (props) {
     removeSeatItem,
     addStandingItem,
     removeStandingItem,
-    systemSettings,
     defaultRecord,
   } = props
 
@@ -78,12 +76,16 @@ function Table (props) {
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
+  const [clockOutErrorMessage, setClockOutErrorMessage] = useState('')
+  const [isErrorModalOpened, setIsErrorModalOpened] = useState(false)
 
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
+  const openErrorModal = () => setIsErrorModalOpened(true)
+  const closeErrorModal = () => setIsErrorModalOpened(false)
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
   // 設定初始值
@@ -173,6 +175,7 @@ function Table (props) {
       const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
 
       if (isInSeatedPlace && !isSeated) {
+        // For Refresh - SeatedList session storage
         const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
@@ -181,6 +184,7 @@ function Table (props) {
       } else {
         const standingIndex = await findIndex(standingList, item => item === undefined)
 
+        // For Refresh - StandingList session storage
         const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
@@ -203,6 +207,7 @@ function Table (props) {
       image = compareImage
 
       if (isInSeatedPlace && !isSeated) {
+        // For Refresh - SeatedList session storage
         const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
         const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
@@ -211,8 +216,8 @@ function Table (props) {
       } else {
         const standingIndex = findIndex(standingList, item => item === undefined)
 
+        // For Refresh - StandingList session storage
         const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
-
         const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
         addStandingItem(newStandingItem, standingIndex)
@@ -252,12 +257,14 @@ function Table (props) {
 
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
+      // For Refresh - StandingList session storage
       const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
       const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? newStandingItem : item))
 
       addStandingItem(newStandingItem, selectedPlaceIndex)
       setSessionStorageItem('standingList', newStandingList)
     } else {
+      // For Refresh - SeatedList session storage
       const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
       const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? newSeatedItem : item))
 
@@ -272,16 +279,22 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async (values, player) => {
+    // 目前限制為－如果不是 platnium (VIP)，propPlay 就給 0 (null)
+    if (player.cardType !== 'platinum') {
+      values.propPlay = 0
+    }
     const result = await GameApi.clockOut({ id: player.memberId, ...values, tableNumber, type: player.type })
 
     const isSeated = player.seatedIndex >= 0
 
     if (isSeated) {
+      // For Refresh - SeatedList session storage
       const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
 
       setSessionStorageItem('seatedList', newSeatedList)
       removeSeatItem(player.seatedIndex)
     } else {
+      // For Refresh - StandingList session storage
       const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
 
       setSessionStorageItem('standingList', newStandingList)
@@ -293,23 +306,35 @@ function Table (props) {
   // Manually clock out
   const onClockOut = async (values, player) => {
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
-    // 根據是否站立，設定位置列表的內容
-    if (isSelectedPlaceStanding) {
-      // For Refresh -
-      const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+      .then(result => {
+        // 根據是否站立，設定位置列表的內容
+        if (isSelectedPlaceStanding) {
+          // For Refresh - StandingList session storage
+          const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
 
-      setSessionStorageItem('standingList', newStandingList)
-      removeStandingItem(selectedPlaceIndex)
-    } else {
-      const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+          setSessionStorageItem('standingList', newStandingList)
 
-      setSessionStorageItem('seatedList', newSeatedList)
-      removeSeatItem(selectedPlaceIndex)
-    }
-    initializeIsSelectedPlaceStanding()
-    initializeSelectedPlaceIndex()
+          removeStandingItem(selectedPlaceIndex)
+        } else {
+          // For Refresh - SeatedList session storage
+          const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
 
-    await history.push(findStaticPath(path))
+          setSessionStorageItem('seatedList', newSeatedList)
+          removeSeatItem(selectedPlaceIndex)
+        }
+        initializeIsSelectedPlaceStanding()
+        initializeSelectedPlaceIndex()
+
+        history.push(findStaticPath(path))
+      })
+      .catch(error => {
+        // 如果有 error 就跳出 popup
+        let errorMessage = error.response.data.data
+        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+        setClockOutErrorMessage(errorMessage)
+        openErrorModal()
+      })
   }
 
   const renderAutomaticNotice = clockState => {
@@ -328,10 +353,11 @@ function Table (props) {
       onClockOut={onClockOut}
       isSelectedPlaceStanding={isSelectedPlaceStanding}
       selectedPlaceIndex={selectedPlaceIndex}
-      clockMemberToDynamiq={systemSettings.clockInOutMemDynamiq}
-      clockAnonymousToDynamiq={systemSettings.clockInOutAnonymousDynamiq}
-      {...props}
       memberPropPlayMother={defaultRecord.memberPropPlayMother}
+      isErrorModalOpened={isErrorModalOpened}
+      closeErrorModal={closeErrorModal}
+      clockOutErrorMessage={clockOutErrorMessage}
+      {...props}
     />
   ) : (
     <div className={cx('home-table')}>
@@ -382,7 +408,6 @@ const mapStateToProps = (state, props) => {
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
     defaultRecord: settingSelectors.getDefaultRecord(state, props),
-    systemSettings: settingSelectors.getSystemSettings(state, props),
   }
 }
 

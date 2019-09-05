@@ -9,6 +9,7 @@ import { Formik, Form as FormikForm, Field } from 'formik'
 
 // Components
 import Person from '../../components/Person'
+import Modal from '../../../../../../components/Modal'
 import Keyboard, { keys } from '../../../../components/Keyboard'
 import Form from '../../../../components/Form'
 import Layout from '../../../../components/Layout'
@@ -40,20 +41,37 @@ export const propTypes = {
   history: PropTypes.object,
   match: PropTypes.object,
   onClockOut: PropTypes.func,
+  tableNumber: PropTypes.string,
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
   isSelectedPlaceStanding: PropTypes.bool,
   selectedPlaceIndex: PropTypes.number,
   memberPropPlayMother: PropTypes.number,
+  isErrorModalOpened: PropTypes.bool,
+  closeErrorModal: PropTypes.func,
+  clockOutErrorMessage: PropTypes.string,
 }
 
 function MemberDetail (props) {
-  const { history, match, onClockOut, isSelectedPlaceStanding, selectedPlaceIndex, seatedList, standingList, memberPropPlayMother } = props
+  const {
+    history,
+    match,
+    onClockOut,
+    isSelectedPlaceStanding,
+    selectedPlaceIndex,
+    seatedList,
+    standingList,
+    memberPropPlayMother,
+    tableNumber,
+    isErrorModalOpened,
+    closeErrorModal,
+    clockOutErrorMessage,
+  } = props
   const { path, params } = match
-  const { memberId: id } = params
+  const { memberId: id, type } = params
 
   const initialValues = {
-    playType: '0',
+    playType: 0,
     propPlay: '',
     averageBet: 0,
     overallWinner: 'player',
@@ -130,6 +148,24 @@ function MemberDetail (props) {
                   setFieldValue(lastFocusField, newValue)
                 }}
               />
+              <Modal
+                className={cx('home-member-detail-error-modal')}
+                isClosable={false}
+                shouldCloseOnOverlayClick={false}
+                isOpened={isErrorModalOpened}
+              >
+                <Modal.Header>
+                  <div className={cx('home-member-detail-error-modal__header')}>{'Clock out error'}</div>
+                </Modal.Header>
+                <Modal.Body>
+                  <div className={cx('home-member-detail-error-modal__body')}>{clockOutErrorMessage}</div>
+                </Modal.Body>
+                <Modal.Footer>
+                  <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeErrorModal}>
+                    OK
+                  </Button>
+                </Modal.Footer>
+              </Modal>
 
               <Layout.Header>
                 <div className={cx('home-table-member-detail__title-wrapper')}>
@@ -210,7 +246,7 @@ function MemberDetail (props) {
                                   <Form.Input
                                     isFocused={lastFocusField === field.name}
                                     onFocus={event => setLastFocusField(field.name)}
-                                    disabled={detail.level !== CARD_TYPE.VIP}
+                                    // disabled={detail.level !== CARD_TYPE.VIP}
                                     {...field}
                                   />
                                 )}

@@ -79,9 +79,7 @@ export const propTypes = {
   standingList: PropTypes.array,
   initSeatedList: PropTypes.func,
   initStandingList: PropTypes.func,
-  systemSettings: PropTypes.object,
-  autoSettings: PropTypes.object,
-  defaultRecord: PropTypes.object,
+  settingData: PropTypes.object,
   initSettingData: PropTypes.func,
 }
 
@@ -96,12 +94,9 @@ function Home (props) {
     initSeatedList,
     standingList,
     initStandingList,
-    systemSettings,
-    autoSettings,
-    defaultRecord,
+    settingData,
     initSettingData,
   } = props
-  console.warn('home')
 
   // For Refresh - initial tableNumber
   const sessionStorageTableNumber = getSessionStorageItem('tableNumber')
@@ -140,7 +135,11 @@ function Home (props) {
   // // For Refresh - initial settingData
   const sessionStorageSettingData = getSessionStorageItem('settingData')
 
-  const isSettingDataEmpty = isEmpty(systemSettings) || isEmpty(autoSettings) || isEmpty(defaultRecord)
+  // 判斷 settingData 裡每個 key 的 value 有沒有值
+  const isSettingDataEmpty =
+    Object.entries(settingData)
+      .map(([key, value]) => isEmpty(value))
+      .indexOf(false) === -1
 
   useEffect(() => {
     if (sessionStorageSettingData && isSettingDataEmpty) {
@@ -195,9 +194,7 @@ const mapStateToProps = (state, props) => {
     clockOutPlayer: tableSelectors.getClockOutPlayer(state, props),
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
-    systemSettings: settingSelectors.getSystemSettings(state, props),
-    autoSettings: settingSelectors.getAutoSettings(state, props),
-    defaultRecord: settingSelectors.getDefaultRecord(state, props),
+    settingData: settingSelectors.getSettingData(state, props),
   }
 }
 

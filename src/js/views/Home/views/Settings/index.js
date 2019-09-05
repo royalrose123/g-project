@@ -145,8 +145,7 @@ function Settings (props) {
       autoSettings: formikValues.autoSettings,
       defaultRecord: formikValues.defaultRecord,
     })
-
-    await clearTable()
+    clearTable()
     await closeConfirmModal()
   }
 
@@ -179,7 +178,6 @@ function Settings (props) {
       return newItem
     })
     const memberIdList = compact(concat(seatedMemberData, standingMemberData))
-
     await removeSessionStorageItem('seatedList')
     await removeAllFromSeated()
     await removeSessionStorageItem('standingList')

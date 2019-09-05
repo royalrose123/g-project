@@ -99,7 +99,7 @@ function Detection (props) {
       const clockOutDefaultValue = {
         anonymous: {
           playType: defaultRecord.anonymousPlayType,
-          propPlay: defaultRecord.anonymousPropPlay.length === 0 ? null : Number(defaultRecord.anonymousPropPlay),
+          propPlay: defaultRecord.anonymousPropPlay,
           averageBet: defaultRecord.anonymousAverageBet,
           actualWin: defaultRecord.anonymousActualWin,
           drop: defaultRecord.anonymousDrop,
@@ -108,7 +108,7 @@ function Detection (props) {
         },
         member: {
           playType: defaultRecord.memberPlayType,
-          propPlay: defaultRecord.memberPropPlay.length === 0 ? null : Number(defaultRecord.memberPropPlay),
+          propPlay: defaultRecord.memberPropPlay,
           averageBet: defaultRecord.memberAverageBet,
           actualWin: defaultRecord.memberActualWin,
           drop: defaultRecord.memberDrop,
@@ -140,6 +140,7 @@ function Detection (props) {
 
             const seatedLeavePlayer = {
               ...player,
+              cardType: leavePlayerInSeatedList.cardType,
               memberId: seatedMemberId,
               seatedIndex: leavePlayerSeatedIndex,
             }
@@ -151,6 +152,7 @@ function Detection (props) {
             const standingMemberId = leavePlayerInStandingList.id
             const standingLeavePlayer = {
               ...player,
+              cardType: leavePlayerInStandingList.cardType,
               memberId: standingMemberId,
               standingIndex: leavePlayerStandingIndex,
             }
