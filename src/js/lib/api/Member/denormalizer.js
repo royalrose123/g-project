@@ -1,7 +1,9 @@
 class Denormalizer {
-  static FetchMemberDetailById ({ id }) {
+  static FetchMemberDetailByIdWithType ({ id, type, tableNumber }) {
     return {
       cid: Number(id),
+      tableName: tableNumber,
+      type: type,
     }
   }
 

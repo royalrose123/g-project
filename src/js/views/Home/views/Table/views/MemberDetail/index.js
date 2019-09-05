@@ -62,14 +62,13 @@ function MemberDetail (props) {
     overage: 0,
     tableName: '',
   }
-
   const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberImage, setMemberImage] = useState('')
 
-  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailById, { id })
+  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, tableNumber })
 
   // fetch-gcdi API 拿不到 member image
   // 把 member imgage 換成 seated / standing 的 image

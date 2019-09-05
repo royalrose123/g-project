@@ -15,7 +15,7 @@ export const initialState = {
   response: null,
 }
 
-export const reducer = (state, { type, response }) => {
+export const reducer = (state, { type, response, error }) => {
   switch (type) {
     case actionTypes.FETCH_REQUEST:
       return { ...state, isFetching: true }
@@ -24,7 +24,7 @@ export const reducer = (state, { type, response }) => {
       return { ...state, isFetching: false, isLoaded: true, hasError: false, response }
 
     case actionTypes.FETCH_FAILURE:
-      return { ...state, isFetching: false, isLoaded: false, hasError: true, response }
+      return { ...state, isFetching: false, isLoaded: false, hasError: true, error }
 
     default:
       return state
@@ -47,7 +47,7 @@ const useFetcher = (initialResponse, fetcher, variables = {}) => {
         }
       } catch (error) {
         if (!didCancel) {
-          dispatch({ type: actionTypes.FETCH_FAILURE })
+          dispatch({ type: actionTypes.FETCH_FAILURE, error })
         }
       }
     }
