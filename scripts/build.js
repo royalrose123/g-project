@@ -3,7 +3,7 @@
 // Do this as the first thing so that any code reading it knows the right env.
 process.env.BABEL_ENV = 'production';
 process.env.NODE_ENV = 'production';
-process.env.API_URL = 'https://localhost:10443/api/v1'; //PROD=DUAL GPU PC (internal IP address:10443)
+// process.env.API_URL = 'https://localhost:10443/api/v1'; // 寫在 package.json，根據環境不同 npm build 時直接注入
 
 // Makes the script crash on unhandled rejections instead of silently
 // ignoring them. In the future, promise rejections that are not handled will

@@ -4,8 +4,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "start": "node scripts/start.js",
-    "build": "node scripts/build.js",
+    "start": "FR_SERVER_IP_PORT='10.1.1.19:10080' API_URL='https://10.1.1.19/api/v1' node scripts/start.js",
+    "build:ci": "FR_SERVER_IP_PORT='10.1.1.19:10080' API_URL='https://10.1.1.19/api/v1' node scripts/build.js",
+    "build:uat": "FR_SERVER_IP_PORT='' API_URL='https://localhost:20443/api/v1' node scripts/build.js",
+    "build:prod": "FR_SERVER_IP_PORT='' API_URL='https://192.168.50.143:10443/api/v1' node scripts/build.js",
     "test": "node scripts/test.js"
   },
   "dependencies": {

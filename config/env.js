@@ -78,6 +78,7 @@ function getClientEnvironment(publicUrl) {
         // images into the `src` and `import` them in code to get their paths.
         PUBLIC_URL: publicUrl,
         API_URL: process.env.API_URL,
+        FR_SERVER_IP_PORT: process.env.FR_SERVER_IP_PORT,
       }
     );
   // Stringify all values so we can feed into Webpack DefinePlugin

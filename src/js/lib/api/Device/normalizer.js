@@ -41,12 +41,10 @@ class Normalizer {
   }
 
   static CameraItem ({ cameraId, url }) {
-    const serverIp = '10.1.1.19:10080'
-
+    const serverIp = process.env.FR_SERVER_IP_PORT // 寫在 package.json，npm start/build 時直接注入
     return {
       id: cameraId,
       rtspUrl: url,
-      // websocketUrl: `ws://${window.encodeURIComponent(url.replace('rtsp://', ''))}/camera_relay?tcpaddr=${serverIp}`,
       websocketUrl: `ws://${serverIp}/camera_relay?tcpaddr=${window.encodeURIComponent(url.replace('rtsp://', ''))}`,
     }
   }
