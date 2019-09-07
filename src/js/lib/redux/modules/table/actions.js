@@ -51,3 +51,10 @@ export const removeClockOutPlayer = clockOutPlayer => ({
     clockOutPlayer,
   },
 })
+
+export const removeAllClockOutPlayer = clockOutPlayer => ({
+  type: actionTypes.REMOVE_ALL_CLOCK_OUT_PLAYER,
+  payload: {
+    clockOutPlayer,
+  },
+})

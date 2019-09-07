@@ -13,3 +13,4 @@ export const changeClockState = actions.changeClockState
 export const initClockOutPlayer = actions.initClockOutPlayer
 export const addClockOutPlayer = actions.addClockOutPlayer
 export const removeClockOutPlayer = actions.removeClockOutPlayer
+export const removeAllClockOutPlayer = actions.removeAllClockOutPlayer

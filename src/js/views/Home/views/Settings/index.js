@@ -5,7 +5,7 @@ import classnames from 'classnames/bind'
 import * as Yup from 'yup'
 import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
-import { map, concat, compact, findKey } from 'lodash'
+import { map, concat, compact, findKey, isEqual } from 'lodash'
 import CARD_TYPE from '../../../../constants/CardType'
 
 // Components
@@ -47,6 +47,7 @@ export const propTypes = {
   standingList: PropTypes.array,
   removeAllFromSeated: PropTypes.func,
   removeAllFromStanding: PropTypes.func,
+  removeAllClockOutPlayer: PropTypes.func,
 }
 
 export const checkClockState = (memberClock, anonymousClock) => {
@@ -83,19 +84,23 @@ const setTableListActiveStatus = (setTableList, tableList, selectedTableName, ta
 const confirmModalText = {
   manualClock: {
     title: 'Manually Clock-In/Out Member and Anonymous',
-    description: `Once your press "CONFIRM", the system will clear the "TABLE" and manually clock-in/out member and anonymous`,
+    description: `Once you press "CONFIRM", the system will clear the "TABLE" and manually clock-in/out member and anonymous`,
   },
   autoAnonymous: {
     title: 'Automatic Clock-In/Out Anonymous',
-    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out anonymous`,
+    description: `Once you press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out anonymous`,
   },
   autoMember: {
     title: 'Automatic Clock-In/Out Member',
-    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member`,
+    description: `Once you press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member`,
   },
   autoClock: {
     title: 'Automatic Clock-In/Out Member and Anonymous',
-    description: `Once your press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member and anonymous`,
+    description: `Once you press "CONFIRM", the system will clear the "TABLE" and automatic clock-in/out member and anonymous`,
+  },
+  clearTable: {
+    title: 'Clear the "TABLE"',
+    description: `Once you press "CONFIRM", the system will clear the "TABLE" to implement the new chosen condition`,
   },
 }
 
@@ -109,6 +114,7 @@ function Settings (props) {
     standingList,
     removeAllFromSeated,
     removeAllFromStanding,
+    removeAllClockOutPlayer,
   } = props
 
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
@@ -119,6 +125,7 @@ function Settings (props) {
   const [memberAutomatic, setMemberAutomatic] = useState(false)
   const [anonymousAutomatic, setAnonymousAutomatic] = useState(false)
   const [previousClockState, setPreviousClockState] = useState('')
+  const [previousDynamiqLogStatus, setPreviousDynamiqLogStatus] = useState({})
   const [tableList, setTableList] = useState([])
   const [confirmModalTextPack, setConfirmModalTextPack] = useState({})
   const [isConfirmModalOpened, setIsConfirmModalOpened] = useState(false)
@@ -129,9 +136,17 @@ function Settings (props) {
   const saveConfirmModal = async formikValues => {
     setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
 
+    setPreviousDynamiqLogStatus({
+      clockInOutMemDynamiq: formikValues.systemSettings.clockInOutMemDynamiq,
+      clockInOutAnonymousDynamiq: formikValues.systemSettings.clockInOutAnonymousDynamiq,
+      logMemClock: formikValues.systemSettings.logMemClock,
+      logAnonymousClock: formikValues.systemSettings.logAnonymousClock,
+    })
+
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
     changeSettingData(formikValues.systemSettings, formikValues.autoSettings, formikValues.defaultRecord)
 
+    // For Refresh - set settingData to sessionStorage
     const newSettingData = {
       systemSettings: formikValues.systemSettings,
       autoSettings: formikValues.autoSettings,
@@ -182,6 +197,7 @@ function Settings (props) {
     await removeAllFromSeated()
     await removeSessionStorageItem('standingList')
     await removeAllFromStanding()
+    await removeAllClockOutPlayer()
     await GameApi.clockOutAll({ memberIdList, tableNumber })
   }
 
@@ -239,6 +255,12 @@ function Settings (props) {
 
     if (detail) {
       setPreviousClockState(checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+      setPreviousDynamiqLogStatus({
+        clockInOutMemDynamiq: detail.systemSettings.clockInOutMemDynamiq,
+        clockInOutAnonymousDynamiq: detail.systemSettings.clockInOutAnonymousDynamiq,
+        logMemClock: detail.systemSettings.logMemClock,
+        logAnonymousClock: detail.systemSettings.logAnonymousClock,
+      })
     }
   }, [detail, tableList, changeTableNumber, changeClockState, tableListTemp])
 
@@ -248,6 +270,7 @@ function Settings (props) {
       changeSettingData(detail.systemSettings, detail.autoSettings, detail.defaultRecord)
       changeTableNumber(detail.systemSettings.tbName)
 
+      // For Refresh - set settingData to sessionStorage
       const newSettingData = {
         systemSettings: detail.systemSettings,
         autoSettings: detail.autoSettings,
@@ -301,12 +324,22 @@ function Settings (props) {
               const currentMemberClock = values.autoSettings.autoClockMember
               const currentAnonymousClock = values.autoSettings.autoClockAnonymous
 
-              if (previousClockState === checkClockState(currentMemberClock, currentAnonymousClock)) {
-                setPreviousClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+              const currentDynamiqLogStatus = {
+                clockInOutMemDynamiq: values.systemSettings.clockInOutMemDynamiq,
+                clockInOutAnonymousDynamiq: values.systemSettings.clockInOutAnonymousDynamiq,
+                logMemClock: values.systemSettings.logMemClock,
+                logAnonymousClock: values.systemSettings.logAnonymousClock,
+              }
 
-                changeClockState(checkClockState(currentMemberClock, currentAnonymousClock))
+              if (!isEqual(currentDynamiqLogStatus, previousDynamiqLogStatus)) {
+                // 如果 member/anonymous  clock-in/out into Dynamiq 或 Log 設定有更改就 clear table
+                setConfirmModalTextPack(confirmModalText['clearTable'])
+                openConfirmModal()
+              } else if (previousClockState === checkClockState(currentMemberClock, currentAnonymousClock)) {
+                // 如果 clock status 有更改就 clear table
                 changeSettingData(values.systemSettings, values.autoSettings, values.defaultRecord)
 
+                // For Refresh - set settingData to sessionStorage
                 const newSettingData = {
                   systemSettings: values.systemSettings,
                   autoSettings: values.autoSettings,
@@ -993,9 +1026,9 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   changeTableNumber: tableOperations.changeTableNumber,
   changeClockState: tableOperations.changeClockState,
+  removeAllClockOutPlayer: tableOperations.removeAllClockOutPlayer,
   removeAllFromSeated: seatedOperations.removeAllFromSeated,
   removeAllFromStanding: standingOperations.removeAllFromStanding,
-
   changeSettingData: settingOperations.changeSettingData,
 }
 

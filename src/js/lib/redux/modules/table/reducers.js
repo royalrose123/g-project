@@ -47,6 +47,11 @@ const tableData = createReducer(initialState, {
     ...state,
     clockOutPlayer: state.clockOutPlayer.filter(item => item !== payload.clockOutPlayer),
   }),
+
+  [actionTypes.REMOVE_ALL_CLOCK_OUT_PLAYER]: (state, { payload }) => ({
+    ...state,
+    clockOutPlayer: [],
+  }),
 })
 
 export default tableData
