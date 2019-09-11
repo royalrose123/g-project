@@ -45,7 +45,7 @@ class Normalizer {
     return {
       id: cameraId,
       rtspUrl: url,
-      websocketUrl: `ws://${serverIp}/camera_relay?tcpaddr=${window.encodeURIComponent(url.replace('rtsp://', ''))}`,
+      websocketUrl: `wss://${serverIp}/camera_relay?tcpaddr=${window.encodeURIComponent(url.replace('rtsp://', ''))}`,
     }
   }
 
