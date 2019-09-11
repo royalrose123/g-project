@@ -25,6 +25,7 @@ import { selectors as settingSelectors } from '../../../../lib/redux/modules/set
 
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
+import MemberApi from '../../../../lib/api/Member'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
@@ -279,28 +280,32 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async (values, player) => {
-    // 目前限制為－如果不是 platnium (VIP)，propPlay 就給 0 (null)
-    if (player.cardType !== 'platinum') {
-      values.propPlay = 0
-    }
-    const result = await GameApi.clockOut({ id: player.memberId, ...values, tableNumber, type: player.type })
+    // auto clock-out 時 member / anonymous 的 { propPlay, actualWin, averageBet, drop, playType } 都用後端回傳的值
+    await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber }).then(result => {
+      values.propPlay = result.propPlay
+      values.actualWin = result.actualWin
+      values.averageBet = result.averageBet
+      values.drop = result.drop
+      values.playType = result.playType
+    })
+    await GameApi.clockOut({ id: player.id, ...values, tableNumber, type: player.type }).then(result => {
+      const isSeated = player.seatedIndex >= 0
 
-    const isSeated = player.seatedIndex >= 0
+      if (isSeated) {
+        // For Refresh - SeatedList session storage
+        const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
 
-    if (isSeated) {
-      // For Refresh - SeatedList session storage
-      const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
+        setSessionStorageItem('seatedList', newSeatedList)
+        removeSeatItem(player.seatedIndex)
+      } else {
+        // For Refresh - StandingList session storage
+        const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
 
-      setSessionStorageItem('seatedList', newSeatedList)
-      removeSeatItem(player.seatedIndex)
-    } else {
-      // For Refresh - StandingList session storage
-      const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
-
-      setSessionStorageItem('standingList', newStandingList)
-      removeStandingItem(player.standingIndex)
-    }
-    return result && true
+        setSessionStorageItem('standingList', newStandingList)
+        removeStandingItem(player.standingIndex)
+      }
+      return result && true
+    })
   }
 
   // Manually clock out
