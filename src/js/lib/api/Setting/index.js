@@ -56,13 +56,13 @@ class Setting {
     return service.callApi()
   }
 
-  static activeTable ({ selectedTableName }) {
+  static activeTable ({ tableNumber }) {
     const service = new Service(
       {
         url: '/active-table',
         method: 'POST',
         params: {
-          selectedTableName,
+          tableNumber,
         },
       },
       {

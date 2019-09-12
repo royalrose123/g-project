@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import { Switch, Route, Redirect } from 'react-router-dom'
@@ -19,6 +19,7 @@ import { operations as standingOperations, selectors as standingSelectors } from
 import { operations as settingOperations, selectors as settingSelectors } from '..//../lib/redux/modules/setting'
 
 // Lib MISC
+import SettingsApi from '../../lib/api/Setting'
 import findStaticPath from '../../lib/utils/find-static-path'
 import { getSessionStorageItem } from '../../lib/helpers/sessionStorage'
 
@@ -97,6 +98,30 @@ function Home (props) {
     settingData,
     initSettingData,
   } = props
+
+  // active current table when Home didmount
+  const isFirstRender = useRef(true)
+
+  useEffect(() => {
+    if (!isFirstRender.current) {
+      SettingsApi.activeTable({ tableNumber })
+    } else {
+      isFirstRender.current = false
+    }
+  }, [tableNumber])
+
+  // deactiveTable current table when window unload
+  useEffect(() => {
+    function closeTable (event) {
+      SettingsApi.deactiveTable({ tableNumber })
+    }
+
+    window.addEventListener('unload', closeTable)
+
+    return () => {
+      window.removeEventListener('unload', closeTable)
+    }
+  }, [tableNumber])
 
   // For Refresh - initial tableNumber
   const sessionStorageTableNumber = getSessionStorageItem('tableNumber')

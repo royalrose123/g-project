@@ -77,7 +77,9 @@ const setTableListActiveStatus = (setTableList, tableList, selectedTableName, ta
       }
     })
   )
-  if (selectedTableName !== 'Please select table') SettingsApi.activeTable({ selectedTableName })
+  // if (selectedTableName !== 'Please select table') SettingsApi.activeTable({ tableNumber: selectedTableName })
+  // 改成在 Home didmount 完 active table
+
   SettingsApi.deactiveTable({ tableNumber })
 }
 

@@ -19,9 +19,9 @@ class Denormalizer {
     }
   }
 
-  static ActiveTable ({ selectedTableName }) {
+  static ActiveTable ({ tableNumber }) {
     return {
-      tableName: selectedTableName,
+      tableName: tableNumber,
     }
   }
 
