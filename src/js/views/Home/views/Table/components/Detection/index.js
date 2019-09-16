@@ -136,24 +136,19 @@ function Detection (props) {
           case isLeavePlayerInSeated:
             const leavePlayerInSeatedList = find(seatedList, { id: player.cid })
             const leavePlayerSeatedIndex = findIndex(seatedList, leavePlayerInSeatedList)
-            const seatedMemberId = leavePlayerInSeatedList.id
-
             const seatedLeavePlayer = {
-              ...player,
-              cardType: leavePlayerInSeatedList.cardType,
-              memberId: seatedMemberId,
+              ...leavePlayerInSeatedList,
               seatedIndex: leavePlayerSeatedIndex,
+              detectTime: player.detectTime,
             }
             setTimeout(() => addClockOutPlayer(seatedLeavePlayer), 10)
             break
           case isLeavePlayerInStanding:
             const leavePlayerInStandingList = find(standingList, { id: player.cid })
             const leavePlayerStandingIndex = findIndex(standingList, leavePlayerInStandingList)
-            const standingMemberId = leavePlayerInStandingList.id
             const standingLeavePlayer = {
-              ...player,
-              cardType: leavePlayerInStandingList.cardType,
-              memberId: standingMemberId,
+              ...leavePlayerInStandingList,
+              detectTime: player.detectTime,
               standingIndex: leavePlayerStandingIndex,
             }
             setTimeout(() => addClockOutPlayer(standingLeavePlayer), 10)
@@ -231,25 +226,32 @@ function Detection (props) {
     }
   }
 
-  const executeAutoClockInByClockState = async (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
+  const AUTO_CLOCK_IN_SECOND = {
+    anonymous: autoSettings['autoClockInAnonymousSec'],
+    member: autoSettings['autoClockInMemberSec'],
+  }
+
+  const autoClockInByType = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
+    if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[detectionItem.type]) {
+      if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
+    }
+  }
+
+  const executeAutoClockInByClockState = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
     switch (clockState) {
       case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
-        if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
-          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
+        if (detectionItem.type === 'anonymous') {
+          autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         }
+
         break
       case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
-        if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
-          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
+        if (detectionItem.type === 'member') {
+          autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         }
         break
       case CLOCK_STATUS.AUTO_CLOCK:
-        if (detectionItem.type === 'anonymous' && detectionItemExistingTime >= autoSettings.autoClockInAnonymousSec) {
-          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
-        }
-        if (detectionItem.type === 'member' && detectionItemExistingTime >= autoSettings.autoClockInMemberSec) {
-          if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
-        }
+        autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         break
     }
   }
