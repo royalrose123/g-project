@@ -152,7 +152,27 @@ function Table (props) {
     return { isInSeatedPlace, seatedIndex }
   }
 
-  // Execute auto clock-in
+  const addSeatedItemToListByAutoClockIn = (tempId, apiId, image, type, cardType, seatedIndex) => {
+    // For Refresh - SeatedList session storage
+    const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
+    const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
+
+    addSeatItem(newSeatedItem, seatedIndex)
+    setSessionStorageItem('seatedList', newSeatedList)
+  }
+
+  const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, seatedIndex) => {
+    const standingIndex = await findIndex(standingList, item => item === undefined)
+
+    // For Refresh - StandingList session storage
+    const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
+    const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
+
+    await addStandingItem(newStandingItem, standingIndex)
+    await setSessionStorageItem('standingList', newStandingList)
+  }
+
+  // Automatically clock-in
   const executeAutoClockIn = async (event, detectionItem) => {
     // 從 detectionItem 的 probableList 挑出 similarity 最高者
     // 解構成 frond-end key
@@ -170,7 +190,7 @@ function Table (props) {
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = newPerson
 
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
-    const isSeated = typeof seatedList[seatedIndex] === 'object'
+    const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
@@ -178,22 +198,10 @@ function Table (props) {
       // 並以取得的 id 放進 seat / standing list 中
       const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
 
-      if (isInSeatedPlace && !isSeated) {
-        // For Refresh - SeatedList session storage
-        const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
-        const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
-
-        addSeatItem(newSeatedItem, seatedIndex)
-        setSessionStorageItem('seatedList', newSeatedList)
+      if (isInSeatedPlace && !isSomeoneSeated) {
+        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
       } else {
-        const standingIndex = await findIndex(standingList, item => item === undefined)
-
-        // For Refresh - StandingList session storage
-        const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
-        const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
-
-        addStandingItem(newStandingItem, standingIndex)
-        setSessionStorageItem('standingList', newStandingList)
+        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
       }
 
       return apiId && true
@@ -210,22 +218,10 @@ function Table (props) {
       const apiId = await GameApi.memberClockInById({ id, tableNumber })
       image = compareImage
 
-      if (isInSeatedPlace && !isSeated) {
-        // For Refresh - SeatedList session storage
-        const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
-        const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
-
-        addSeatItem(newSeatedItem, seatedIndex)
-        setSessionStorageItem('seatedList', newSeatedList)
+      if (isInSeatedPlace && !isSomeoneSeated) {
+        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
       } else {
-        const standingIndex = findIndex(standingList, item => item === undefined)
-
-        // For Refresh - StandingList session storage
-        const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
-        const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
-
-        addStandingItem(newStandingItem, standingIndex)
-        setSessionStorageItem('standingList', newStandingList)
+        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
       }
       return apiId && true
     }
