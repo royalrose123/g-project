@@ -98,7 +98,7 @@ function Detection (props) {
     if (!isEmpty(defaultRecord)) {
       const clockOutDefaultValue = {
         anonymous: {
-          playType: defaultRecord.anonymousPlayType,
+          playTypeNumber: defaultRecord.anonymousPlayType,
           propPlay: defaultRecord.anonymousPropPlay,
           averageBet: defaultRecord.anonymousAverageBet,
           actualWin: defaultRecord.anonymousActualWin,
@@ -107,7 +107,7 @@ function Detection (props) {
           overallWinner: defaultRecord.anonymousWhoWin,
         },
         member: {
-          playType: defaultRecord.memberPlayType,
+          playTypeNumber: defaultRecord.memberPlayType,
           propPlay: defaultRecord.memberPropPlay,
           averageBet: defaultRecord.memberAverageBet,
           actualWin: defaultRecord.memberActualWin,

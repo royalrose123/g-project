@@ -47,9 +47,9 @@ export const propTypes = {
   isSelectedPlaceStanding: PropTypes.bool,
   selectedPlaceIndex: PropTypes.number,
   memberPropPlayMother: PropTypes.number,
-  isErrorModalOpened: PropTypes.bool,
-  closeErrorModal: PropTypes.func,
-  clockOutErrorMessage: PropTypes.string,
+  isClockOutErrorModalOpened: PropTypes.bool,
+  closeClockOutErrorModal: PropTypes.func,
+  clockErrorMessage: PropTypes.string,
 }
 
 function MemberDetail (props) {
@@ -63,15 +63,15 @@ function MemberDetail (props) {
     standingList,
     memberPropPlayMother,
     tableNumber,
-    isErrorModalOpened,
-    closeErrorModal,
-    clockOutErrorMessage,
+    isClockOutErrorModalOpened,
+    closeClockOutErrorModal,
+    clockErrorMessage,
   } = props
   const { path, params } = match
   const { memberId: id, type } = params
 
   const initialValues = {
-    playType: 0,
+    playTypeNumber: 0,
     propPlay: '',
     averageBet: 0,
     overallWinner: 'player',
@@ -80,7 +80,7 @@ function MemberDetail (props) {
     overage: 0,
     tableName: '',
   }
-  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
+  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
@@ -152,16 +152,16 @@ function MemberDetail (props) {
                 className={cx('home-member-detail-error-modal')}
                 isClosable={false}
                 shouldCloseOnOverlayClick={false}
-                isOpened={isErrorModalOpened}
+                isOpened={isClockOutErrorModalOpened}
               >
                 <Modal.Header>
-                  <div className={cx('home-member-detail-error-modal__header')}>{'Clock out error'}</div>
+                  <div className={cx('home-member-detail-error-modal__header')}>{'Clock-Out Error'}</div>
                 </Modal.Header>
                 <Modal.Body>
-                  <div className={cx('home-member-detail-error-modal__body')}>{clockOutErrorMessage}</div>
+                  <div className={cx('home-member-detail-error-modal__body')}>{clockErrorMessage}</div>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeErrorModal}>
+                  <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeClockOutErrorModal}>
                     OK
                   </Button>
                 </Modal.Footer>
@@ -222,12 +222,14 @@ function MemberDetail (props) {
                           </Form.Column>
                           <Form.Column size='md'>
                             <Field
-                              name='playType'
+                              name='playTypeNumber'
                               render={({ field }) => (
                                 <Form.Select {...field}>
-                                  <option value='0'>CASH</option>
-                                  <option value='5'>TMAB</option>
-                                  <option value='6'>ABT</option>
+                                  {detail.playTypeList.map((item, index) => (
+                                    <option key={index} value={item.ptn}>
+                                      {item.ptc}
+                                    </option>
+                                  ))}
                                 </Form.Select>
                               )}
                             />

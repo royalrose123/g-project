@@ -23,10 +23,10 @@ class Denormalizer {
     }
   }
 
-  static ClockOut ({ id, playType, propPlay, averageBet, actualWin, drop, overage, overallWinner, tableNumber, type }) {
+  static ClockOut ({ id, playTypeNumber, propPlay, averageBet, actualWin, drop, overage, overallWinner, tableNumber, type }) {
     return {
       cid: Number(id),
-      ptn: Number(playType),
+      ptn: Number(playTypeNumber),
       pgp: propPlay?.length === 0 ? null : Number(propPlay),
       abt: averageBet?.length === 0 ? null : Number(averageBet),
       awl: actualWin?.length === 0 ? null : Number(actualWin),

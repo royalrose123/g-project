@@ -265,6 +265,7 @@ function Table (props) {
       // 並以取得的 id 放進 seat / standing list 中
       id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
         .then(result => {
+          id = result
           addItemToListByManualClockIn(tempId, id, image, type, cardType)
         })
         .catch(error => {
@@ -314,14 +315,15 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async (values, player) => {
-    // auto clock-out 時 member / anonymous 的 { propPlay, actualWin, averageBet, drop, playType } 都用後端回傳的值
+    // auto clock-out 時 member / anonymous 的 { propPlay, actualWin, averageBet, drop, playTypeNumber } 都用後端回傳的值
     await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber }).then(result => {
       values.propPlay = result.propPlay
       values.actualWin = result.actualWin
       values.averageBet = result.averageBet
       values.drop = result.drop
-      values.playType = result.playType
+      values.playTypeNumber = result.playTypeNumber
     })
+
     await GameApi.clockOut({ id: player.id, ...values, tableNumber, type: player.type }).then(result => {
       const isSeated = player.seatedIndex >= 0
 
