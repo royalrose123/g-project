@@ -77,16 +77,19 @@ function Table (props) {
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
-  const [clockOutErrorMessage, setClockOutErrorMessage] = useState('')
-  const [isErrorModalOpened, setIsErrorModalOpened] = useState(false)
+  const [clockErrorMessage, setClockErrorMessage] = useState('')
+  const [isClockInErrorModalOpened, setIsClockInErrorModalOpened] = useState(false)
+  const [isClockOutErrorModalOpened, setIsClockOutErrorModalOpened] = useState(false)
 
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
-  const openErrorModal = () => setIsErrorModalOpened(true)
-  const closeErrorModal = () => setIsErrorModalOpened(false)
+  const openClockInErrorModal = () => setIsClockInErrorModalOpened(true)
+  const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
+  const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
+  const closeClockOutErrorModal = () => setIsClockOutErrorModalOpened(false)
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
   // 設定初始值
@@ -232,30 +235,7 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
-  // Manually clock-in
-  const onManuallyClockIn = async (event, person) => {
-    let { id, image } = person
-    const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
-
-    if (identify === PERSON_TYPE.ANONYMOUS) {
-      // 若是 anonymous
-      // 即自動建立臨時帳號
-      // 並以取得的 id 放進 seat / standing list 中
-      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
-    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
-      // 若是 member card
-      // 即為會員，使用荷官輸入的 member card
-      // 立刻關掉 modal
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard })
-    } else {
-      // 若不是 anonymous 或者 member card
-      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInById({ id, tableNumber })
-      image = compareImage
-    }
-
+  const addItemToListByManualClockIn = (tempId, id, image, type, cardType) => {
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
       // For Refresh - StandingList session storage
@@ -276,6 +256,64 @@ function Table (props) {
     closeClockInModal()
     initializeIsSelectedPlaceStanding()
     initializeSelectedPlaceIndex()
+  }
+
+  // Manually clock-in
+  const onManuallyClockIn = async (event, person) => {
+    let { id, image } = person
+    const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
+
+    if (identify === PERSON_TYPE.ANONYMOUS) {
+      // 若是 anonymous
+      // 即自動建立臨時帳號
+      // 並以取得的 id 放進 seat / standing list 中
+      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+        .then(result => {
+          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+        })
+        .catch(error => {
+          // 如果有 error 就跳出 popup
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          setClockErrorMessage(errorMessage)
+          openClockInErrorModal()
+        })
+    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
+      // 若是 member card
+      // 即為會員，使用荷官輸入的 member card
+      // 立刻關掉 modal
+      // 圖片改用資料庫中的照片
+      await GameApi.memberClockInByMemberCard({ memberCard })
+        .then(result => {
+          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+        })
+        .catch(error => {
+          // 如果有 error 就跳出 popup
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          setClockErrorMessage(errorMessage)
+          openClockInErrorModal()
+        })
+    } else {
+      // 若不是 anonymous 或者 member card
+      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
+      // 圖片改用資料庫中的照片
+      await GameApi.memberClockInById({ id, tableNumber })
+        .then(result => {
+          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+        })
+        .catch(error => {
+          // 如果有 error 就跳出 popup
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          setClockErrorMessage(errorMessage)
+          openClockInErrorModal()
+        })
+      image = compareImage
+    }
   }
 
   // Auto clock out
@@ -337,8 +375,8 @@ function Table (props) {
         let errorMessage = error.response.data.data
         errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-        setClockOutErrorMessage(errorMessage)
-        openErrorModal()
+        setClockErrorMessage(errorMessage)
+        openClockOutErrorModal()
       })
   }
 
@@ -359,9 +397,9 @@ function Table (props) {
       isSelectedPlaceStanding={isSelectedPlaceStanding}
       selectedPlaceIndex={selectedPlaceIndex}
       memberPropPlayMother={defaultRecord.memberPropPlayMother}
-      isErrorModalOpened={isErrorModalOpened}
-      closeErrorModal={closeErrorModal}
-      clockOutErrorMessage={clockOutErrorMessage}
+      isClockOutErrorModalOpened={isClockOutErrorModalOpened}
+      closeClockOutErrorModal={closeClockOutErrorModal}
+      clockErrorMessage={clockErrorMessage}
       {...props}
     />
   ) : (
@@ -399,6 +437,9 @@ function Table (props) {
         onClose={onClockInModalClose}
         afterClose={afterClockInModalClose}
         onClockIn={onManuallyClockIn}
+        isClockInErrorModalOpened={isClockInErrorModalOpened}
+        closeClockInErrorModal={closeClockInErrorModal}
+        clockErrorMessage={clockErrorMessage}
       />
     </div>
   )

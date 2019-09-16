@@ -40,10 +40,13 @@ export const propTypes = {
   onClose: PropTypes.func.isRequired,
   afterClose: PropTypes.func.isRequired,
   onClockIn: PropTypes.func,
+  isClockInErrorModalOpened: PropTypes.bool,
+  closeClockInErrorModal: PropTypes.func,
+  clockErrorMessage: PropTypes.string,
 }
 
 function ClockInModal (props) {
-  const { detectionItem, isOpened, onClose, afterClose, onClockIn } = props
+  const { detectionItem, isOpened, onClose, afterClose, onClockIn, isClockInErrorModalOpened, closeClockInErrorModal, clockErrorMessage } = props
 
   // TODO: 暫時做成一秒後自動帶入密碼
   // === TEMP ===
@@ -253,6 +256,24 @@ function ClockInModal (props) {
       onBack={event => setMode(MODE.CLOCK_IN)}
       afterClose={afterClose}
     >
+      <Modal
+        className={cx('home-member-detail-error-modal')}
+        isClosable={false}
+        shouldCloseOnOverlayClick={false}
+        isOpened={isClockInErrorModalOpened}
+      >
+        <Modal.Header>
+          <div className={cx('home-member-detail-error-modal__header')}>{'Clock-In Error'}</div>
+        </Modal.Header>
+        <Modal.Body>
+          <div className={cx('home-member-detail-error-modal__body')}>{clockErrorMessage}</div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeClockInErrorModal}>
+            OK
+          </Button>
+        </Modal.Footer>
+      </Modal>
       {(() => {
         if (!shouldRenderContent) return null
 
