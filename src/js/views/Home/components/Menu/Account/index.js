@@ -30,8 +30,24 @@ function Account (props) {
 
   return (
     <span className={cx('home-menu-account', className)}>
-      <Svg className={cx('home-menu-account__icon')} {...icon} />
-      <span className={cx('home-menu-account__main')}>
+      <Svg
+        className={cx('home-menu-account__icon')}
+        {...icon}
+        onClick={
+          isFullScreen
+            ? event => {
+              setIsFullScreen(false)
+              exitFullScreen()
+            }
+            : event => {
+              setIsFullScreen(true)
+              requestFullscreen(document.documentElement)
+            }
+        }
+      />
+      {/* Dynamiq API 目前不提供 supervisor 跟  dealer，等未來有提供再加上 */}
+
+      {/* <span className={cx('home-menu-account__main')}>
         David Melrose <span className={cx('home-menu-account__sub')}>(Supervisor)</span>
       </span>
       <span
@@ -49,7 +65,7 @@ function Account (props) {
         }
       >
         Ben Ryan <span className={cx('home-menu-account__sub')}>(Dealer)</span>
-      </span>
+      </span> */}
     </span>
   )
 }

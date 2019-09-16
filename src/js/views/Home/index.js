@@ -178,7 +178,7 @@ function Home (props) {
         <Clock />
         <Menu>
           {navigations.map(({ path, name, icon, component }, index) => (
-            // TODO: 暫時做成按下 Dealer name 之後會 full screen，再按一次取消 full screen
+            // TODO: 暫時做成按下 Menu Icon 之後會 full screen，再按一次取消 full screen
             <Menu.Item key={index}>
               <Menu.Link to={`${match.url}/${findStaticPath(path)}`} disabled={component === null}>
                 <Svg className={cx('home__menu-link-icon')} {...icon} />
