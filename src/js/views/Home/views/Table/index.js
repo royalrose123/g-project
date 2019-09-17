@@ -39,6 +39,7 @@ import styles from './style.module.scss'
 import PERSON_TYPE from '../../../../constants/PersonType'
 const cx = classnames.bind(styles)
 const person = { width: '130px', height: '170px' }
+const TOTAL_SEAT = 7
 
 export const propTypes = {
   match: PropTypes.object,
@@ -152,20 +153,18 @@ function Table (props) {
     return { isInSeatedPlace, seatedIndex }
   }
 
-  const addSeatedItemToListByAutoClockIn = (tempId, apiId, image, type, cardType, seatedIndex) => {
+  const addSeatedItemToListByAutoClockIn = (tempId, apiId, image, type, cardType, seatedIndex, seatNumber) => {
     // For Refresh - SeatedList session storage
-    const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
+    const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
     addSeatItem(newSeatedItem, seatedIndex)
     setSessionStorageItem('seatedList', newSeatedList)
   }
 
-  const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, seatedIndex) => {
-    const standingIndex = await findIndex(standingList, item => item === undefined)
-
+  const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, standingIndex, seatNumber) => {
     // For Refresh - StandingList session storage
-    const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType }
+    const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
     await addStandingItem(newStandingItem, standingIndex)
@@ -192,16 +191,25 @@ function Table (props) {
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
     const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
+    const standingIndex = await findIndex(standingList, item => item === undefined)
+
+    // Dynamiq GTT 實際座位
+    let seatNumber = seatedIndex + 1
+    if (!isInSeatedPlace) {
+      seatNumber = standingIndex + TOTAL_SEAT + 1
+    }
+
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
-      const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+
+      const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber })
 
       if (isInSeatedPlace && !isSomeoneSeated) {
-        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
+        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
       } else {
-        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
+        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
       }
 
       return apiId && true
@@ -210,18 +218,18 @@ function Table (props) {
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard })
+      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber })
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
-      const apiId = await GameApi.memberClockInById({ id, tableNumber })
+      const apiId = await GameApi.memberClockInById({ id, tableNumber, seatNumber })
       image = compareImage
 
       if (isInSeatedPlace && !isSomeoneSeated) {
-        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
+        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
       } else {
-        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex)
+        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
       }
       return apiId && true
     }
@@ -231,18 +239,18 @@ function Table (props) {
   const onClockInModalClose = event => closeClockInModal()
   const afterClockInModalClose = event => initializeCurrentDetectionItem()
 
-  const addItemToListByManualClockIn = (tempId, id, image, type, cardType) => {
+  const addItemToListByManualClockIn = (tempId, id, image, type, cardType, seatNumber) => {
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
       // For Refresh - StandingList session storage
-      const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
+      const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? newStandingItem : item))
 
       addStandingItem(newStandingItem, selectedPlaceIndex)
       setSessionStorageItem('standingList', newStandingList)
     } else {
       // For Refresh - SeatedList session storage
-      const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType }
+      const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? newSeatedItem : item))
 
       addSeatItem(newSeatedItem, selectedPlaceIndex)
@@ -259,14 +267,20 @@ function Table (props) {
     let { id, image } = person
     const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
 
+    // Dynamiq GTT 實際座位
+    let seatNumber = selectedPlaceIndex + 1
+    if (isSelectedPlaceStanding) {
+      seatNumber += TOTAL_SEAT
+    }
+
     if (identify === PERSON_TYPE.ANONYMOUS) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
-      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber })
+      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber })
         .then(result => {
           id = result
-          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup
@@ -281,9 +295,9 @@ function Table (props) {
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard })
+      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber })
         .then(result => {
-          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup
@@ -297,10 +311,10 @@ function Table (props) {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInById({ id, tableNumber })
+      await GameApi.memberClockInById({ id, tableNumber, seatNumber })
         .then(result => {
           image = compareImage
-          addItemToListByManualClockIn(tempId, id, image, type, cardType)
+          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup

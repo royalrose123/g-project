@@ -4,7 +4,7 @@ import Denormalizer from './denormalizer'
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ tempId, name, snapshot, tableNumber }) {
+  static anonymousClockIn ({ tempId, name, snapshot, tableNumber, seatNumber }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
@@ -14,6 +14,7 @@ class Game {
           name,
           snapshot,
           tableNumber,
+          seatNumber,
         },
       },
       {
@@ -24,7 +25,7 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInById ({ id, tableNumber }) {
+  static memberClockInById ({ id, tableNumber, seatNumber }) {
     const service = new Service(
       {
         url: '/clock-in/member',
@@ -32,6 +33,7 @@ class Game {
         data: {
           id,
           tableNumber,
+          seatNumber,
         },
       },
       {
@@ -42,13 +44,14 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInByMemberCard ({ memberCard }) {
+  static memberClockInByMemberCard ({ memberCard, seatNumber }) {
     const service = new Service(
       {
         url: '/clock-in/member',
         method: 'POST',
         data: {
           memberCard,
+          seatNumber,
         },
       },
       {

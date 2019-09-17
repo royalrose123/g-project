@@ -86,6 +86,14 @@ $desk-height: 105px;
     }
   }
 
+  &__seat-number {
+    z-index: 1;
+    position: absolute;
+    left: 2%;
+    top: 0%;
+    font-size: $font-size-sm;
+  }
+
   &__seat-image {
     width: 100%;
     @include position-center;

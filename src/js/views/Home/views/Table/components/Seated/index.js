@@ -40,7 +40,10 @@ function Seated (props) {
           data-is-auto-clock={typeof seatedItem === 'object' && seatedItem.isAuto}
         >
           {typeof seatedItem === 'object' ? (
-            <img className={cx('home-table-seated__seat-image')} src={seatedItem.image} />
+            <>
+              <p className={cx('home-table-seated__seat-number')}>{seatedItem.seatNumber}</p>
+              <img className={cx('home-table-seated__seat-image')} src={seatedItem.image} />
+            </>
           ) : (
             <span className={cx('home-table-seated__seat-empty')}>{index + 1}</span>
           )}

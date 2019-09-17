@@ -43,7 +43,10 @@ function Standing (props) {
             data-is-auto-clock={typeof standingItem === 'object' && standingItem.isAuto}
           >
             {typeof standingItem === 'object' ? (
-              <img className={cx('home-table-standing__place-image')} src={standingItem.image} />
+              <>
+                <p className={cx('home-table-standing__seat-number')}>{standingItem.seatNumber}</p>
+                <img className={cx('home-table-standing__place-image')} src={standingItem.image} />
+              </>
             ) : (
               <Svg
                 className={cx('home-table-standing__place-empty')}
