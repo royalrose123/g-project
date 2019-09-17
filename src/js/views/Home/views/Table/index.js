@@ -299,6 +299,7 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInById({ id, tableNumber })
         .then(result => {
+          image = compareImage
           addItemToListByManualClockIn(tempId, id, image, type, cardType)
         })
         .catch(error => {
@@ -309,7 +310,6 @@ function Table (props) {
           setClockErrorMessage(errorMessage)
           openClockInErrorModal()
         })
-      image = compareImage
     }
   }
 

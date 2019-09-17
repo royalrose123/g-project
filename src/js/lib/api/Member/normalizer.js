@@ -17,9 +17,8 @@ class Normalizer {
       propPlay: pgp,
       averageBet: abt,
       actualWin: awl,
-      playTypeList: ptcfg.pt,
+      playTypeList: ptcfg ? ptcfg.pt : [], // 後端 ptcfg.pt 為陣列
       playTypeNumber: ptn,
-      // playTypeCode: ptc, //
     }
   }
 
