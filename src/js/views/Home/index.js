@@ -20,7 +20,9 @@ import { operations as settingOperations, selectors as settingSelectors } from '
 
 // Lib MISC
 import SettingsApi from '../../lib/api/Setting'
+import TableApi from '../../lib/api/Table'
 import findStaticPath from '../../lib/utils/find-static-path'
+import { parsePraToList, parsePraListToBitValues } from '../../lib/utils/parse-pra-to-list'
 import { getSessionStorageItem } from '../../lib/helpers/sessionStorage'
 
 // Style
@@ -104,16 +106,20 @@ function Home (props) {
 
   useEffect(() => {
     if (!isFirstRender.current) {
+      console.warn('parsePraToList 000000', parsePraToList(10))
+      console.warn('parsePraListToBitValues 11111', parsePraListToBitValues(10))
       SettingsApi.activeTable({ tableNumber })
+      TableApi.logOnTable({ tableNumber })
     } else {
       isFirstRender.current = false
     }
   }, [tableNumber])
 
-  // deactiveTable current table when window unload
+  // deactive current table when window unload
   useEffect(() => {
     function closeTable (event) {
       SettingsApi.deactiveTable({ tableNumber })
+      TableApi.logOffTable({ tableNumber })
     }
 
     window.addEventListener('unload', closeTable)

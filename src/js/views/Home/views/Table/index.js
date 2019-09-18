@@ -26,6 +26,7 @@ import { selectors as settingSelectors } from '../../../../lib/redux/modules/set
 // Lib MISC
 import GameApi from '../../../../lib/api/Game'
 import MemberApi from '../../../../lib/api/Member'
+import TableApi from '../../../../lib/api/Table'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
@@ -321,6 +322,11 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
+          if (errorMessage === 'Not logged on') {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
+
           setClockErrorMessage(errorMessage)
           openClockInErrorModal()
         })
@@ -406,8 +412,6 @@ function Table (props) {
   return isDetailVisible ? (
     <MemberDetail
       onClockOut={onClockOut}
-      isSelectedPlaceStanding={isSelectedPlaceStanding}
-      selectedPlaceIndex={selectedPlaceIndex}
       memberPropPlayMother={defaultRecord.memberPropPlayMother}
       isClockOutErrorModalOpened={isClockOutErrorModalOpened}
       closeClockOutErrorModal={closeClockOutErrorModal}

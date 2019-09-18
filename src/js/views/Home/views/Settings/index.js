@@ -22,6 +22,7 @@ import { operations as settingOperations } from '../../../../lib/redux/modules/s
 
 // Lib MISC
 import SettingsApi from '../../../../lib/api/Setting'
+import TableApi from '../../../../lib/api/Table'
 import GameApi from '../../../../lib/api/Game'
 import useFetcher from '../../../../lib/effects/useFetcher'
 import { setSessionStorageItem, removeSessionStorageItem, clearSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
@@ -81,6 +82,7 @@ const setTableListActiveStatus = (setTableList, tableList, selectedTableName, ta
   // 改成在 Home didmount 完 active table
 
   SettingsApi.deactiveTable({ tableNumber })
+  TableApi.logOffTable({ tableNumber })
 }
 
 const confirmModalText = {
@@ -121,7 +123,7 @@ function Settings (props) {
 
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
-  // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playType' && key !== 'overallWinner')
+  // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
   const [currentTab, setCurrentTab] = useState(TABS.SYSTEM_SETTINGS)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberAutomatic, setMemberAutomatic] = useState(false)

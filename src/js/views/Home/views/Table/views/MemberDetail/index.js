@@ -6,6 +6,7 @@ import * as Yup from 'yup'
 import { format, formatDistanceStrict } from 'date-fns'
 import { BigNumber } from 'bignumber.js'
 import { Formik, Form as FormikForm, Field } from 'formik'
+import { trim, find } from 'lodash'
 
 // Components
 import Person from '../../components/Person'
@@ -22,8 +23,10 @@ import { selectors as standingSelectors } from '../../../../../../lib/redux/modu
 
 // Lib MISC
 import MemberApi from '../../../../../../lib/api/Member'
+import TableApi from '../../../../../../lib/api/Table'
 import useFetcher from '../../../../../../lib/effects/useFetcher'
 import findStaticPath from '../../../../../../lib/utils/find-static-path'
+// import { parsePraToList } from '../../../../../../lib/utils/parse-pra-to-list'
 
 // Styles
 import styles from './style.module.scss'
@@ -44,8 +47,6 @@ export const propTypes = {
   tableNumber: PropTypes.string,
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
-  isSelectedPlaceStanding: PropTypes.bool,
-  selectedPlaceIndex: PropTypes.number,
   memberPropPlayMother: PropTypes.number,
   isClockOutErrorModalOpened: PropTypes.bool,
   closeClockOutErrorModal: PropTypes.func,
@@ -57,8 +58,6 @@ function MemberDetail (props) {
     history,
     match,
     onClockOut,
-    isSelectedPlaceStanding,
-    selectedPlaceIndex,
     seatedList,
     standingList,
     memberPropPlayMother,
@@ -86,25 +85,37 @@ function MemberDetail (props) {
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberImage, setMemberImage] = useState('')
 
-  const { isLoaded, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, tableNumber })
+  const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, tableNumber })
 
-  // fetch-gcdi API 拿不到 member image
-  // 把 member imgage 換成 seated / standing 的 image
   useEffect(() => {
-    const isSelected = !isNaN(selectedPlaceIndex)
-    const isInSeated = Boolean(seatedList[selectedPlaceIndex])
-    const isInStanding = Boolean(standingList[selectedPlaceIndex])
+    if (isLoaded) {
+      const standingItemImage = find(standingList, { id: detail.id })
+      const seatedItemImage = find(seatedList, { id: detail.id })
 
-    if (isLoaded && isSelected && (isInSeated || isInStanding)) {
-      if (isSelectedPlaceStanding) {
-        setMemberImage(standingList[selectedPlaceIndex].image)
+      if (standingItemImage) {
+        setMemberImage(standingItemImage.image)
       } else {
-        setMemberImage(seatedList[selectedPlaceIndex].image)
+        setMemberImage(seatedItemImage.image)
       }
     }
-  }, [isLoaded, selectedPlaceIndex, seatedList, standingList, isSelectedPlaceStanding])
+  }, [detail, isLoaded, seatedList, standingList])
 
   if (isLoaded) detail.image = memberImage
+
+  // Not Log-On 時自動 Log-On
+  useEffect(() => {
+    if (error) {
+      let errorMessage = error.response.data.data
+      if (errorMessage) {
+        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+      }
+      console.warn('memberDetail error 6666666', errorMessage)
+      if (errorMessage === 'Not logged on') {
+        TableApi.logOnTable({ tableNumber })
+        window.location.reload(false)
+      }
+    }
+  }, [detail, error, match, tableNumber])
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
 
