@@ -22,8 +22,7 @@ import { operations as settingOperations, selectors as settingSelectors } from '
 import SettingsApi from '../../lib/api/Setting'
 import TableApi from '../../lib/api/Table'
 import findStaticPath from '../../lib/utils/find-static-path'
-import { parsePraToList, parsePraListToBitValues } from '../../lib/utils/parse-pra-to-list'
-import { getSessionStorageItem } from '../../lib/helpers/sessionStorage'
+import { getLocalStorageItem } from '../../lib/helpers/localStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -106,8 +105,6 @@ function Home (props) {
 
   useEffect(() => {
     if (!isFirstRender.current) {
-      console.warn('parsePraToList 000000', parsePraToList(10))
-      console.warn('parsePraListToBitValues 11111', parsePraListToBitValues(10))
       SettingsApi.activeTable({ tableNumber })
       TableApi.logOnTable({ tableNumber })
     } else {
@@ -130,41 +127,41 @@ function Home (props) {
   }, [tableNumber])
 
   // For Refresh - initial tableNumber
-  const sessionStorageTableNumber = getSessionStorageItem('tableNumber')
+  const localStorageTableNumber = getLocalStorageItem('tableNumber')
 
   useEffect(() => {
-    if (sessionStorageTableNumber && tableNumber === 'Please select table') initTableNumber(sessionStorageTableNumber)
-  }, [initTableNumber, sessionStorageTableNumber, tableNumber])
+    if (localStorageTableNumber && tableNumber === 'Please select table') initTableNumber(localStorageTableNumber)
+  }, [initTableNumber, localStorageTableNumber, tableNumber])
 
   // For Refresh - initial clockState
-  const sessionStorageClockState = getSessionStorageItem('clockState')
+  const localStorageClockState = getLocalStorageItem('clockState')
 
   useEffect(() => {
-    if (sessionStorageClockState && clockState === 'manualClock') initClockState(sessionStorageClockState)
-  }, [clockState, initClockState, sessionStorageClockState])
+    if (localStorageClockState && clockState === 'manualClock') initClockState(localStorageClockState)
+  }, [clockState, initClockState, localStorageClockState])
 
   // For Refresh - initial standingList
   const isStandingListEmpty = findIndex(standingList, item => item) === -1
 
-  const sessionStorageStandingList = getSessionStorageItem('standingList')
-  const isLocalStorageStandingListEmpty = findIndex(sessionStorageStandingList, item => item) === -1
+  const localStorageStandingList = getLocalStorageItem('standingList')
+  const isLocalStorageStandingListEmpty = findIndex(localStorageStandingList, item => item) === -1
 
   useEffect(() => {
-    if (isStandingListEmpty && !isLocalStorageStandingListEmpty) initStandingList(sessionStorageStandingList)
-  }, [initStandingList, isLocalStorageStandingListEmpty, isStandingListEmpty, sessionStorageStandingList])
+    if (isStandingListEmpty && !isLocalStorageStandingListEmpty) initStandingList(localStorageStandingList)
+  }, [initStandingList, isLocalStorageStandingListEmpty, isStandingListEmpty, localStorageStandingList])
 
   // For Refresh - initial seatedList
   const isSeatedListEmpty = findIndex(seatedList, item => item) === -1
 
-  const sessionStorageSeatedList = getSessionStorageItem('seatedList')
-  const isLocalStorageSeatedListEmpty = findIndex(sessionStorageSeatedList, item => item) === -1
+  const localStorageSeatedList = getLocalStorageItem('seatedList')
+  const isLocalStorageSeatedListEmpty = findIndex(localStorageSeatedList, item => item) === -1
 
   useEffect(() => {
-    if (isSeatedListEmpty && !isLocalStorageSeatedListEmpty) initSeatedList(sessionStorageSeatedList)
-  }, [initSeatedList, isLocalStorageSeatedListEmpty, isSeatedListEmpty, sessionStorageSeatedList])
+    if (isSeatedListEmpty && !isLocalStorageSeatedListEmpty) initSeatedList(localStorageSeatedList)
+  }, [initSeatedList, isLocalStorageSeatedListEmpty, isSeatedListEmpty, localStorageSeatedList])
 
   // // For Refresh - initial settingData
-  const sessionStorageSettingData = getSessionStorageItem('settingData')
+  const localStorageSettingData = getLocalStorageItem('settingData')
 
   // 判斷 settingData 裡每個 key 的 value 有沒有值
   const isSettingDataEmpty =
@@ -173,10 +170,10 @@ function Home (props) {
       .indexOf(false) === -1
 
   useEffect(() => {
-    if (sessionStorageSettingData && isSettingDataEmpty) {
-      initSettingData(sessionStorageSettingData.systemSettings, sessionStorageSettingData.autoSettings, sessionStorageSettingData.defaultRecord)
+    if (localStorageSettingData && isSettingDataEmpty) {
+      initSettingData(localStorageSettingData.systemSettings, localStorageSettingData.autoSettings, localStorageSettingData.defaultRecord)
     }
-  }, [initSettingData, isSettingDataEmpty, sessionStorageSettingData])
+  }, [initSettingData, isSettingDataEmpty, localStorageSettingData])
 
   return (
     <Layout className={cx('home')}>

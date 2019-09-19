@@ -30,7 +30,7 @@ import TableApi from '../../../../lib/api/Table'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
-import { setSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
+import { setLocalStorageItem } from '../../../../lib/helpers/localStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
 import { parsePraListToBitValues, parsePraListToClockOutField } from '../../../../lib/utils/parse-pra-to-list'
 
@@ -180,21 +180,21 @@ function Table (props) {
   }
 
   const addSeatedItemToListByAutoClockIn = (tempId, apiId, image, type, cardType, seatedIndex, seatNumber) => {
-    // For Refresh - SeatedList session storage
+    // For Refresh - SeatedList local storage
     const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
     addSeatItem(newSeatedItem, seatedIndex)
-    setSessionStorageItem('seatedList', newSeatedList)
+    setLocalStorageItem('seatedList', newSeatedList)
   }
 
   const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, standingIndex, seatNumber) => {
-    // For Refresh - StandingList session storage
+    // For Refresh - StandingList local storage
     const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
     await addStandingItem(newStandingItem, standingIndex)
-    await setSessionStorageItem('standingList', newStandingList)
+    await setLocalStorageItem('standingList', newStandingList)
   }
 
   // Automatically clock-in
@@ -268,19 +268,19 @@ function Table (props) {
   const addItemToListByManualClockIn = (tempId, id, image, type, cardType, seatNumber) => {
     // 根據是否站立，設定位置列表的內容
     if (isSelectedPlaceStanding) {
-      // For Refresh - StandingList session storage
+      // For Refresh - StandingList local storage
       const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? newStandingItem : item))
 
       addStandingItem(newStandingItem, selectedPlaceIndex)
-      setSessionStorageItem('standingList', newStandingList)
+      setLocalStorageItem('standingList', newStandingList)
     } else {
-      // For Refresh - SeatedList session storage
+      // For Refresh - SeatedList local storage
       const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? newSeatedItem : item))
 
       addSeatItem(newSeatedItem, selectedPlaceIndex)
-      setSessionStorageItem('seatedList', newSeatedList)
+      setLocalStorageItem('seatedList', newSeatedList)
     }
 
     closeClockInModal()
@@ -389,16 +389,16 @@ function Table (props) {
       .then(result => {
         const isSeated = player.seatedIndex >= 0
         if (isSeated) {
-          // For Refresh - SeatedList session storage
+          // For Refresh - SeatedList local storage
           const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
 
-          setSessionStorageItem('seatedList', newSeatedList)
+          setLocalStorageItem('seatedList', newSeatedList)
           removeSeatItem(player.seatedIndex)
         } else {
-          // For Refresh - StandingList session storage
+          // For Refresh - StandingList local storage
           const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
 
-          setSessionStorageItem('standingList', newStandingList)
+          setLocalStorageItem('standingList', newStandingList)
           removeStandingItem(player.standingIndex)
         }
         return result && true
@@ -423,17 +423,17 @@ function Table (props) {
       .then(result => {
         // 根據是否站立，設定位置列表的內容
         if (isSelectedPlaceStanding) {
-          // For Refresh - StandingList session storage
+          // For Refresh - StandingList local storage
           const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
 
-          setSessionStorageItem('standingList', newStandingList)
+          setLocalStorageItem('standingList', newStandingList)
 
           removeStandingItem(selectedPlaceIndex)
         } else {
-          // For Refresh - SeatedList session storage
+          // For Refresh - SeatedList local storage
           const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
 
-          setSessionStorageItem('seatedList', newSeatedList)
+          setLocalStorageItem('seatedList', newSeatedList)
           removeSeatItem(selectedPlaceIndex)
         }
         initializeIsSelectedPlaceStanding()

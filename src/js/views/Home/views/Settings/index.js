@@ -25,7 +25,7 @@ import SettingsApi from '../../../../lib/api/Setting'
 import TableApi from '../../../../lib/api/Table'
 import GameApi from '../../../../lib/api/Game'
 import useFetcher from '../../../../lib/effects/useFetcher'
-import { setSessionStorageItem, removeSessionStorageItem, clearSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
+import { setLocalStorageItem, removeLocalStorageItem, clearLocalStorageItem } from '../../../../lib/helpers/localStorage'
 
 // Style
 import styles from './style.module.scss'
@@ -150,14 +150,14 @@ function Settings (props) {
     changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
     changeSettingData(formikValues.systemSettings, formikValues.autoSettings, formikValues.defaultRecord)
 
-    // For Refresh - set settingData to sessionStorage
+    // For Refresh - set settingData to localStorage
     const newSettingData = {
       systemSettings: formikValues.systemSettings,
       autoSettings: formikValues.autoSettings,
       defaultRecord: formikValues.defaultRecord,
     }
-    setSessionStorageItem('settingData', newSettingData)
-    setSessionStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    setLocalStorageItem('settingData', newSettingData)
+    setLocalStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
 
     await SettingsApi.postSettingDetail({
       systemSettings: formikValues.systemSettings,
@@ -197,9 +197,9 @@ function Settings (props) {
       return newItem
     })
     const memberIdList = compact(concat(seatedMemberData, standingMemberData))
-    await removeSessionStorageItem('seatedList')
+    await removeLocalStorageItem('seatedList')
     await removeAllFromSeated()
-    await removeSessionStorageItem('standingList')
+    await removeLocalStorageItem('standingList')
     await removeAllFromStanding()
     await removeAllClockOutPlayer()
     await GameApi.clockOutAll({ memberIdList, tableNumber })
@@ -242,8 +242,8 @@ function Settings (props) {
 
     setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
     changeTableNumber(selectedTableName)
-    clearSessionStorageItem()
-    setSessionStorageItem('tableNumber', selectedTableName)
+    clearLocalStorageItem()
+    setLocalStorageItem('tableNumber', selectedTableName)
   }
 
   useEffect(() => {
@@ -274,14 +274,14 @@ function Settings (props) {
       changeSettingData(detail.systemSettings, detail.autoSettings, detail.defaultRecord)
       changeTableNumber(detail.systemSettings.tbName)
 
-      // For Refresh - set settingData to sessionStorage
+      // For Refresh - set settingData to localStorage
       const newSettingData = {
         systemSettings: detail.systemSettings,
         autoSettings: detail.autoSettings,
         defaultRecord: detail.defaultRecord,
       }
-      setSessionStorageItem('settingData', newSettingData)
-      setSessionStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
+      setLocalStorageItem('settingData', newSettingData)
+      setLocalStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
   }, [detail, isLoaded, changeTableNumber, changeClockState, changeSettingData])
 
@@ -343,14 +343,14 @@ function Settings (props) {
                 // 如果 clock status 有更改就 clear table
                 changeSettingData(values.systemSettings, values.autoSettings, values.defaultRecord)
 
-                // For Refresh - set settingData to sessionStorage
+                // For Refresh - set settingData to localStorage
                 const newSettingData = {
                   systemSettings: values.systemSettings,
                   autoSettings: values.autoSettings,
                   defaultRecord: values.defaultRecord,
                 }
-                setSessionStorageItem('settingData', newSettingData)
-                setSessionStorageItem('clockState', checkClockState(currentMemberClock, currentAnonymousClock))
+                setLocalStorageItem('settingData', newSettingData)
+                setLocalStorageItem('clockState', checkClockState(currentMemberClock, currentAnonymousClock))
 
                 SettingsApi.postSettingDetail({
                   systemSettings: values.systemSettings,
