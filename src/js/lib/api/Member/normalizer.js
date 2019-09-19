@@ -2,7 +2,7 @@ import CARD_TYPE from '../../../constants/CardType'
 import toBase64Src from '../../utils/to-base64-src'
 
 class Normalizer {
-  static MemberDetail ({ cid, cnm, ctc, dob, gen, idDocNo, pgpDen, pic, drp, ptn, pgp, abt, awl, ptcfg }) {
+  static MemberDetail ({ cid, cnm, ctc, dob, gen, idDocNo, pgpDen, pic, drp, ptn, pgp, abt, awl, ptcfg, pra }) {
     return {
       id: String(cid),
       name: cnm,
@@ -19,6 +19,7 @@ class Normalizer {
       actualWin: awl,
       playTypeList: ptcfg ? ptcfg.pt : [], // 後端 ptcfg.pt 為陣列
       playTypeNumber: ptn,
+      praValue: pra,
     }
   }
 

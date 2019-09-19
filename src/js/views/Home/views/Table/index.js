@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex, trim, findKey } from 'lodash'
+import { findIndex, trim, findKey, set, isEmpty } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -32,6 +32,7 @@ import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
 import { setSessionStorageItem } from '../../../../lib/helpers/sessionStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
+import { parsePraListToBitValues, parsePraListToClockOutField } from '../../../../lib/utils/parse-pra-to-list'
 
 // Style
 import styles from './style.module.scss'
@@ -70,6 +71,30 @@ function Table (props) {
     removeStandingItem,
     defaultRecord,
   } = props
+
+  const clockOutDefaultValue = {
+    anonymous: {
+      playTypeNumber: '',
+      propPlay: '',
+      averageBet: '',
+      actualWin: '',
+      drop: '',
+      overage: '',
+      overallWinner: defaultRecord.anonymousWhoWin,
+    },
+    member: {
+      playTypeNumber: '',
+      propPlay: '',
+      averageBet: '',
+      actualWin: '',
+      drop: '',
+      overage: '',
+      overallWinner: defaultRecord.memberWhoWin,
+    },
+  }
+
+  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop']
+  const clockOutPoutEnquiryValue = {}
 
   const { path, params } = match
   let { memberId, type } = params
@@ -288,6 +313,11 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
+          if (errorMessage === 'Not logged on') {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
+
           setClockErrorMessage(errorMessage)
           openClockInErrorModal()
         })
@@ -304,6 +334,11 @@ function Table (props) {
           // 如果有 error 就跳出 popup
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          if (errorMessage === 'Not logged on') {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
 
           setClockErrorMessage(errorMessage)
           openClockInErrorModal()
@@ -334,34 +369,52 @@ function Table (props) {
   }
 
   // Auto clock out
-  const executeAutoClockOut = async (values, player) => {
-    // auto clock-out 時 member / anonymous 的 { propPlay, actualWin, averageBet, drop, playTypeNumber } 都用後端回傳的值
-    await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber }).then(result => {
-      values.propPlay = result.propPlay
-      values.actualWin = result.actualWin
-      values.averageBet = result.averageBet
-      values.drop = result.drop
-      values.playTypeNumber = result.playTypeNumber
-    })
+  const executeAutoClockOut = async player => {
+    // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 POUT enquiry 裡的值，否則為空字串
+    if (isEmpty(clockOutPoutEnquiryValue)) {
+      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber }).then(result => {
+        clockOutFieldList.map(item => {
+          set(clockOutPoutEnquiryValue, item, result[item])
+        })
 
-    await GameApi.clockOut({ id: player.id, ...values, tableNumber, type: player.type }).then(result => {
-      const isSeated = player.seatedIndex >= 0
+        if (result?.praValue) {
+          parsePraListToClockOutField(result.praValue).forEach(item => {
+            set(clockOutDefaultValue[player.type], item, result[item])
+          })
+        }
+      })
+    }
 
-      if (isSeated) {
-        // For Refresh - SeatedList session storage
-        const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
+    await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type })
+      .then(result => {
+        const isSeated = player.seatedIndex >= 0
+        if (isSeated) {
+          // For Refresh - SeatedList session storage
+          const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
 
-        setSessionStorageItem('seatedList', newSeatedList)
-        removeSeatItem(player.seatedIndex)
-      } else {
-        // For Refresh - StandingList session storage
-        const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
+          setSessionStorageItem('seatedList', newSeatedList)
+          removeSeatItem(player.seatedIndex)
+        } else {
+          // For Refresh - StandingList session storage
+          const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
 
-        setSessionStorageItem('standingList', newStandingList)
-        removeStandingItem(player.standingIndex)
-      }
-      return result && true
-    })
+          setSessionStorageItem('standingList', newStandingList)
+          removeStandingItem(player.standingIndex)
+        }
+        return result && true
+      })
+      .catch(async error => {
+        let errorMessage = error.response.data.data
+        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+        const praMessage = trim(errorMessage.split('pra')[1], '=')
+
+        if (praMessage) {
+          parsePraListToClockOutField(praMessage).forEach(item => {
+            set(clockOutDefaultValue[player.type], item, clockOutPoutEnquiryValue[item])
+          })
+        }
+      })
   }
 
   // Manually clock out
@@ -390,11 +443,18 @@ function Table (props) {
       })
       .catch(error => {
         // 如果有 error 就跳出 popup
-        let errorMessage = error.response.data.data
-        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+        if (error?.response) {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-        setClockErrorMessage(errorMessage)
-        openClockOutErrorModal()
+          const praMessage = trim(errorMessage.split('pra')[1], '=')
+          if (praMessage) {
+            errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
+          }
+
+          setClockErrorMessage(errorMessage)
+          openClockOutErrorModal()
+        }
       })
   }
 

@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get, find, findIndex, uniqBy, isEmpty } from 'lodash'
+import { get, find, findIndex, uniqBy } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -41,7 +41,7 @@ export const propTypes = {
   executeAutoClockIn: PropTypes.func,
   executeAutoClockOut: PropTypes.func,
   autoSettings: PropTypes.object,
-  defaultRecord: PropTypes.object,
+  // defaultRecord: PropTypes.object,
   clockOutPlayer: PropTypes.array,
   addClockOutPlayer: PropTypes.func,
   removeClockOutPlayer: PropTypes.func,
@@ -58,14 +58,12 @@ function Detection (props) {
     executeAutoClockIn,
     executeAutoClockOut,
     autoSettings,
-    defaultRecord,
     clockOutPlayer,
     addClockOutPlayer,
     removeClockOutPlayer,
   } = props
 
   const [detectionData, setDetectionData] = useState({})
-  const [defaultRecordValue, setDefaultRecordValue] = useState({})
   const clockInPlayer = useRef({})
   // console.log('clockInPlayer', clockInPlayer.current)
   // console.log('detectionData.leave', detectionData.leave)
@@ -92,33 +90,6 @@ function Detection (props) {
       fetchDataSubscription.unsubscribe()
     }
   }, [tableNumber])
-
-  // Redux 的 defaultRecord 有值才 setDefaultRecordValue
-  useEffect(() => {
-    if (!isEmpty(defaultRecord)) {
-      const clockOutDefaultValue = {
-        anonymous: {
-          playTypeNumber: defaultRecord.anonymousPlayType,
-          propPlay: defaultRecord.anonymousPropPlay,
-          averageBet: defaultRecord.anonymousAverageBet,
-          actualWin: defaultRecord.anonymousActualWin,
-          drop: defaultRecord.anonymousDrop,
-          overage: defaultRecord.anonymousOverage,
-          overallWinner: defaultRecord.anonymousWhoWin,
-        },
-        member: {
-          playTypeNumber: defaultRecord.memberPlayType,
-          propPlay: defaultRecord.memberPropPlay,
-          averageBet: defaultRecord.memberAverageBet,
-          actualWin: defaultRecord.memberActualWin,
-          drop: defaultRecord.memberDrop,
-          overage: defaultRecord.memberOverage,
-          overallWinner: defaultRecord.memberWhoWin,
-        },
-      }
-      setDefaultRecordValue(clockOutDefaultValue)
-    }
-  }, [defaultRecord])
 
   // 如果 detectionData.leave 的 item 有 clock in 就放進 clockOutPlayer
   useEffect(() => {
@@ -169,28 +140,31 @@ function Detection (props) {
       // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
       // 如果 clockOutPlayer 的 item 在被 clock-out 前出現在 stay，必須從 clockOutPlayer 移除
-      const isBackToStay = Boolean(find(detectionData.stay, { cid: player.cid }))
+      const isBackToStay = Boolean(find(detectionData.stay, { cid: player.id }))
       if (isBackToStay) {
         setTimeout(() => removeClockOutPlayer(player), 10)
       }
 
+      // 如果被 clock-out 就 removeClockOutPlayer 跟 delete clockInPlayer
+      const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
+      const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
+
+      if (!isPlayerInStanding && !isPlayerInSeated) {
+        setTimeout(() => removeClockOutPlayer(player), 10)
+        delete clockInPlayer.current[player.tempId]
+      }
+
       switch (player.type) {
         case 'anonymous':
-          if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
+          if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
             // 執行完 clock-ou API 得到 true
-            if (executeAutoClockOut(defaultRecordValue[player.type], player)) {
-              setTimeout(() => removeClockOutPlayer(player), 10)
-              delete clockInPlayer.current[player.tempId]
-            }
+            executeAutoClockOut(player)
           }
           break
         case 'member':
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
             // 執行完 clock-ou API 得到 true
-            if (executeAutoClockOut(defaultRecordValue[player.type], player)) {
-              setTimeout(() => removeClockOutPlayer(player), 10)
-              delete clockInPlayer.current[player.tempId]
-            }
+            executeAutoClockOut(player)
           }
           break
       }
