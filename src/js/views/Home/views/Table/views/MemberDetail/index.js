@@ -6,7 +6,7 @@ import * as Yup from 'yup'
 import { format, formatDistanceStrict } from 'date-fns'
 import { BigNumber } from 'bignumber.js'
 import { Formik, Form as FormikForm, Field } from 'formik'
-import { trim, find } from 'lodash'
+import { trim, find, set } from 'lodash'
 
 // Components
 import Person from '../../components/Person'
@@ -26,7 +26,7 @@ import MemberApi from '../../../../../../lib/api/Member'
 import TableApi from '../../../../../../lib/api/Table'
 import useFetcher from '../../../../../../lib/effects/useFetcher'
 import findStaticPath from '../../../../../../lib/utils/find-static-path'
-// import { parsePraToList } from '../../../../../../lib/utils/parse-pra-to-list'
+import { parsePraListToClockOutField } from '../../../../../../lib/utils/parse-pra-to-list'
 
 // Styles
 import styles from './style.module.scss'
@@ -69,36 +69,42 @@ function MemberDetail (props) {
   const { path, params } = match
   const { memberId: id, type } = params
 
-  const initialValues = {
-    playTypeNumber: 0,
-    propPlay: '',
-    averageBet: 0,
-    overallWinner: 'player',
-    actualWin: '',
-    drop: 0,
-    overage: 0,
-    tableName: '',
-  }
-  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
-
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberImage, setMemberImage] = useState('')
 
   const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, tableNumber })
+  const initialValues = {
+    playTypeNumber: detail?.playTypeNumber,
+    propPlay: '',
+    averageBet: '',
+    overallWinner: 'player',
+    actualWin: '',
+    drop: '',
+    overage: '',
+    tableName: '',
+  }
+  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
 
   useEffect(() => {
     if (isLoaded) {
       const standingItemImage = find(standingList, { id: detail.id })
       const seatedItemImage = find(seatedList, { id: detail.id })
-
       if (standingItemImage) {
         setMemberImage(standingItemImage.image)
-      } else {
+      } else if (seatedItemImage) {
         setMemberImage(seatedItemImage.image)
       }
     }
   }, [detail, isLoaded, seatedList, standingList])
+
+  useEffect(() => {
+    if (isLoaded && detail.praValue) {
+      parsePraListToClockOutField(detail.praValue).forEach(item => {
+        set(initialValues, item, detail[item])
+      })
+    }
+  }, [detail, initialValues, isLoaded])
 
   if (isLoaded) detail.image = memberImage
 
@@ -109,7 +115,6 @@ function MemberDetail (props) {
       if (errorMessage) {
         errorMessage = trim(errorMessage.split('msg')[1], '}:"')
       }
-      console.warn('memberDetail error 6666666', errorMessage)
       if (errorMessage === 'Not logged on') {
         TableApi.logOnTable({ tableNumber })
         window.location.reload(false)
@@ -121,11 +126,11 @@ function MemberDetail (props) {
 
   const getValidationSchema = () => {
     return Yup.object().shape({
-      propPlay: Yup.number().max(memberPropPlayMother, `PropPlay must be less or equal ${memberPropPlayMother}`),
-      averageBet: Yup.number().test('must be above 0', 'AverageBet must be above or equal 0', value => Number(value) >= 0),
-      actualWin: Yup.number().test('must be above 0', 'ActualWin must be above or equal 0', value => Number(value) >= 0),
-      drop: Yup.number().test('must be above 0', 'Drop must be above or equal 0', value => Number(value) >= 0),
-      overage: Yup.number().test('must be above 0', 'Overage must be above or equal 0', value => Number(value) >= 0),
+      // propPlay: Yup.number().max(memberPropPlayMother, `PropPlay must be less or equal ${memberPropPlayMother}`),
+      // averageBet: Yup.number().test('must be above 0', 'AverageBet must be above or equal 0', value => Number(value) >= 0),
+      // actualWin: Yup.number().test('must be above 0', 'ActualWin must be above or equal 0', value => Number(value) >= 0),
+      // drop: Yup.number().test('must be above 0', 'Drop must be above or equal 0', value => Number(value) >= 0),
+      // overage: Yup.number().test('must be above 0', 'Overage must be above or equal 0', value => Number(value) >= 0),
     })
   }
 
@@ -186,11 +191,11 @@ function MemberDetail (props) {
                     mode='01'
                     onClick={event => history.push(findStaticPath(path))}
                   />
-                  <h1 className={cx('home-table-member-detail__title')}>Clock-out / Details</h1>
+                  <h1 className={cx('home-table-member-detail__title')} style={{ color: '#fff' }}>
+                    Clock-out / Details
+                  </h1>
                 </div>
-                <Button type='submit' disabled={detail.level === CARD_TYPE.VIP ? !(values.actualWin && values.propPlay) : !values.actualWin}>
-                  Clock-Out
-                </Button>
+                <Button type='submit'>Clock-Out</Button>
               </Layout.Header>
 
               <Layout.Content className={cx('home-table-member-detail__content')} style={{ color: '#fff' }}>
@@ -235,7 +240,11 @@ function MemberDetail (props) {
                             <Field
                               name='playTypeNumber'
                               render={({ field }) => (
-                                <Form.Select {...field}>
+                                <Form.Select
+                                  // value={detail.playTypeList[0].ptn}
+                                  onChange={e => setFieldValue(field.name, e.target.options[e.target.selectedIndex].value)}
+                                  {...field}
+                                >
                                   {detail.playTypeList.map((item, index) => (
                                     <option key={index} value={item.ptn}>
                                       {item.ptc}
@@ -323,7 +332,7 @@ function MemberDetail (props) {
                       <Form.Group width={300}>
                         <Form.Row>
                           <Form.Column size='sm'>
-                            <Form.Label>* Actual Win</Form.Label>
+                            <Form.Label>Actual Win</Form.Label>
                           </Form.Column>
                           <Form.Column size='md'>
                             <Field
