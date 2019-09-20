@@ -8,6 +8,7 @@ import { initializeStore } from './js/lib/redux/store'
 import { unregister } from './serviceWorker'
 import App from './App'
 
+import './styles/antd-theme.less'
 import './styles/main.scss'
 
 const store = initializeStore()

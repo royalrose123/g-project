@@ -1,0 +1,93 @@
+@import "~antd/dist/antd.less";
+@import "_antd-variables.scss";
+
+// Alert
+.ant-alert-error {
+  color: @color-danger;
+}
+
+// Drawer
+.ant-drawer-header {
+  color: @gray-white;
+  background-color: @color-primary-light;
+  border: none;
+  border-radius: 0;
+}
+
+.ant-drawer-title {
+  color: inherit;
+  font-size: @font-size-lg;
+  font-weight: 400;
+  line-height: 1.7875;
+}
+
+.ant-drawer-close {
+  width: 52px;
+  height: 52px;
+  color: inherit;
+}
+
+.ant-drawer-body {
+  overflow: hidden;
+  height: calc(100% - 52px); // 100% - header-height
+}
+
+// Form
+.ant-form-item-control {
+  line-height: 36px;
+}
+
+.ant-form-item-label {
+  line-height: 24px;
+}
+
+// Input
+.ant-input-group {
+  .ant-input {
+    float: none;
+  }
+}
+
+// Tabs
+.ant-tabs.ant-tabs-card {
+  .ant-tabs-card-bar {
+    border-color: @gray-white;
+
+    .ant-tabs-tab {
+      color: @gray-white;
+      border-color: transparent;
+      background-color: @gray-light;
+    }
+
+    .ant-tabs-tab-active {
+      color: @color-primary;
+      border-color: @gray-white;
+      background-color: @gray-white;
+    }
+  }
+}
+
+// Table
+.ant-table table {
+  table-layout: fixed;
+}
+
+.ant-table-title {
+  padding: 8px 0;
+}
+
+.ant-table-tbody > tr > td {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ant-table-pagination.ant-pagination {
+  margin-top: 24px;
+  margin-bottom: 0;
+  float: none;
+  text-align: center;
+}
+// .ant-calendar {
+//   width: 500px;
+// }

@@ -1,6 +1,7 @@
 build
 config
 scripts
+src/styles/_antd-variables.scss
 src/styles/_variables.scss
 
 player

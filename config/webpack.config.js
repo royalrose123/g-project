@@ -39,6 +39,7 @@ const cssRegex = /\.css$/;
 const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
+const lessRegex = /\.less$/;
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -423,14 +424,18 @@ module.exports = function(webpackEnv) {
             // extensions .module.scss or .module.sass
             {
               test: sassRegex,
+              issuer: { exclude: lessRegex },
               exclude: sassModuleRegex,
-              use: getStyleLoaders(
+              use: getStyleLoaders({
+                importLoaders: 2,
+                sourceMap: isEnvProduction && shouldUseSourceMap,
+              }).concat([
                 {
-                  importLoaders: 2,
-                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                  loader: require.resolve('sass-loader'),
+                  options: {
+                    sourceMap: isEnvProduction && shouldUseSourceMap,
+                  },
                 },
-                'sass-loader'
-              ).concat([
                 {
                   loader: require.resolve('sass-resources-loader'),
                   options: {
@@ -470,6 +475,28 @@ module.exports = function(webpackEnv) {
                   },
                 }
               ]),
+            },
+            {
+              test: sassRegex,
+              issuer: lessRegex,
+              use: {
+                loader: require.resolve('./sassVarsToLess.js'),
+              },
+            },
+            {
+              test: lessRegex,
+              use: getStyleLoaders({
+                  importLoaders: 2,
+                  sourceMap: isEnvProduction && shouldUseSourceMap,
+                }).concat([
+                  {
+                    loader: require.resolve('less-loader'),
+                    options: {
+                      javascriptEnabled: true,
+                      sourceMap: isEnvProduction && shouldUseSourceMap,
+                    },
+                  }
+                ]),
             },
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
