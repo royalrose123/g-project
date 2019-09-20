@@ -1,0 +1,37 @@
+.home-menu-account {
+  padding-left: 15px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: $gray-white;
+
+  &__icon {
+    flex-shrink: 0;
+  }
+
+  &__main {
+    position: relative;
+    padding-left: 16px;
+    font-size: $font-size-sm;
+
+    &:not(:last-of-type) {
+      padding-right: 8px;
+
+      &:after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 0;
+        transform: translateY(-50%);
+        width: 1px;
+        height: calc(100% - 10px);
+        background-color: $gray-white;
+      }
+    }
+  }
+
+  &__sub {
+    color: $color-secondary-light;
+    font-size: $font-size-xs;
+  }
+}

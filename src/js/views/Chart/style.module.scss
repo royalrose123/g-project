@@ -1,0 +1,12 @@
+.chart {
+  position: relative;
+  height: 100%;
+  background: rgba(#122333, 0.7);
+  background: url("../../../assets/images/backgrounds/background01.jpg") no-repeat center center;
+  background-size: cover;
+
+  &__menu-link-text {
+    margin-left: 10px;
+    font-size: $font-size-sm;
+  }
+}
