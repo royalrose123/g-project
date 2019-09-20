@@ -79,6 +79,9 @@ function getClientEnvironment(publicUrl) {
         PUBLIC_URL: publicUrl,
         API_URL: process.env.API_URL,
         FR_SERVER_IP_PORT: process.env.FR_SERVER_IP_PORT,
+        LOG_ON_ID: process.env.LOG_ON_ID,
+        LOG_ON_PASSWORD: process.env.LOG_ON_PASSWORD,
+
       }
     );
   // Stringify all values so we can feed into Webpack DefinePlugin
