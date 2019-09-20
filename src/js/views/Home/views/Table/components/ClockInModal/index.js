@@ -24,7 +24,7 @@ const MODE = {
   CLOCK_IN: 'CLOCK_IN',
   SWIPE_MEMBER_CARD: 'SWIPE_MEMBER_CARD',
 }
-const MEMBER_MATCH_PERCENT = 80
+// const MEMBER_MATCH_PERCENT = 80
 
 export const propTypes = {
   detectionItem: PropTypes.shape({
@@ -43,10 +43,21 @@ export const propTypes = {
   isClockInErrorModalOpened: PropTypes.bool,
   closeClockInErrorModal: PropTypes.func,
   clockErrorMessage: PropTypes.string,
+  matchPercent: PropTypes.number,
 }
 
 function ClockInModal (props) {
-  const { detectionItem, isOpened, onClose, afterClose, onClockIn, isClockInErrorModalOpened, closeClockInErrorModal, clockErrorMessage } = props
+  const {
+    detectionItem,
+    isOpened,
+    onClose,
+    afterClose,
+    onClockIn,
+    isClockInErrorModalOpened,
+    closeClockInErrorModal,
+    clockErrorMessage,
+    matchPercent,
+  } = props
 
   // TODO: 暫時做成一秒後自動帶入密碼
   // === TEMP ===
@@ -60,7 +71,7 @@ function ClockInModal (props) {
   const [selectedPerson, setSelectedPerson] = useState(null)
 
   const shouldRenderContent = detectionItem !== null
-  const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem) : {}
+  const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem, matchPercent) : {}
   // 打開時給預設值
   // 關掉時重設狀態
   useDeepCompareEffect(() => {
@@ -83,10 +94,6 @@ function ClockInModal (props) {
       // === TEMP ===
     }
   }, [shouldRenderContent, detectionItem, person])
-
-  // if (shouldRenderContent && isAutoClocking) {
-  //   onClockIn(event, selectedPerson, isAutoClocking)
-  // }
 
   // Clock in
   const renderClockInHeader = () => (
@@ -127,7 +134,7 @@ function ClockInModal (props) {
                   // 濾掉自己
                   .filter(probableItem => probableItem.id)
                   // 濾出相似度高於 80% 的結果
-                  .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(MEMBER_MATCH_PERCENT))
+                  .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(matchPercent)) // show 出 probableList 中 similarity 大於 matchPercent 的 item
                   .map((probableItem, index) => (
                     // Auto anonymous clock in 時需自動setSelectedPerson
                     <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>

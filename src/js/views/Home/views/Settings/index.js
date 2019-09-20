@@ -490,10 +490,15 @@ function Settings (props) {
                         </Form.Column>
                         <Form.Column size='md'>
                           <Field
-                            name='matchPercentage'
+                            name='systemSettings.matchPercentage'
                             render={({ field }) => (
-                              <Form.Select>
-                                <option value='90'>{`${90}%`}</option>
+                              <Form.Select
+                                value={values.systemSettings.matchPercentage}
+                                onChange={e => setFieldValue(field.name, e.target.options[e.target.selectedIndex].value)}
+                              >
+                                <option value='90'>90%</option>
+                                <option value='80'>80%</option>
+                                <option value='70'>70%</option>
                               </Form.Select>
                             )}
                           />

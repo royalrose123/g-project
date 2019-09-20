@@ -54,6 +54,7 @@ export const propTypes = {
   removeSeatItem: PropTypes.func,
   addStandingItem: PropTypes.func,
   removeStandingItem: PropTypes.func,
+  systemSettings: PropTypes.object,
   defaultRecord: PropTypes.object,
 }
 
@@ -69,6 +70,7 @@ function Table (props) {
     removeSeatItem,
     addStandingItem,
     removeStandingItem,
+    systemSettings,
     defaultRecord,
   } = props
 
@@ -94,6 +96,7 @@ function Table (props) {
   }
 
   const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop']
+
   const clockOutPoutEnquiryValue = {}
 
   const { path, params } = match
@@ -131,7 +134,6 @@ function Table (props) {
     document.documentElement.style.setProperty('--person-width', person.width)
     document.documentElement.style.setProperty('--person-height', person.height)
   })
-
   // Seat, Standing
   const onPlaceClick = (event, { index, place, isStanding }) => {
     setIsSelectedPlaceStanding(isStanding)
@@ -448,6 +450,7 @@ function Table (props) {
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
           const praMessage = trim(errorMessage.split('pra')[1], '=')
+
           if (praMessage) {
             errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
           }
@@ -516,6 +519,7 @@ function Table (props) {
         isClockInErrorModalOpened={isClockInErrorModalOpened}
         closeClockInErrorModal={closeClockInErrorModal}
         clockErrorMessage={clockErrorMessage}
+        matchPercent={systemSettings.matchPercentage}
       />
     </div>
   )
@@ -530,6 +534,7 @@ const mapStateToProps = (state, props) => {
     seatedList: seatedSelectors.getSeatedList(state, props),
     standingList: standingSelectors.getStandingList(state, props),
     defaultRecord: settingSelectors.getDefaultRecord(state, props),
+    systemSettings: settingSelectors.getSystemSettings(state, props),
   }
 }
 
