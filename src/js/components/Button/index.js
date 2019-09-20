@@ -12,6 +12,7 @@ export const propTypes = {
   isRounded: PropTypes.bool.isRequired,
   isFilled: PropTypes.bool.isRequired,
   isBlock: PropTypes.bool,
+  isInvisible: PropTypes.bool,
   size: PropTypes.oneOf(['sm', 'md', 'lg']),
   setRef: PropTypes.oneOfType([PropTypes.func, PropTypes.object]),
   prefix: PropTypes.any,
@@ -26,12 +27,13 @@ export const defaultProps = {
   isRounded: false,
   isFilled: true,
   isBlock: false,
+  isInvisible: false,
   size: 'md',
   contentProps: {},
 }
 
 function Button (props) {
-  const { isRounded, isFilled, isBlock, disabled, size, setRef, prefix, suffix, contentProps, className, children, ...restProps } = props
+  const { isRounded, isFilled, isBlock, isInvisible, disabled, size, setRef, prefix, suffix, contentProps, className, children, ...restProps } = props
   const { className: contentClassName } = contentProps
 
   return (
@@ -40,6 +42,7 @@ function Button (props) {
       data-is-rounded={isRounded}
       data-is-filled={isFilled}
       data-is-block={isBlock}
+      data-is-invisible={isInvisible}
       disabled={disabled}
       data-size={size}
       ref={setRef}

@@ -93,3 +93,17 @@
     margin-left: 24px;
   }
 }
+
+.settings-change-table-modal {
+  &__header {
+    font-size: $font-size-lg;
+    font-weight: 800;
+  }
+  &__body {
+    // background-color: #fff;
+    width: 475px;
+  }
+  &__action:last-of-type {
+    margin-left: 24px;
+  }
+}

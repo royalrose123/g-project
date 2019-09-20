@@ -47,6 +47,10 @@
     width: 100%;
   }
 
+  &[data-is-invisible="true"] {
+    display: none;
+  }
+
   &[data-is-block="false"][data-size="sm"] {
     width: 40px;
   }
