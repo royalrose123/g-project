@@ -98,14 +98,6 @@ function MemberDetail (props) {
     }
   }, [detail, isLoaded, seatedList, standingList])
 
-  useEffect(() => {
-    if (isLoaded && detail.praValue) {
-      parsePraListToClockOutField(detail.praValue).forEach(item => {
-        set(initialValues, item, detail[item])
-      })
-    }
-  }, [detail, initialValues, isLoaded])
-
   if (isLoaded) detail.image = memberImage
 
   // Not Log-On 時自動 Log-On
@@ -137,6 +129,15 @@ function MemberDetail (props) {
   return isLoaded ? (
     <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut} validationSchema={getValidationSchema}>
       {({ values, setFieldValue }) => {
+        // 如果 POUT enquiry 的 pra 有值 ，就先將對應的 pra field 填入值
+        if (detail.praValue) {
+          parsePraListToClockOutField(detail.praValue).forEach(item => {
+            if (!detail[item]) detail[item] = 0
+
+            set(values, item, detail[item])
+          })
+        }
+
         return (
           <FormikForm>
             <Layout className={cx('home-table-member-detail')}>
@@ -258,19 +259,14 @@ function MemberDetail (props) {
 
                         <Form.Row>
                           <Form.Column size='sm'>
-                            <Form.Label>{detail.level === CARD_TYPE.VIP && '* '}Prop Play</Form.Label>
+                            <Form.Label>Prop Play</Form.Label>
                           </Form.Column>
                           <Form.Column size='md'>
                             <Form.Row style={{ margin: 0 }}>
                               <Field
                                 name='propPlay'
                                 render={({ field }) => (
-                                  <Form.Input
-                                    isFocused={lastFocusField === field.name}
-                                    onFocus={event => setLastFocusField(field.name)}
-                                    // disabled={detail.level !== CARD_TYPE.VIP}
-                                    {...field}
-                                  />
+                                  <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
                                 )}
                               />
                               <div className={cx('home-table-member-detail__all-games')}>/ {memberPropPlayMother}</div>
