@@ -288,19 +288,17 @@ function Settings (props) {
       setChangeTableModalTextPack(changeTableModalText['autoClockOut'])
       openChangeTableModal()
     } else {
-      setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
-      changeTableNumber(selectedTableName)
+      await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
+      await clearTable()
       clearLocalStorageItem()
       setLocalStorageItem('tableNumber', selectedTableName)
-
-      clearTable()
+      changeTableNumber(selectedTableName)
     }
   }
 
   const clockOutAllByChangeTable = async () => {
-    setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
+    await setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
     changeTableNumber(changeTableName)
-    clearLocalStorageItem()
     setLocalStorageItem('tableNumber', changeTableName)
 
     await clearTable()

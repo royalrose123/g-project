@@ -74,6 +74,7 @@ function MemberDetail (props) {
   const [memberImage, setMemberImage] = useState('')
 
   const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, tableNumber })
+
   const initialValues = {
     playTypeNumber: detail?.playTypeNumber,
     propPlay: '',
@@ -84,10 +85,19 @@ function MemberDetail (props) {
     overage: '',
     tableName: '',
   }
+
   const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
 
   useEffect(() => {
     if (isLoaded) {
+      // 如果 POUT enquiry 的 pra 有值 ，就先將對應的 pra field 填入值
+      if (detail.praValue) {
+        parsePraListToClockOutField(detail.praValue).forEach(item => {
+          if (!detail[item]) detail[item] = 0
+          set(initialValues, item, detail[item])
+        })
+      }
+
       const standingItemImage = find(standingList, { id: detail.id })
       const seatedItemImage = find(seatedList, { id: detail.id })
       if (standingItemImage) {
@@ -96,7 +106,7 @@ function MemberDetail (props) {
         setMemberImage(seatedItemImage.image)
       }
     }
-  }, [detail, isLoaded, seatedList, standingList])
+  }, [detail, initialValues, isLoaded, seatedList, standingList])
 
   if (isLoaded) detail.image = memberImage
 
@@ -127,17 +137,8 @@ function MemberDetail (props) {
   }
 
   return isLoaded ? (
-    <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut} validationSchema={getValidationSchema}>
+    <Formik initialValues={initialValues} isInitialValid onSubmit={onClockOut} enableReinitialize validationSchema={getValidationSchema}>
       {({ values, setFieldValue }) => {
-        // 如果 POUT enquiry 的 pra 有值 ，就先將對應的 pra field 填入值
-        if (detail.praValue) {
-          parsePraListToClockOutField(detail.praValue).forEach(item => {
-            if (!detail[item]) detail[item] = 0
-
-            set(values, item, detail[item])
-          })
-        }
-
         return (
           <FormikForm>
             <Layout className={cx('home-table-member-detail')}>
@@ -266,7 +267,12 @@ function MemberDetail (props) {
                               <Field
                                 name='propPlay'
                                 render={({ field }) => (
-                                  <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                  <Form.Input
+                                    name={field.name}
+                                    isFocused={lastFocusField === field.name}
+                                    onFocus={event => setLastFocusField(field.name)}
+                                    {...field}
+                                  />
                                 )}
                               />
                               <div className={cx('home-table-member-detail__all-games')}>/ {memberPropPlayMother}</div>
@@ -287,7 +293,12 @@ function MemberDetail (props) {
                             <Field
                               name='averageBet'
                               render={({ field }) => (
-                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                <Form.Input
+                                  name={field.name}
+                                  isFocused={lastFocusField === field.name}
+                                  onFocus={event => setLastFocusField(field.name)}
+                                  {...field}
+                                />
                               )}
                             />
                           </Form.Column>
@@ -334,7 +345,12 @@ function MemberDetail (props) {
                             <Field
                               name='actualWin'
                               render={({ field }) => (
-                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                <Form.Input
+                                  name={field.name}
+                                  isFocused={lastFocusField === field.name}
+                                  onFocus={event => setLastFocusField(field.name)}
+                                  {...field}
+                                />
                               )}
                             />
                           </Form.Column>
@@ -348,7 +364,12 @@ function MemberDetail (props) {
                             <Field
                               name='drop'
                               render={({ field }) => (
-                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                <Form.Input
+                                  name={field.name}
+                                  isFocused={lastFocusField === field.name}
+                                  onFocus={event => setLastFocusField(field.name)}
+                                  {...field}
+                                />
                               )}
                             />
                           </Form.Column>
@@ -362,7 +383,12 @@ function MemberDetail (props) {
                             <Field
                               name='overage'
                               render={({ field }) => (
-                                <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                                <Form.Input
+                                  name={field.name}
+                                  isFocused={lastFocusField === field.name}
+                                  onFocus={event => setLastFocusField(field.name)}
+                                  {...field}
+                                />
                               )}
                             />
                           </Form.Column>

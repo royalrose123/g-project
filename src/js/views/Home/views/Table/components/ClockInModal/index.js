@@ -168,6 +168,7 @@ function ClockInModal (props) {
         className={cx('home-table-clock-in-modal__action')}
         type='button'
         isFilled={false}
+        disabled // 目前沒有 swipe member card 功能
         onClick={event => {
           setMode(MODE.SWIPE_MEMBER_CARD)
 
