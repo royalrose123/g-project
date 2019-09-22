@@ -8,8 +8,8 @@ class Chart {
     const service = new Service(
       {
         url: '/monitor-performance',
-        method: 'POST',
-        data: {
+        method: 'GET',
+        params: {
           chartDate,
           chartType,
         },
