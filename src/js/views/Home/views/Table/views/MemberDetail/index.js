@@ -48,6 +48,8 @@ export const propTypes = {
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
   memberPropPlayMother: PropTypes.number,
+  isOverride: PropTypes.bool,
+  confirmOverride: PropTypes.func,
   isClockOutErrorModalOpened: PropTypes.bool,
   closeClockOutErrorModal: PropTypes.func,
   clockErrorMessage: PropTypes.string,
@@ -62,6 +64,8 @@ function MemberDetail (props) {
     standingList,
     memberPropPlayMother,
     tableNumber,
+    isOverride,
+    confirmOverride,
     isClockOutErrorModalOpened,
     closeClockOutErrorModal,
     clockErrorMessage,
@@ -179,8 +183,33 @@ function MemberDetail (props) {
                   <div className={cx('home-member-detail-error-modal__body')}>{clockErrorMessage}</div>
                 </Modal.Body>
                 <Modal.Footer>
-                  <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeClockOutErrorModal}>
+                  <Button
+                    type='button'
+                    className={cx('home-member-detail-error-modal__action')}
+                    size={'md'}
+                    onClick={closeClockOutErrorModal}
+                    isInvisible={isOverride}
+                  >
                     OK
+                  </Button>
+                  <Button
+                    type='button'
+                    className={cx('home-member-detail-error-modal__action')}
+                    size={'md'}
+                    onClick={closeClockOutErrorModal}
+                    isFilled={false}
+                    isInvisible={!isOverride}
+                  >
+                    CANCEL
+                  </Button>
+                  <Button
+                    type='button'
+                    className={cx('home-member-detail-error-modal__action')}
+                    size={'md'}
+                    onClick={confirmOverride}
+                    isInvisible={!isOverride}
+                  >
+                    CONFIRM
                   </Button>
                 </Modal.Footer>
               </Modal>

@@ -107,6 +107,9 @@ function Table (props) {
   const [selectedPlaceIndex, setSelectedPlaceIndex] = useState(null)
   const [isClockInModalOpened, setIsClockInModalOpened] = useState(false)
   const [currentDetectionItem, setCurrentDetectionItem] = useState(null)
+  const [praValue, setPraValue] = useState(0)
+  const [isOverride, setIsOverride] = useState(false)
+  const [overrideValue, setOverrideValue] = useState({})
   const [clockErrorMessage, setClockErrorMessage] = useState('')
   const [isClockInErrorModalOpened, setIsClockInErrorModalOpened] = useState(false)
   const [isClockOutErrorModalOpened, setIsClockOutErrorModalOpened] = useState(false)
@@ -455,10 +458,26 @@ function Table (props) {
             errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
           }
 
+          const isOverrideMessage = errorMessage.indexOf('override') !== -1
+
+          if (isOverrideMessage) {
+            clockOutFieldList.map(item => {
+              set(clockOutDefaultValue[type], item, values[item])
+            })
+            setOverrideValue(clockOutDefaultValue[type])
+            setIsOverride(isOverrideMessage)
+            setPraValue(praMessage)
+          }
+
           setClockErrorMessage(errorMessage)
           openClockOutErrorModal()
         }
       })
+  }
+
+  const confirmOverride = async () => {
+    set(overrideValue, 'praValue', praValue)
+    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type })
   }
 
   const renderAutomaticNotice = clockState => {
@@ -476,6 +495,8 @@ function Table (props) {
     <MemberDetail
       onClockOut={onClockOut}
       memberPropPlayMother={defaultRecord.memberPropPlayMother}
+      isOverride={isOverride}
+      confirmOverride={confirmOverride}
       isClockOutErrorModalOpened={isClockOutErrorModalOpened}
       closeClockOutErrorModal={closeClockOutErrorModal}
       clockErrorMessage={clockErrorMessage}
@@ -519,7 +540,7 @@ function Table (props) {
         isClockInErrorModalOpened={isClockInErrorModalOpened}
         closeClockInErrorModal={closeClockInErrorModal}
         clockErrorMessage={clockErrorMessage}
-        matchPercent={systemSettings.matchPercentage}
+        matchPercent={Number(systemSettings.matchPercentage)}
       />
     </div>
   )
