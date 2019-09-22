@@ -377,17 +377,26 @@ function Table (props) {
   const executeAutoClockOut = async player => {
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 POUT enquiry 裡的值，否則為空字串
     if (isEmpty(clockOutPoutEnquiryValue)) {
-      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber }).then(result => {
-        clockOutFieldList.map(item => {
-          set(clockOutPoutEnquiryValue, item, result[item])
-        })
-
-        if (result?.praValue) {
-          parsePraListToClockOutField(result.praValue).forEach(item => {
-            set(clockOutDefaultValue[player.type], item, result[item])
+      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber })
+        .then(result => {
+          clockOutFieldList.map(item => {
+            set(clockOutPoutEnquiryValue, item, result[item])
           })
-        }
-      })
+
+          if (result?.praValue) {
+            parsePraListToClockOutField(result.praValue).forEach(item => {
+              set(clockOutDefaultValue[player.type], item, result[item])
+            })
+          }
+        })
+        .catch(error => {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          if (errorMessage === 'Not logged on') {
+            TableApi.logOnTable({ tableNumber })
+          }
+        })
     }
 
     await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type })
@@ -477,7 +486,27 @@ function Table (props) {
 
   const confirmOverride = async () => {
     set(overrideValue, 'praValue', praValue)
-    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type })
+    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type }).then(result => {
+      // 根據是否站立，設定位置列表的內容
+      if (isSelectedPlaceStanding) {
+        // For Refresh - StandingList local storage
+        const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+
+        setLocalStorageItem('standingList', newStandingList)
+
+        removeStandingItem(selectedPlaceIndex)
+      } else {
+        // For Refresh - SeatedList local storage
+        const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+
+        setLocalStorageItem('seatedList', newSeatedList)
+        removeSeatItem(selectedPlaceIndex)
+      }
+      initializeIsSelectedPlaceStanding()
+      initializeSelectedPlaceIndex()
+
+      history.push(findStaticPath(path))
+    })
   }
 
   const renderAutomaticNotice = clockState => {
