@@ -225,9 +225,9 @@ function Table (props) {
     const standingIndex = await findIndex(standingList, item => item === undefined)
 
     // Dynamiq GTT 實際座位
-    let seatNumber = seatedIndex + 1
+    let seatNumber = (await seatedIndex) + 1
     if (!isInSeatedPlace) {
-      seatNumber = standingIndex + TOTAL_SEAT + 1
+      seatNumber = (await standingIndex) + TOTAL_SEAT + 1
     }
 
     if (identify === PERSON_TYPE.ANONYMOUS) {

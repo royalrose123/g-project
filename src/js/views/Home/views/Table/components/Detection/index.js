@@ -211,21 +211,21 @@ function Detection (props) {
     }
   }
 
-  const executeAutoClockInByClockState = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
+  const executeAutoClockInByClockState = async (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
     switch (clockState) {
       case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
         if (detectionItem.type === 'anonymous') {
-          autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+          await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         }
 
         break
       case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
         if (detectionItem.type === 'member') {
-          autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+          await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         }
         break
       case CLOCK_STATUS.AUTO_CLOCK:
-        autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+        await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
         break
     }
   }
