@@ -69,7 +69,6 @@ function ClockInModal (props) {
 
   const [mode, setMode] = useState(MODE.CLOCK_IN)
   const [selectedPerson, setSelectedPerson] = useState(null)
-
   const shouldRenderContent = detectionItem !== null
   const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem, matchPercent) : {}
   // 打開時給預設值
@@ -125,7 +124,7 @@ function ClockInModal (props) {
               type={detectionItem.type}
               person={person}
               isSelected={selectedPerson && selectedPerson.identify === PERSON_TYPE.ANONYMOUS}
-              onClick={event => setSelectedPerson({ ...person, identify: PERSON_TYPE.ANONYMOUS })}
+              onClick={event => setSelectedPerson({ ...person, identify: PERSON_TYPE.ANONYMOUS, type: PERSON_TYPE.ANONYMOUS })} // anonymous identify 給 anonymous
             />
             <div className={cx('home-table-clock-in-modal__probable-list-wrapper')}>
               <h4 className={cx('home-table-clock-in-modal__probable-list-title')}>Probable Matches</h4>
@@ -143,7 +142,14 @@ function ClockInModal (props) {
                         title='id'
                         person={probableItem}
                         isSelected={selectedPerson && selectedPerson.identify === probableItem.id}
-                        onClick={event => setSelectedPerson({ ...probableItem, identify: probableItem.id, compareImage: probableItem.image })}
+                        onClick={event => {
+                          setSelectedPerson({
+                            ...probableItem,
+                            identify: probableItem.id, // member identify 給 id
+                            type: PERSON_TYPE.MEMBER,
+                            compareImage: probableItem.image,
+                          })
+                        }}
                         renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{probableItem.similarity}</div>}
                       />
                     </div>
