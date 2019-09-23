@@ -62,7 +62,7 @@ class Game {
     return service.callApi()
   }
 
-  static clockOut ({ id, playTypeNumber, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner, type }) {
+  static clockOut ({ id, playTypeNumber, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner, type, praValue }) {
     const service = new Service(
       {
         url: '/clock-out',
@@ -78,6 +78,7 @@ class Game {
           overage,
           tableNumber,
           type,
+          praValue,
         },
       },
       {
