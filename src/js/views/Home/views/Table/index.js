@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex, trim, findKey, set, isEmpty } from 'lodash'
+import { findIndex, trim, findKey, set, isEmpty, find } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -96,7 +96,6 @@ function Table (props) {
   }
 
   const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop']
-
   const clockOutPoutEnquiryValue = {}
 
   const { path, params } = match
@@ -375,6 +374,11 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async player => {
+    const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
+    const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
+
+    if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
+
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 POUT enquiry 裡的值，否則為空字串
     if (isEmpty(clockOutPoutEnquiryValue)) {
       await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber })
@@ -402,6 +406,7 @@ function Table (props) {
     await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type })
       .then(result => {
         const isSeated = player.seatedIndex >= 0
+
         if (isSeated) {
           // For Refresh - SeatedList local storage
           const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
@@ -417,7 +422,7 @@ function Table (props) {
         }
         return result && true
       })
-      .catch(async error => {
+      .catch(error => {
         let errorMessage = error.response.data.data
         errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
@@ -430,25 +435,30 @@ function Table (props) {
         }
       })
   }
-
   // Manually clock out
   const onClockOut = async (values, player) => {
+    const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
+
+    const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+    const indexInSeatedList = findIndex(seatedList, { id: memberId })
+
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
       .then(result => {
         // 根據是否站立，設定位置列表的內容
-        if (isSelectedPlaceStanding) {
+        if (isPlayerInStanding) {
           // For Refresh - StandingList local storage
-          const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+          const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
 
           setLocalStorageItem('standingList', newStandingList)
 
-          removeStandingItem(selectedPlaceIndex)
+          removeStandingItem(indexInStadingList)
         } else {
           // For Refresh - SeatedList local storage
-          const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+          const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
 
           setLocalStorageItem('seatedList', newSeatedList)
-          removeSeatItem(selectedPlaceIndex)
+
+          removeSeatItem(indexInSeatedList)
         }
         initializeIsSelectedPlaceStanding()
         initializeSelectedPlaceIndex()
@@ -487,20 +497,25 @@ function Table (props) {
   const confirmOverride = async () => {
     set(overrideValue, 'praValue', praValue)
     await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type }).then(result => {
+      const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
+
+      const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+      const indexInSeatedList = findIndex(seatedList, { id: memberId })
+
       // 根據是否站立，設定位置列表的內容
-      if (isSelectedPlaceStanding) {
+      if (isPlayerInStanding) {
         // For Refresh - StandingList local storage
-        const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+        const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
 
         setLocalStorageItem('standingList', newStandingList)
 
-        removeStandingItem(selectedPlaceIndex)
+        removeStandingItem(indexInStadingList)
       } else {
         // For Refresh - SeatedList local storage
-        const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? undefined : item))
+        const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
 
         setLocalStorageItem('seatedList', newSeatedList)
-        removeSeatItem(selectedPlaceIndex)
+        removeSeatItem(indexInSeatedList)
       }
       initializeIsSelectedPlaceStanding()
       initializeSelectedPlaceIndex()
