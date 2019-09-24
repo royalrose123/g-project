@@ -1,4 +1,4 @@
-import CARD_TYPE from '../../../constants/CardType'
+// import CARD_TYPE from '../../../constants/CardType'
 import toBase64Src from '../../utils/to-base64-src'
 
 class Normalizer {
@@ -8,7 +8,7 @@ class Normalizer {
       name: cnm,
       // transform base64 to src
       image: toBase64Src(pic),
-      level: CARD_TYPE[ctc],
+      level: ctc,
       playTimes: pgpDen,
       gender: gen,
       birthday: dob,
@@ -29,7 +29,7 @@ class Normalizer {
       name: dpiCnm,
       // transform base64 to src
       image: toBase64Src(pic),
-      level: CARD_TYPE[dpiCtc],
+      level: dpiCtc,
       // dpiCtd,
       // dpiCti,
       gender: dpiGen,

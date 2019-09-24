@@ -4,7 +4,7 @@ import Denormalizer from './denormalizer'
 import Service from '../service'
 
 class Game {
-  static anonymousClockIn ({ tempId, name, snapshot, tableNumber, seatNumber }) {
+  static anonymousClockIn ({ tempId, name, snapshot, tableNumber, seatNumber, cardType }) {
     const service = new Service(
       {
         url: '/clock-in/anonymous',
@@ -15,6 +15,7 @@ class Game {
           snapshot,
           tableNumber,
           seatNumber,
+          cardType,
         },
       },
       {
@@ -25,7 +26,7 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInById ({ id, tableNumber, seatNumber }) {
+  static memberClockInById ({ id, tableNumber, seatNumber, cardType }) {
     const service = new Service(
       {
         url: '/clock-in/member',
@@ -34,6 +35,7 @@ class Game {
           id,
           tableNumber,
           seatNumber,
+          cardType,
         },
       },
       {
@@ -44,7 +46,7 @@ class Game {
     return service.callApi()
   }
 
-  static memberClockInByMemberCard ({ memberCard, seatNumber }) {
+  static memberClockInByMemberCard ({ memberCard, seatNumber, cardType }) {
     const service = new Service(
       {
         url: '/clock-in/member',
@@ -52,6 +54,7 @@ class Game {
         data: {
           memberCard,
           seatNumber,
+          cardType,
         },
       },
       {
@@ -62,7 +65,24 @@ class Game {
     return service.callApi()
   }
 
-  static clockOut ({ id, playTypeNumber, propPlay, averageBet, actualWin, drop, overage, tableNumber, overallWinner, type, praValue }) {
+  static clockOut ({
+    id,
+    playTypeNumber,
+    propPlay,
+    averageBet,
+    actualWin,
+    drop,
+    overage,
+    playTypeNumberOverride,
+    propPlayOverride,
+    averageBetOverride,
+    actualWinOverride,
+    tableNumber,
+    overallWinner,
+    type,
+    cardType,
+    praValue,
+  }) {
     const service = new Service(
       {
         url: '/clock-out',
@@ -76,8 +96,13 @@ class Game {
           actualWin, // requierd
           drop,
           overage,
+          playTypeNumberOverride,
+          propPlayOverride,
+          averageBetOverride,
+          actualWinOverride,
           tableNumber,
           type,
+          cardType,
           praValue,
         },
       },

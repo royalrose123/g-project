@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 
-import CARD_TYPE from '../../../constants/CardType'
+// import CARD_TYPE from '../../../constants/CardType'
 import Service from '../service'
 
 class Normalizer {
@@ -12,7 +12,7 @@ class Normalizer {
       id: idcard,
       tempId: peopleId,
       name: peopleName,
-      level: CARD_TYPE[ctc],
+      level: ctc,
     }
   }
 

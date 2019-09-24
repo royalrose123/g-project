@@ -1,5 +1,5 @@
 class Denormalizer {
-  static AnonymousClockIn ({ tempId, name, snapshot, tableNumber, seatNumber }) {
+  static AnonymousClockIn ({ tempId, name, snapshot, tableNumber, seatNumber, cardType }) {
     return {
       tempId,
       // 格式為 [RandomString]
@@ -7,26 +7,46 @@ class Denormalizer {
       pic: snapshot,
       tableName: tableNumber,
       seatNo: seatNumber,
+      ctc: cardType,
     }
   }
 
-  static MemberClockInById ({ id, tableNumber, seatNumber }) {
+  static MemberClockInById ({ id, tableNumber, seatNumber, cardType }) {
     return {
       // 跟後端協調後，收到時為 string，送出時轉成 number
       cid: Number(id),
       tableName: tableNumber,
       seatNo: seatNumber,
+      ctc: cardType,
     }
   }
 
-  static MemberClockInByMemberCard ({ memberCard, seatNumber }) {
+  static MemberClockInByMemberCard ({ memberCard, seatNumber, cardType }) {
     return {
       cda: memberCard,
       seatNo: seatNumber,
+      ctc: cardType,
     }
   }
 
-  static ClockOut ({ id, playTypeNumber, propPlay, averageBet, actualWin, drop, overage, overallWinner, tableNumber, type, praValue }) {
+  static ClockOut ({
+    id,
+    playTypeNumber,
+    propPlay,
+    averageBet,
+    actualWin,
+    drop,
+    overage,
+    playTypeNumberOverride,
+    propPlayOverride,
+    averageBetOverride,
+    actualWinOverride,
+    overallWinner,
+    tableNumber,
+    type,
+    cardType,
+    praValue,
+  }) {
     return {
       cid: Number(id),
       ptn: playTypeNumber?.length === 0 ? null : Number(playTypeNumber),
@@ -35,10 +55,15 @@ class Denormalizer {
       awl: actualWin?.length === 0 ? null : Number(actualWin),
       drp: drop?.length === 0 ? null : Number(drop),
       ovg: overage?.length === 0 ? null : Number(overage),
+      ptnMmOvr: playTypeNumberOverride,
+      pgpMmOvr: propPlayOverride,
+      abtMmOvr: averageBetOverride,
+      awlMmOvr: actualWinOverride,
       tableName: tableNumber,
       whoWin: overallWinner,
       type,
-      pra: praValue,
+      ctc: cardType,
+      pra: Number(praValue),
     }
   }
 
