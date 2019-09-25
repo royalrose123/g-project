@@ -177,7 +177,7 @@ function Settings (props) {
         }
       })
     )
-
+    SettingsApi.activeTable({ tableNumber: selectedTableName })
     SettingsApi.deactiveTable({ tableNumber })
     TableApi.logOffTable({ tableNumber })
   }
@@ -289,7 +289,7 @@ function Settings (props) {
     } else {
       await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
       await clearTable()
-      clearLocalStorageItem()
+      await clearLocalStorageItem()
       setLocalStorageItem('tableNumber', selectedTableName)
       changeTableNumber(selectedTableName)
     }

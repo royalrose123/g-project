@@ -19,7 +19,6 @@ import { operations as standingOperations, selectors as standingSelectors } from
 import { operations as settingOperations, selectors as settingSelectors } from '..//../lib/redux/modules/setting'
 
 // Lib MISC
-import SettingsApi from '../../lib/api/Setting'
 import TableApi from '../../lib/api/Table'
 import findStaticPath from '../../lib/utils/find-static-path'
 import { getLocalStorageItem } from '../../lib/helpers/localStorage'
@@ -105,7 +104,6 @@ function Home (props) {
 
   useEffect(() => {
     if (!isFirstRender.current) {
-      SettingsApi.activeTable({ tableNumber })
       TableApi.logOnTable({ tableNumber })
     } else {
       isFirstRender.current = false
@@ -115,7 +113,6 @@ function Home (props) {
   // deactive current table when window unload
   useEffect(() => {
     function closeTable (event) {
-      SettingsApi.deactiveTable({ tableNumber })
       TableApi.logOffTable({ tableNumber })
     }
 
