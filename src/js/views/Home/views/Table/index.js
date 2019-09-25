@@ -32,6 +32,8 @@ import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
 import { setLocalStorageItem } from '../../../../lib/helpers/localStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
+import MISMATCH_FIELD from '../../../../constants/MismatchField'
+import ERROR_MESSAGE from '../../../../constants/ErrorMessage'
 import { parsePraListToBitValues, parsePraListToClockOutField } from '../../../../lib/utils/parse-pra-to-list'
 
 // Style
@@ -99,7 +101,7 @@ function Table (props) {
   const clockOutPoutEnquiryValue = {}
 
   const { path, params } = match
-  let { memberId, type } = params
+  let { memberId, type, cardType } = params
 
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
@@ -119,9 +121,14 @@ function Table (props) {
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
   const openClockInErrorModal = () => setIsClockInErrorModalOpened(true)
-  const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
+  const initializeIsOverride = () => setIsOverride(false)
+  const initializePraValue = () => setPraValue(0)
   const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
-  const closeClockOutErrorModal = () => setIsClockOutErrorModalOpened(false)
+  const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
+
+  const closeClockOutErrorModal = () => {
+    setIsClockOutErrorModalOpened(false)
+  }
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
   // 設定初始值
@@ -142,7 +149,7 @@ function Table (props) {
     setSelectedPlaceIndex(index)
     // 如果位置已經有人，打開 detail
     if (typeof place === 'object') {
-      history.push(`${match.url}/${place.type}/${place.id}`)
+      history.push(`${match.url}/${place.type}/${place.cardType}/${place.id}`)
       return
     }
 
@@ -222,7 +229,6 @@ function Table (props) {
     const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
     const standingIndex = await findIndex(standingList, item => item === undefined)
-
     // Dynamiq GTT 實際座位
     let seatNumber = (await seatedIndex) + 1
     if (!isInSeatedPlace) {
@@ -234,34 +240,76 @@ function Table (props) {
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
 
-      const apiId = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber })
+      await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
+        .then(result => {
+          const apiId = result
 
-      if (isInSeatedPlace && !isSomeoneSeated) {
-        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
-      } else {
-        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
-      }
+          if (isInSeatedPlace && !isSomeoneSeated) {
+            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+          } else {
+            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+          }
+        })
+        .catch(error => {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-      return apiId && true
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
+        })
     } else if (identify === PERSON_TYPE.MEMBER_CARD) {
       // 若是 member card
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber })
+      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
+        .then(result => {
+          const apiId = result
+
+          if (isInSeatedPlace && !isSomeoneSeated) {
+            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+          } else {
+            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+          }
+        })
+        .catch(error => {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
+        })
     } else {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
-      const apiId = await GameApi.memberClockInById({ id, tableNumber, seatNumber })
-      image = compareImage
+      await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
+        .then(result => {
+          const apiId = result
+          image = compareImage
 
-      if (isInSeatedPlace && !isSomeoneSeated) {
-        addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
-      } else {
-        addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
-      }
-      return apiId && true
+          if (isInSeatedPlace && !isSomeoneSeated) {
+            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+          } else {
+            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+          }
+        })
+        .catch(error => {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+            errorMessage += '. Please confirm Clock-In again.'
+            TableApi.logOnTable({ tableNumber })
+          }
+        })
     }
   }
 
@@ -307,9 +355,9 @@ function Table (props) {
       // 若是 anonymous
       // 即自動建立臨時帳號
       // 並以取得的 id 放進 seat / standing list 中
-      id = await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber })
+      await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
         .then(result => {
-          id = result
+          const id = result
           addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
         .catch(error => {
@@ -317,7 +365,8 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          if (errorMessage === 'Not logged on') {
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
             errorMessage += '. Please confirm Clock-In again.'
             TableApi.logOnTable({ tableNumber })
           }
@@ -330,8 +379,9 @@ function Table (props) {
       // 即為會員，使用荷官輸入的 member card
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber })
+      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
         .then(result => {
+          const id = result
           addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
         .catch(error => {
@@ -339,7 +389,8 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          if (errorMessage === 'Not logged on') {
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
             errorMessage += '. Please confirm Clock-In again.'
             TableApi.logOnTable({ tableNumber })
           }
@@ -351,8 +402,9 @@ function Table (props) {
       // 若不是 anonymous 或者 member card
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
-      await GameApi.memberClockInById({ id, tableNumber, seatNumber })
+      await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
         .then(result => {
+          const id = result
           image = compareImage
           addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
         })
@@ -361,7 +413,8 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          if (errorMessage === 'Not logged on') {
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
             errorMessage += '. Please confirm Clock-In again.'
             TableApi.logOnTable({ tableNumber })
           }
@@ -369,6 +422,29 @@ function Table (props) {
           setClockErrorMessage(errorMessage)
           openClockInErrorModal()
         })
+    }
+  }
+
+  const removeItemFromListByManualClockOut = () => {
+    const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
+
+    const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+    const indexInSeatedList = findIndex(seatedList, { id: memberId })
+
+    if (isPlayerInStanding) {
+      // For Refresh - StandingList local storage
+      const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
+
+      setLocalStorageItem('standingList', newStandingList)
+
+      removeStandingItem(indexInStadingList)
+    } else {
+      // For Refresh - SeatedList local storage
+      const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
+
+      setLocalStorageItem('seatedList', newSeatedList)
+
+      removeSeatItem(indexInSeatedList)
     }
   }
 
@@ -381,7 +457,7 @@ function Table (props) {
 
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 POUT enquiry 裡的值，否則為空字串
     if (isEmpty(clockOutPoutEnquiryValue)) {
-      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, tableNumber })
+      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, cardType: player.cardType, tableNumber })
         .then(result => {
           clockOutFieldList.map(item => {
             set(clockOutPoutEnquiryValue, item, result[item])
@@ -397,13 +473,37 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          if (errorMessage === 'Not logged on') {
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
             TableApi.logOnTable({ tableNumber })
+          } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+            const isPlayerInStanding = findIndex(standingList, { id: player.id }) !== -1
+
+            const indexInStadingList = findIndex(standingList, { id: player.id }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+            const indexInSeatedList = findIndex(seatedList, { id: player.id })
+
+            if (isPlayerInStanding) {
+              // For Refresh - StandingList local storage
+              const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
+
+              setLocalStorageItem('standingList', newStandingList)
+
+              removeStandingItem(indexInStadingList)
+            } else {
+              // For Refresh - SeatedList local storage
+              const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
+
+              setLocalStorageItem('seatedList', newSeatedList)
+
+              removeSeatItem(indexInSeatedList)
+            }
           }
         })
     }
 
-    await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type })
+    if (isEmpty(clockOutPoutEnquiryValue)) return // 如果 enquiry 失敗就不執行 clock-out
+
+    await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type, cardType: player.cardType })
       .then(result => {
         const isSeated = player.seatedIndex >= 0
 
@@ -437,29 +537,82 @@ function Table (props) {
   }
   // Manually clock out
   const onClockOut = async (values, player) => {
-    const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
-
-    const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-    const indexInSeatedList = findIndex(seatedList, { id: memberId })
-
-    await GameApi.clockOut({ id: memberId, ...values, tableNumber, type })
+    await GameApi.clockOut({ id: memberId, ...values, tableNumber, type, cardType })
       .then(result => {
-        // 根據是否站立，設定位置列表的內容
-        if (isPlayerInStanding) {
-          // For Refresh - StandingList local storage
-          const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
+        removeItemFromListByManualClockOut()
 
-          setLocalStorageItem('standingList', newStandingList)
+        initializeIsSelectedPlaceStanding()
+        initializeSelectedPlaceIndex()
+        initializeIsOverride()
+        initializePraValue()
 
-          removeStandingItem(indexInStadingList)
-        } else {
-          // For Refresh - SeatedList local storage
-          const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
+        history.push(findStaticPath(path))
+      })
+      .catch(error => {
+        // 如果有 error 就跳出 popup
+        if (error?.response) {
+          let errorMessage = error.response.data.data
+          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          setLocalStorageItem('seatedList', newSeatedList)
+          // 如果 not log-on，自動 log-on
+          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+            errorMessage += '. Please confirm Clock-Out again.'
+            TableApi.logOnTable({ tableNumber })
+          }
 
-          removeSeatItem(indexInSeatedList)
+          const praMessage = trim(errorMessage.split('pra')[1], '=')
+
+          if (praMessage) {
+            errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
+          }
+
+          const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
+          const isOverrideMessage = errorMessage.indexOf('override') !== -1
+          const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
+
+          if (isMismatchMessage) {
+            // mismatch override
+            const mismatchMessage = errorMessage.split(' mismatch,')[0]
+            const mismatchField = MISMATCH_FIELD[mismatchMessage]
+
+            clockOutFieldList.map(item => {
+              set(clockOutDefaultValue[type], item, values[item])
+            })
+
+            set(clockOutDefaultValue[type], mismatchField, 1)
+
+            setOverrideValue(clockOutDefaultValue[type])
+            setIsOverride(isMismatchMessage)
+          } else if (isOverrideMessage) {
+            // pra override
+            clockOutFieldList.map(item => {
+              set(clockOutDefaultValue[type], item, values[item])
+            })
+
+            setOverrideValue(clockOutDefaultValue[type])
+            setIsOverride(isOverrideMessage)
+            setPraValue(praMessage)
+          } else if (isNotPermittedMessage) {
+            setIsOverride(!isNotPermittedMessage)
+          }
+
+          setClockErrorMessage(errorMessage)
+          openClockOutErrorModal()
         }
+      })
+  }
+
+  const confirmOverride = async () => {
+    set(overrideValue, 'praValue', praValue)
+
+    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type, cardType })
+      .then(result => {
+        removeItemFromListByManualClockOut()
+
+        closeClockOutErrorModal()
+        initializeIsOverride()
+        initializePraValue()
+
         initializeIsSelectedPlaceStanding()
         initializeSelectedPlaceIndex()
 
@@ -477,51 +630,37 @@ function Table (props) {
             errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
           }
 
+          const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
           const isOverrideMessage = errorMessage.indexOf('override') !== -1
+          const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
 
-          if (isOverrideMessage) {
-            clockOutFieldList.map(item => {
-              set(clockOutDefaultValue[type], item, values[item])
-            })
-            setOverrideValue(clockOutDefaultValue[type])
+          if (isMismatchMessage) {
+            // mismatch override
+            const mismatchMessage = errorMessage.split(' mismatch,')[0]
+            const mismatchField = MISMATCH_FIELD[mismatchMessage]
+
+            set(overrideValue, mismatchField, 1)
+            setIsOverride(isMismatchMessage)
+          } else if (isOverrideMessage) {
+            // pra override
             setIsOverride(isOverrideMessage)
             setPraValue(praMessage)
+          } else if (isNotPermittedMessage) {
+            setIsOverride(!isNotPermittedMessage)
           }
 
           setClockErrorMessage(errorMessage)
-          openClockOutErrorModal()
         }
       })
   }
 
-  const confirmOverride = async () => {
-    set(overrideValue, 'praValue', praValue)
-    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type }).then(result => {
-      const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
+  const removeItemFromListByNotClockIn = () => {
+    removeItemFromListByManualClockOut()
 
-      const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-      const indexInSeatedList = findIndex(seatedList, { id: memberId })
+    initializeIsSelectedPlaceStanding()
+    initializeSelectedPlaceIndex()
 
-      // 根據是否站立，設定位置列表的內容
-      if (isPlayerInStanding) {
-        // For Refresh - StandingList local storage
-        const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
-
-        setLocalStorageItem('standingList', newStandingList)
-
-        removeStandingItem(indexInStadingList)
-      } else {
-        // For Refresh - SeatedList local storage
-        const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
-
-        setLocalStorageItem('seatedList', newSeatedList)
-        removeSeatItem(indexInSeatedList)
-      }
-      initializeIsSelectedPlaceStanding()
-      initializeSelectedPlaceIndex()
-
-      history.push(findStaticPath(path))
-    })
+    history.push(findStaticPath(path))
   }
 
   const renderAutomaticNotice = clockState => {
@@ -544,6 +683,7 @@ function Table (props) {
       isClockOutErrorModalOpened={isClockOutErrorModalOpened}
       closeClockOutErrorModal={closeClockOutErrorModal}
       clockErrorMessage={clockErrorMessage}
+      removeItemFromList={removeItemFromListByNotClockIn}
       {...props}
     />
   ) : (

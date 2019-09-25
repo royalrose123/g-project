@@ -14,7 +14,7 @@ class Denormalizer {
   static MemberClockInById ({ id, tableNumber, seatNumber, cardType }) {
     return {
       // 跟後端協調後，收到時為 string，送出時轉成 number
-      cid: Number(id),
+      cid: String(id),
       tableName: tableNumber,
       seatNo: seatNumber,
       ctc: cardType,
@@ -48,7 +48,7 @@ class Denormalizer {
     praValue,
   }) {
     return {
-      cid: Number(id),
+      cid: String(id),
       ptn: playTypeNumber?.length === 0 ? null : Number(playTypeNumber),
       pgp: propPlay?.length === 0 ? null : Number(propPlay),
       abt: averageBet?.length === 0 ? null : Number(averageBet),

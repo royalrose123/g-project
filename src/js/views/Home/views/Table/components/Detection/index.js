@@ -96,7 +96,7 @@ function Detection (props) {
     if (
       typeof detectionData !== 'undefined' &&
       typeof detectionData.leave !== 'undefined' &&
-      detectionData.leave.length > 0 &&
+      detectionData?.leave?.length > 0 &&
       clockState !== CLOCK_STATUS.MANUALLY_CLOCK
     ) {
       detectionData.leave.forEach(player => {
@@ -207,7 +207,13 @@ function Detection (props) {
 
   const autoClockInByType = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
     if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[detectionItem.type]) {
-      if (executeAutoClockIn(event, detectionItem)) clockInPlayer.current[detectionItemTempId] = true
+      executeAutoClockIn(event, detectionItem)
+
+      const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
+      const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
+      const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
+
+      if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = true
     }
   }
 

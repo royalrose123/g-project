@@ -7,7 +7,7 @@ import Avatar from '../Avatar'
 import Body from '../Body'
 import Header from '../Header'
 import Footer from '../Footer'
-import Icon from '../../../../../../../../components/Icon'
+// import Icon from '../../../../../../../../components/Icon'
 
 // Style
 import styles from './style.module.scss'
@@ -22,7 +22,7 @@ export const propTypes = {
   person: PropTypes.shape({
     id: PropTypes.string,
     name: PropTypes.string,
-    level: PropTypes.oneOf(['green', 'silver', 'gold', 'platinum']),
+    level: PropTypes.string,
     image: PropTypes.string,
     compareImage: PropTypes.string,
   }).isRequired,
@@ -36,7 +36,7 @@ function Person (props) {
   return (
     <div className={cx('home-table-person-member')} data-mode={mode}>
       <Header type={PERSON_TYPE.MEMBER}>
-        <Icon className={cx('home-table-person-member__header-icon')} data-level={level} name='crown' mode='01' />
+        {/* <Icon className={cx('home-table-person-member__header-icon')} data-level={level} name='crown' mode='01' />  // 目前先拿掉 */}
         {title === 'id' ? `#${id}` : level}
       </Header>
       <Body>

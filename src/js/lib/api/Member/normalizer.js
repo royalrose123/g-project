@@ -1,4 +1,3 @@
-// import CARD_TYPE from '../../../constants/CardType'
 import toBase64Src from '../../utils/to-base64-src'
 
 class Normalizer {

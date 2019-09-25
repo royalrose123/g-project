@@ -5,8 +5,7 @@ import classnames from 'classnames/bind'
 import * as Yup from 'yup'
 import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
-import { map, concat, compact, findKey, isEqual } from 'lodash'
-import CARD_TYPE from '../../../../constants/CardType'
+import { map, concat, compact, isEqual } from 'lodash'
 
 // Components
 import Modal from '../../../../components/Modal'
@@ -190,7 +189,7 @@ function Settings (props) {
       if (typeof item === 'object') {
         newItem = {
           cid: item.id,
-          level: findKey(CARD_TYPE, cardType => cardType === item.cardType),
+          level: item.cardType,
           type: item.type,
         }
       }
@@ -204,7 +203,7 @@ function Settings (props) {
       if (typeof item === 'object') {
         newItem = {
           cid: item.id,
-          level: findKey(CARD_TYPE, cardType => cardType === item.cardType),
+          level: item.cardType,
           type: item.type,
         }
       }

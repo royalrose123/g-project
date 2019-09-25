@@ -31,4 +31,8 @@ camera1/2 -> index.html -> 修改 `wsUrl` 和 `rtspUrl` 的屬性值
 
 ## Deploy
 
-將 build 裡面的內容放到靜態 server 上，再把 camera1/2 這兩個資料夾和 build 裡面的內容放在一起。
+將 build 裡面的內容放到靜態 server 上，再把 camera1/2 這兩個資料夾和 build 裡面的內容放在一起。 // 已可接收 websocket 資料並畫出
+
+## Game APIs
+
+只要有 call 到 Dynamiq GTT 時，都需要 catch error message，例如 detetection, clock-in/out, enquiry，error message 為 'Not logged on' 時需要 auto log-on，

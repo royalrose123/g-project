@@ -1,6 +1,5 @@
 import { BigNumber } from 'bignumber.js'
 
-// import CARD_TYPE from '../../../constants/CardType'
 import Service from '../service'
 
 class Normalizer {

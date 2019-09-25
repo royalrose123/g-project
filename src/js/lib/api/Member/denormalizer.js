@@ -1,10 +1,11 @@
 class Denormalizer {
   static FetchMemberDetailByIdWithType ({ id, type, tableNumber, cardType }) {
+    console.log('cardType', cardType)
     return {
-      cid: Number(id),
+      cid: String(id),
       tableName: tableNumber,
       type,
-      cardType,
+      ctc: cardType,
     }
   }
 
