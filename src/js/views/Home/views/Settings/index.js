@@ -5,7 +5,7 @@ import classnames from 'classnames/bind'
 import * as Yup from 'yup'
 import { Formik, Form as FormikForm, Field, getIn } from 'formik'
 import { BigNumber } from 'bignumber.js'
-import { map, concat, compact, isEqual } from 'lodash'
+import { map, concat, compact, isEqual, trim } from 'lodash'
 
 // Components
 import Modal from '../../../../components/Modal'
@@ -25,6 +25,7 @@ import TableApi from '../../../../lib/api/Table'
 import GameApi from '../../../../lib/api/Game'
 import useFetcher from '../../../../lib/effects/useFetcher'
 import { setLocalStorageItem, removeLocalStorageItem, clearLocalStorageItem } from '../../../../lib/helpers/localStorage'
+import ERROR_MESSAGE from '../../../../constants/ErrorMessage'
 
 // Style
 import styles from './style.module.scss'
@@ -126,183 +127,16 @@ function Settings (props) {
   const [isChangeClockStateModalOpened, setIsChangeClockStateModalOpened] = useState(false)
   const [changeTableModalTextPack, setChangeTableModalTextPack] = useState({})
   const [isChangeTableModalOpened, setIsChangeTableModalOpened] = useState(false)
+  const [isClockOutAllModalOpened, setClockOutAllModalOpened] = useState(false)
+  const [clockOutError, setClockOutError] = useState('')
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
   const openConfirmModal = () => setIsChangeClockStateModalOpened(true)
   const closeConfirmModal = () => setIsChangeClockStateModalOpened(false)
   const openChangeTableModal = () => setIsChangeTableModalOpened(true)
   const closeChangeTableModal = () => setIsChangeTableModalOpened(false)
-  const saveConfirmModal = async formikValues => {
-    setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-
-    setPreviousDynamiqLogStatus({
-      clockInOutMemDynamiq: formikValues.systemSettings.clockInOutMemDynamiq,
-      clockInOutAnonymousDynamiq: formikValues.systemSettings.clockInOutAnonymousDynamiq,
-      logMemClock: formikValues.systemSettings.logMemClock,
-      logAnonymousClock: formikValues.systemSettings.logAnonymousClock,
-    })
-
-    changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-    changeSettingData(formikValues.systemSettings, formikValues.autoSettings, formikValues.defaultRecord)
-
-    // For Refresh - set settingData to localStorage
-    const newSettingData = {
-      systemSettings: formikValues.systemSettings,
-      autoSettings: formikValues.autoSettings,
-      defaultRecord: formikValues.defaultRecord,
-    }
-    setLocalStorageItem('settingData', newSettingData)
-    setLocalStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
-
-    await SettingsApi.postSettingDetail({
-      systemSettings: formikValues.systemSettings,
-      autoSettings: formikValues.autoSettings,
-      defaultRecord: formikValues.defaultRecord,
-    })
-    clearTable()
-    await closeConfirmModal()
-  }
-
-  const setTableListActiveStatus = (setTableList, tableList, selectedTableName, tableNumber) => {
-    setTableList(
-      tableList.map(tableItem => {
-        if (tableItem.tableName === 'Please select table') {
-          return tableItem
-        } else if (tableItem.tableName === selectedTableName) {
-          return { ...tableItem, disabled: true }
-        } else if (tableItem.tableName === tableNumber) {
-          return { ...tableItem, disabled: false }
-        } else {
-          return tableItem
-        }
-      })
-    )
-    SettingsApi.activeTable({ tableNumber: selectedTableName })
-    SettingsApi.deactiveTable({ tableNumber })
-    TableApi.logOffTable({ tableNumber })
-  }
-
-  const clearTable = async () => {
-    const seatedMemberData = map(seatedList, item => {
-      let newItem
-
-      if (typeof item === 'object') {
-        newItem = {
-          cid: item.id,
-          level: item.cardType,
-          type: item.type,
-        }
-      }
-
-      return newItem
-    })
-
-    const standingMemberData = map(standingList, item => {
-      let newItem
-
-      if (typeof item === 'object') {
-        newItem = {
-          cid: item.id,
-          level: item.cardType,
-          type: item.type,
-        }
-      }
-
-      return newItem
-    })
-
-    const memberIdList = compact(concat(seatedMemberData, standingMemberData))
-    await removeLocalStorageItem('seatedList')
-    await removeAllFromSeated()
-    await removeLocalStorageItem('standingList')
-    await removeAllFromStanding()
-    await removeAllClockOutPlayer()
-    await GameApi.clockOutAll({ memberIdList, tableNumber })
-  }
-
-  const getValidationSchema = () => {
-    return Yup.object().shape({
-      systemSettings: Yup.object().shape({}),
-      autoSettings: Yup.object().shape({
-        autoClockInMemberSec: Yup.string()
-          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
-          .required('Duration must be entered'),
-        autoClockOutMemberSec: Yup.string()
-          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
-          .required('Duration must be entered'),
-        autoClockInAnonymousSec: Yup.string()
-          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
-          .required('Duration must be entered'),
-        autoClockOutAnonymousSec: Yup.string()
-          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
-          .required('Duration must be entered'),
-      }),
-      defaultRecord: Yup.object().shape({
-        memberPropPlay: Yup.string().test(
-          'more-than-api',
-          'Amounnt cannot be larger than proportion of games',
-          value => Number(value) <= detail.defaultRecord.memberPropPlayMother
-        ),
-        anonymousPropPlay: Yup.string().test(
-          'more-than-api',
-          'Amounnt cannot be larger than proportion of games',
-          value => Number(value) <= detail.defaultRecord.anonymousPropPlayMother
-        ),
-      }),
-    })
-  }
-
-  const onOptionChange = async event => {
-    const selectedTableName = event.target.value
-    setChangeTableName(event.target.value)
-
-    //  seatedList / standingList 有人的話，判斷是被 auto 或 manual clock-in
-    let isSomeOneManualClockedIn = false
-    let isSomeOneAutoClockedIn = false
-
-    await seatedList.forEach(item => {
-      if (item) {
-        if (item?.isAuto) {
-          isSomeOneAutoClockedIn = true
-        } else {
-          isSomeOneManualClockedIn = true
-        }
-      }
-    })
-
-    await standingList.forEach(item => {
-      if (item) {
-        if (item?.isAuto) {
-          isSomeOneAutoClockedIn = true
-        } else {
-          isSomeOneManualClockedIn = true
-        }
-      }
-    })
-
-    if (isSomeOneManualClockedIn) {
-      setChangeTableModalTextPack(changeTableModalText['manualClockOut'])
-      openChangeTableModal()
-    } else if (isSomeOneAutoClockedIn) {
-      setChangeTableModalTextPack(changeTableModalText['autoClockOut'])
-      openChangeTableModal()
-    } else {
-      await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
-      await clearTable()
-      await clearLocalStorageItem()
-      setLocalStorageItem('tableNumber', selectedTableName)
-      changeTableNumber(selectedTableName)
-    }
-  }
-
-  const clockOutAllByChangeTable = async () => {
-    await setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
-    changeTableNumber(changeTableName)
-    setLocalStorageItem('tableNumber', changeTableName)
-
-    await clearTable()
-    await closeChangeTableModal()
-  }
+  const openClockOutAllModal = () => setClockOutAllModalOpened(true)
+  const closeClockOutAllModal = () => setClockOutAllModalOpened(false)
 
   useEffect(() => {
     if (tableList.length > 0) {
@@ -342,6 +176,312 @@ function Settings (props) {
       setLocalStorageItem('clockState', checkClockState(detail.autoSettings.autoClockMember, detail.autoSettings.autoClockAnonymous))
     }
   }, [detail, isLoaded, changeTableNumber, changeClockState, changeSettingData])
+
+  const saveConfirmModal = async formikValues => {
+    setPreviousClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+
+    setPreviousDynamiqLogStatus({
+      clockInOutMemDynamiq: formikValues.systemSettings.clockInOutMemDynamiq,
+      clockInOutAnonymousDynamiq: formikValues.systemSettings.clockInOutAnonymousDynamiq,
+      logMemClock: formikValues.systemSettings.logMemClock,
+      logAnonymousClock: formikValues.systemSettings.logAnonymousClock,
+    })
+
+    changeClockState(checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+    changeSettingData(formikValues.systemSettings, formikValues.autoSettings, formikValues.defaultRecord)
+
+    // For Refresh - set settingData to localStorage
+    const newSettingData = {
+      systemSettings: formikValues.systemSettings,
+      autoSettings: formikValues.autoSettings,
+      defaultRecord: formikValues.defaultRecord,
+    }
+    setLocalStorageItem('settingData', newSettingData)
+    setLocalStorageItem('clockState', checkClockState(formikValues.autoSettings.autoClockMember, formikValues.autoSettings.autoClockAnonymous))
+
+    await clearTableBySave(formikValues)
+  }
+
+  const setTableListActiveStatus = (setTableList, tableList, selectedTableName, tableNumber) => {
+    setTableList(
+      tableList.map(tableItem => {
+        if (tableItem.tableName === 'Please select table') {
+          return tableItem
+        } else if (tableItem.tableName === selectedTableName) {
+          return { ...tableItem, disabled: true }
+        } else if (tableItem.tableName === tableNumber) {
+          return { ...tableItem, disabled: false }
+        } else {
+          return tableItem
+        }
+      })
+    )
+    SettingsApi.activeTable({ tableNumber: selectedTableName })
+    SettingsApi.deactiveTable({ tableNumber })
+    TableApi.logOffTable({ tableNumber })
+  }
+
+  const getPlayerList = () => {
+    const seatedMemberData = map(seatedList, item => {
+      let newItem
+
+      if (typeof item === 'object') {
+        newItem = {
+          cid: item.id,
+          level: item.cardType,
+          type: item.type,
+        }
+      }
+
+      return newItem
+    })
+
+    const standingMemberData = map(standingList, item => {
+      let newItem
+
+      if (typeof item === 'object') {
+        newItem = {
+          cid: item.id,
+          level: item.cardType,
+          type: item.type,
+        }
+      }
+
+      return newItem
+    })
+
+    const memberIdList = compact(concat(seatedMemberData, standingMemberData))
+    return { memberIdList }
+  }
+
+  // batch clock-out by change clock state and clock-in / out to Dynamiq
+  const clearTableBySave = async formikValues => {
+    const { memberIdList } = getPlayerList()
+
+    await GameApi.clockOutAll({ memberIdList, tableNumber })
+      .then(async result => {
+        console.warn('result 11111', result)
+        await SettingsApi.postSettingDetail({
+          systemSettings: formikValues.systemSettings,
+          autoSettings: formikValues.autoSettings,
+          defaultRecord: formikValues.defaultRecord,
+        })
+        await closeConfirmModal()
+
+        await removeLocalStorageItem('seatedList')
+        await removeAllFromSeated()
+        await removeLocalStorageItem('standingList')
+        await removeAllFromStanding()
+        await removeAllClockOutPlayer()
+      })
+      .catch(error => {
+        console.warn('error.response 22222', error.response)
+        let errorMessage = error.response.data.data
+        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+        if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+          errorMessage += '. Please click "CONFIRM" again.'
+          TableApi.logOnTable({ tableNumber })
+          setClockOutError(errorMessage)
+        } else {
+          setClockOutError(errorMessage)
+        }
+
+        openClockOutAllModal()
+      })
+  }
+
+  const onOptionChange = async event => {
+    const selectedTableName = event.target.value
+    setChangeTableName(event.target.value)
+
+    //  seatedList / standingList 有人的話，判斷是被 auto 或 manual clock-in
+    let isSomeOneManualClockedIn = false
+    let isSomeOneAutoClockedIn = false
+
+    await seatedList.forEach(item => {
+      if (item) {
+        if (item?.isAuto) {
+          isSomeOneAutoClockedIn = true
+        } else {
+          isSomeOneManualClockedIn = true
+        }
+      }
+    })
+
+    await standingList.forEach(item => {
+      if (item) {
+        if (item?.isAuto) {
+          isSomeOneAutoClockedIn = true
+        } else {
+          isSomeOneManualClockedIn = true
+        }
+      }
+    })
+
+    if (isSomeOneManualClockedIn) {
+      setChangeTableModalTextPack(changeTableModalText['manualClockOut'])
+      openChangeTableModal()
+    } else if (isSomeOneAutoClockedIn) {
+      setChangeTableModalTextPack(changeTableModalText['autoClockOut'])
+      openChangeTableModal()
+    } else {
+      await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
+      await clearLocalStorageItem()
+      setLocalStorageItem('tableNumber', selectedTableName)
+      changeTableNumber(selectedTableName)
+    }
+  }
+
+  // batch clock-out by change table
+  const clearTableByChangeTable = async () => {
+    const { memberIdList } = getPlayerList()
+
+    await GameApi.clockOutAll({ memberIdList, tableNumber })
+      .then(async result => {
+        await setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
+        changeTableNumber(changeTableName)
+        setLocalStorageItem('tableNumber', changeTableName)
+
+        await closeChangeTableModal()
+      })
+      .catch(error => {
+        let errorMessage = error.response.data.data
+        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+        // 如果 not log-on，自動 log-on
+        if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+          errorMessage += '. Please click "CONFIRM" again.'
+          TableApi.logOnTable({ tableNumber })
+        }
+
+        setClockOutError(errorMessage)
+        openClockOutAllModal()
+      })
+  }
+
+  const getValidationSchema = () => {
+    return Yup.object().shape({
+      systemSettings: Yup.object().shape({}),
+      autoSettings: Yup.object().shape({
+        autoClockInMemberSec: Yup.string()
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
+          .required('Duration must be entered'),
+        autoClockOutMemberSec: Yup.string()
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
+          .required('Duration must be entered'),
+        autoClockInAnonymousSec: Yup.string()
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
+          .required('Duration must be entered'),
+        autoClockOutAnonymousSec: Yup.string()
+          .test('must be above 0', 'Duration must be above 0', value => Number(value) > 0)
+          .required('Duration must be entered'),
+      }),
+      defaultRecord: Yup.object().shape({
+        memberPropPlay: Yup.string().test(
+          'more-than-api',
+          'Amounnt cannot be larger than proportion of games',
+          value => Number(value) <= detail.defaultRecord.memberPropPlayMother
+        ),
+        anonymousPropPlay: Yup.string().test(
+          'more-than-api',
+          'Amounnt cannot be larger than proportion of games',
+          value => Number(value) <= detail.defaultRecord.anonymousPropPlayMother
+        ),
+      }),
+    })
+  }
+
+  const renderModal = values =>
+    (isChangeTableModalOpened || isChangeClockStateModalOpened || isClockOutAllModalOpened) && (
+      <>
+        {/* change clock state and clock-in / out to Dynamiq / Log popup */}
+        <Modal
+          className={cx('home-settings-confirm-modal')}
+          isClosable={false}
+          shouldCloseOnOverlayClick={false}
+          isOpened={isChangeClockStateModalOpened}
+        >
+          <Modal.Header>
+            <div className={cx('home-settings-confirm-modal__header')}>{changeClockStateModalTextPack.title}</div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={cx('home-settings-confirm-modal__body')}>{changeClockStateModalTextPack.description}</div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type='button' className={cx('home-settings-confirm-modal__action')} isFilled={false} size={'md'} onClick={closeConfirmModal}>
+              CANCEL
+            </Button>
+            <Button type='button' className={cx('home-settings-confirm-modal__action')} size={'md'} onClick={() => saveConfirmModal(values)}>
+              CONFIRM
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        {/* change table popup */}
+        <Modal
+          className={cx('home-settings-change-table-modal')}
+          isClosable={false}
+          shouldCloseOnOverlayClick={false}
+          isOpened={isChangeTableModalOpened}
+        >
+          <Modal.Header>
+            <div className={cx('home-settings-change-table-modal__header')}>{changeTableModalTextPack.title}</div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={cx('home-settings-change-table-modal__body')}>{changeTableModalTextPack.description}</div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              type='button'
+              className={cx('home-settings-change-table-modal__action')}
+              isInvisible={changeTableModalTextPack.state === 'autoClockOut'}
+              size={'md'}
+              onClick={closeChangeTableModal}
+            >
+              OK
+            </Button>
+            <Button
+              type='button'
+              className={cx('home-settings-change-table-modal__action')}
+              isFilled={false}
+              isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
+              size={'md'}
+              onClick={closeChangeTableModal}
+            >
+              CANCEL
+            </Button>
+            <Button
+              type='button'
+              className={cx('home-settings-change-table-modal__action')}
+              isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
+              size={'md'}
+              onClick={() => clearTableByChangeTable()}
+            >
+              CONFIRM
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        {/* error popup */}
+        <Modal
+          className={cx('home-settings-change-table-modal')}
+          isClosable={false}
+          shouldCloseOnOverlayClick={false}
+          isOpened={isClockOutAllModalOpened}
+        >
+          <Modal.Header>
+            <div className={cx('home-settings-change-table-modal__header')}>{`Clock-Out Error`}</div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={cx('home-settings-change-table-modal__body')}>{`${clockOutError}`}</div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type='button' className={cx('home-settings-change-table-modal__action')} size={'md'} onClick={closeClockOutAllModal}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </>
+    )
 
   return isLoaded ? (
     <div className={cx('home-settings')}>
@@ -424,83 +564,6 @@ function Settings (props) {
             {({ validateForm, submitForm, initialValues, values, setFieldValue }) => {
               return (
                 <FormikForm>
-                  <Modal
-                    className={cx('home-settings-confirm-modal')}
-                    isClosable={false}
-                    shouldCloseOnOverlayClick={false}
-                    isOpened={isChangeClockStateModalOpened}
-                  >
-                    {/* change clock state and clock-in / out to Dynamiq / Log popup */}
-                    <Modal.Header>
-                      <div className={cx('home-settings-confirm-modal__header')}>{changeClockStateModalTextPack.title}</div>
-                    </Modal.Header>
-                    <Modal.Body>
-                      <div className={cx('home-settings-confirm-modal__body')}>{changeClockStateModalTextPack.description}</div>
-                    </Modal.Body>
-                    <Modal.Footer>
-                      <Button
-                        type='button'
-                        className={cx('home-settings-confirm-modal__action')}
-                        isFilled={false}
-                        size={'md'}
-                        onClick={closeConfirmModal}
-                      >
-                        CANCEL
-                      </Button>
-                      <Button
-                        type='button'
-                        className={cx('home-settings-confirm-modal__action')}
-                        size={'md'}
-                        onClick={() => saveConfirmModal(values)}
-                      >
-                        CONFIRM
-                      </Button>
-                    </Modal.Footer>
-                  </Modal>
-                  <Modal
-                    className={cx('home-settings-change-table-modal')}
-                    isClosable={false}
-                    shouldCloseOnOverlayClick={false}
-                    isOpened={isChangeTableModalOpened}
-                  >
-                    <Modal.Header>
-                      <div className={cx('home-settings-change-table-modal__header')}>{changeTableModalTextPack.title}</div>
-                    </Modal.Header>
-                    <Modal.Body>
-                      <div className={cx('home-settings-change-table-modal__body')}>{changeTableModalTextPack.description}</div>
-                    </Modal.Body>
-                    {/* change table popup */}
-                    <Modal.Footer>
-                      <Button
-                        type='button'
-                        className={cx('home-settings-change-table-modal__action')}
-                        isInvisible={changeTableModalTextPack.state === 'autoClockOut'}
-                        size={'md'}
-                        onClick={closeChangeTableModal}
-                      >
-                        OK
-                      </Button>
-                      <Button
-                        type='button'
-                        className={cx('home-settings-change-table-modal__action')}
-                        isFilled={false}
-                        isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
-                        size={'md'}
-                        onClick={closeChangeTableModal}
-                      >
-                        CANCEL
-                      </Button>
-                      <Button
-                        type='button'
-                        className={cx('home-settings-change-table-modal__action')}
-                        isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
-                        size={'md'}
-                        onClick={() => clockOutAllByChangeTable()}
-                      >
-                        CONFIRM
-                      </Button>
-                    </Modal.Footer>
-                  </Modal>
                   <Keyboard
                     onPress={key => {
                       if (key === keys.ENTER) return
@@ -525,7 +588,7 @@ function Settings (props) {
                       setFieldValue(lastFocusField, newValue)
                     }}
                   />
-
+                  {renderModal(values)}
                   <div
                     id={TABS.SYSTEM_SETTINGS}
                     data-is-active={currentTab === TABS.SYSTEM_SETTINGS}
@@ -602,6 +665,7 @@ function Settings (props) {
                                 <option value='90'>90%</option>
                                 <option value='80'>80%</option>
                                 <option value='70'>70%</option>
+                                <option value='0'>0%</option>
                               </Form.Select>
                             )}
                           />
