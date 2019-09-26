@@ -9,6 +9,8 @@ import ClockInModal from './components/ClockInModal'
 import Detection from './components/Detection'
 import Seated from './components/Seated'
 import Standing from './components/Standing'
+import Modal from '../../../../components/Modal'
+import Button from '../../../../components/Button'
 
 // Views
 import MemberDetail from './views/MemberDetail'
@@ -79,26 +81,35 @@ function Table (props) {
   const clockOutDefaultValue = {
     anonymous: {
       playTypeNumber: '',
-      propPlay: '',
-      averageBet: '',
-      actualWin: '',
-      drop: '',
-      overage: '',
+      propPlay: defaultRecord.anonymousPropPlay,
+      averageBet: defaultRecord.anonymousAverageBet,
+      actualWin: defaultRecord.anonymousActualWin,
+      drop: defaultRecord.anonymousDrop,
+      overage: defaultRecord.anonymousOverage,
       overallWinner: defaultRecord.anonymousWhoWin,
     },
     member: {
       playTypeNumber: '',
-      propPlay: '',
-      averageBet: '',
-      actualWin: '',
-      drop: '',
-      overage: '',
+      propPlay: defaultRecord.memberPropPlay,
+      averageBet: defaultRecord.memberAverageBet,
+      actualWin: defaultRecord.memberActualWin,
+      drop: defaultRecord.memberDrop,
+      overage: defaultRecord.memberOverage,
       overallWinner: defaultRecord.memberWhoWin,
     },
   }
 
   const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop']
-  const clockOutPoutEnquiryValue = {}
+  let clockOutPoutEnquiryValue = {}
+  const clockOutValue = {
+    playTypeNumber: '',
+    propPlay: '',
+    averageBet: '',
+    actualWin: '',
+    drop: '',
+    overage: '',
+    overallWinner: '',
+  }
 
   const { path, params } = match
   let { memberId, type, cardType } = params
@@ -114,6 +125,8 @@ function Table (props) {
   const [clockErrorMessage, setClockErrorMessage] = useState('')
   const [isClockInErrorModalOpened, setIsClockInErrorModalOpened] = useState(false)
   const [isClockOutErrorModalOpened, setIsClockOutErrorModalOpened] = useState(false)
+  const [isStopDetect, setIsStopDetect] = useState(false)
+  const [autoClockOutErrorMessage, setAutoClockOutErrorMessage] = useState('')
 
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
@@ -125,9 +138,12 @@ function Table (props) {
   const initializePraValue = () => setPraValue(0)
   const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
   const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
+  const stopDetecting = () => setIsStopDetect(true)
+  const keepDetecting = () => setIsStopDetect(false)
 
   const closeClockOutErrorModal = () => {
-    setIsClockOutErrorModalOpened(false)
+    closeClockInErrorModal()
+    setIsOverride(false)
   }
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
 
@@ -425,11 +441,11 @@ function Table (props) {
     }
   }
 
-  const removeItemFromListByManualClockOut = () => {
-    const isPlayerInStanding = findIndex(standingList, { id: memberId }) !== -1
+  const removeItemFromListByManualClockOut = palyerId => {
+    const isPlayerInStanding = findIndex(standingList, { id: palyerId }) !== -1
 
-    const indexInStadingList = findIndex(standingList, { id: memberId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-    const indexInSeatedList = findIndex(seatedList, { id: memberId })
+    const indexInStadingList = findIndex(standingList, { id: palyerId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+    const indexInSeatedList = findIndex(seatedList, { id: palyerId })
 
     if (isPlayerInStanding) {
       // For Refresh - StandingList local storage
@@ -455,55 +471,42 @@ function Table (props) {
 
     if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
 
-    // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 POUT enquiry 裡的值，否則為空字串
-    if (isEmpty(clockOutPoutEnquiryValue)) {
+    // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
+    if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect) {
       await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, cardType: player.cardType, tableNumber })
         .then(result => {
           clockOutFieldList.map(item => {
             set(clockOutPoutEnquiryValue, item, result[item])
           })
+          set(clockOutValue, 'overallWinner', clockOutDefaultValue[player.type]['overallWinner']) // 一開始先填 whoWin default value
 
           if (result?.praValue) {
-            parsePraListToClockOutField(result.praValue).forEach(item => {
-              set(clockOutDefaultValue[player.type], item, result[item])
-            })
+            parsePraListToClockOutField(result.praValue).forEach(item => {})
+          }
+          if (result?.praValue === 1 || result?.praValue === 0) {
+            set(clockOutValue, 'playTypeNumber', result['playTypeNumber']) // clock-out value
           }
         })
         .catch(error => {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          // 如果 not log-on，自動 log-on
           if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+            // 如果 not log-on，自動 log-on
             TableApi.logOnTable({ tableNumber })
           } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
-            const isPlayerInStanding = findIndex(standingList, { id: player.id }) !== -1
-
-            const indexInStadingList = findIndex(standingList, { id: player.id }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-            const indexInSeatedList = findIndex(seatedList, { id: player.id })
-
-            if (isPlayerInStanding) {
-              // For Refresh - StandingList local storage
-              const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
-
-              setLocalStorageItem('standingList', newStandingList)
-
-              removeStandingItem(indexInStadingList)
-            } else {
-              // For Refresh - SeatedList local storage
-              const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
-
-              setLocalStorageItem('seatedList', newSeatedList)
-
-              removeSeatItem(indexInSeatedList)
-            }
+            removeItemFromListByManualClockOut(player.id)
+          } else {
+            clockOutPoutEnquiryValue = {}
+            stopDetecting()
+            removeItemFromListByManualClockOut(player.id)
+            setAutoClockOutErrorMessage(error.response.data.data)
           }
         })
     }
-
     if (isEmpty(clockOutPoutEnquiryValue)) return // 如果 enquiry 失敗就不執行 clock-out
 
-    await GameApi.clockOut({ id: player.id, ...clockOutDefaultValue[player.type], tableNumber, type: player.type, cardType: player.cardType })
+    await GameApi.clockOut({ id: player.id, ...clockOutValue, tableNumber, type: player.type, cardType: player.cardType })
       .then(result => {
         const isSeated = player.seatedIndex >= 0
 
@@ -530,16 +533,20 @@ function Table (props) {
 
         if (praMessage) {
           parsePraListToClockOutField(praMessage).forEach(item => {
-            set(clockOutDefaultValue[player.type], item, clockOutPoutEnquiryValue[item])
+            set(clockOutValue, item, clockOutDefaultValue[player.type][item]) // clock-out value
           })
+        } else {
+          stopDetecting()
+          setAutoClockOutErrorMessage(error.response.data.data)
         }
       })
   }
+
   // Manually clock out
   const onClockOut = async (values, player) => {
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type, cardType })
       .then(result => {
-        removeItemFromListByManualClockOut()
+        removeItemFromListByManualClockOut(memberId)
 
         initializeIsSelectedPlaceStanding()
         initializeSelectedPlaceIndex()
@@ -576,20 +583,20 @@ function Table (props) {
             const mismatchField = MISMATCH_FIELD[mismatchMessage]
 
             clockOutFieldList.map(item => {
-              set(clockOutDefaultValue[type], item, values[item])
+              set(clockOutValue, item, values[item])
             })
 
-            set(clockOutDefaultValue[type], mismatchField, 1)
+            set(clockOutValue, mismatchField, 1)
 
-            setOverrideValue(clockOutDefaultValue[type])
+            setOverrideValue(clockOutValue)
             setIsOverride(isMismatchMessage)
           } else if (isOverrideMessage) {
             // pra override
             clockOutFieldList.map(item => {
-              set(clockOutDefaultValue[type], item, values[item])
+              set(clockOutValue, item, values[item])
             })
 
-            setOverrideValue(clockOutDefaultValue[type])
+            setOverrideValue(clockOutValue)
             setIsOverride(isOverrideMessage)
             setPraValue(praMessage)
           } else if (isNotPermittedMessage) {
@@ -607,7 +614,7 @@ function Table (props) {
 
     await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type, cardType })
       .then(result => {
-        removeItemFromListByManualClockOut()
+        removeItemFromListByManualClockOut(memberId)
 
         closeClockOutErrorModal()
         initializeIsOverride()
@@ -655,7 +662,7 @@ function Table (props) {
   }
 
   const removeItemFromListByNotClockIn = () => {
-    removeItemFromListByManualClockOut()
+    removeItemFromListByManualClockOut(memberId)
 
     initializeIsSelectedPlaceStanding()
     initializeSelectedPlaceIndex()
@@ -673,6 +680,36 @@ function Table (props) {
         return <div className={cx('home-table__seating-plan__notice')}>Automatic Clock-In/Out: Member</div>
     }
   }
+
+  const renderErrorModal = values =>
+    isStopDetect && (
+      <>
+        <Modal className={cx('home-detection-stop-modal')} isClosable={false} shouldCloseOnOverlayClick={false} isOpened={isStopDetect}>
+          <Modal.Header>
+            <div className={cx('home-detection-stop-modal__header')}>{'Auto Clock-Out Error'}</div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={cx('home-detection-stop-modal__body')}>
+              {`There has been an error during auto clock-out, please check the error log. `}
+              <p>{`Error : ${autoClockOutErrorMessage}`}</p>
+            </div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              type='button'
+              className={cx('home-detection-stop-modal__action')}
+              size={'md'}
+              onClick={() => {
+                keepDetecting()
+              }}
+              isInvisible={isOverride}
+            >
+              Keep Detecting
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </>
+    )
 
   return isDetailVisible ? (
     <MemberDetail
@@ -704,6 +741,7 @@ function Table (props) {
           <h2 className={cx('home-table__standing-title')}>Standing</h2>
         </div>
       </div>
+
       <div className={cx('home-table__row')}>
         <Detection
           isPlaceSelected={selectedPlaceIndex !== null}
@@ -713,6 +751,7 @@ function Table (props) {
           onClockOut={onClockOut}
           isOpened={isClockInModalOpened}
           clockState={clockState}
+          isStopDetect={isStopDetect}
         />
       </div>
       <ClockInModal
@@ -726,6 +765,7 @@ function Table (props) {
         clockErrorMessage={clockErrorMessage}
         matchPercent={Number(systemSettings.matchPercentage)}
       />
+      {renderErrorModal()}
     </div>
   )
 }

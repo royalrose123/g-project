@@ -81,6 +81,7 @@ function getClientEnvironment(publicUrl) {
         FR_SERVER_IP_PORT: process.env.FR_SERVER_IP_PORT,
         LOG_ON_ID: process.env.LOG_ON_ID,
         LOG_ON_PASSWORD: process.env.LOG_ON_PASSWORD,
+        TEMP_ACCOUNT: process.env.TEMP_ACCOUNT,
 
       }
     );

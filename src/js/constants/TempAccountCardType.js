@@ -1,0 +1,2 @@
+const TEMP_ACCOUNT_CARD_TYPE = process.env.TEMP_ACCOUNT
+export default TEMP_ACCOUNT_CARD_TYPE

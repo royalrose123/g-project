@@ -24,6 +24,7 @@ import { selectors as standingSelectors } from '../../../../../../lib/redux/modu
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
+import TEMP_ACCOUNT_CARD_TYPE from '../../../../../../constants/TempAccountCardType'
 
 // Style
 import styles from './style.module.scss'
@@ -32,6 +33,7 @@ import styles from './style.module.scss'
 const cx = classnames.bind(styles)
 
 export const propTypes = {
+  isStopDetect: PropTypes.bool,
   seatedList: PropTypes.array,
   standingList: PropTypes.array,
   tableNumber: PropTypes.string,
@@ -49,6 +51,7 @@ export const propTypes = {
 
 function Detection (props) {
   const {
+    isStopDetect,
     seatedList,
     standingList,
     tableNumber,
@@ -69,29 +72,39 @@ function Detection (props) {
   // console.log('detectionData.leave', detectionData.leave)
   // console.log('clockOutPlayer', clockOutPlayer)
 
-  useEffect(() => {
-    const timerSecond = 2
-
-    const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(
-      flatMap(() => {
-        return from(DeviceApi.fetchDetectionList({ tableNumber }))
-      })
-    )
-
-    const fetchDataSubscription = fetchDataObservable.subscribe(response => {
-      const fetchData = {
-        detectionList: response.detectionList.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])),
-        stay: response.stay,
-        leave: response.leave,
-      }
-      setDetectionData(fetchData)
-    })
-    return () => {
-      fetchDataSubscription.unsubscribe()
+  const mapCardTypeToType = cardType => {
+    if (cardType === TEMP_ACCOUNT_CARD_TYPE) {
+      return 'anonymous'
+    } else {
+      return 'member'
     }
-  }, [tableNumber])
+  }
 
-  // 如果 detectionData.leave 的 item 有 clock in 就放進 clockOutPlayer
+  useEffect(() => {
+    if (!isStopDetect) {
+      const timerSecond = 2
+
+      const fetchDataObservable = timer(0, 1000 * timerSecond).pipe(
+        flatMap(() => {
+          return from(DeviceApi.fetchDetectionList({ tableNumber }))
+        })
+      )
+
+      const fetchDataSubscription = fetchDataObservable.subscribe(response => {
+        const fetchData = {
+          detectionList: response.detectionList.sort((a, b) => new BigNumber(a.rect[0]).comparedTo(b.rect[0])),
+          stay: response.stay,
+          leave: response.leave,
+        }
+        setDetectionData(fetchData)
+      })
+      return () => {
+        fetchDataSubscription.unsubscribe()
+      }
+    }
+  }, [isStopDetect, tableNumber])
+
+  // auto clock-out // 如果 detectionData.leave 的 item 有 clock in 就放進 clockOutPlayer
   useEffect(() => {
     if (
       typeof detectionData !== 'undefined' &&
@@ -137,7 +150,7 @@ function Detection (props) {
       const playerLeaveTime = new Date(player.detectTime).getTime() // 後端傳 date，前端轉毫秒
       const alreadyLeaveTime = (new Date().getTime() - playerLeaveTime) / 1000
 
-      // console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
+      console.warn(player.tempId + '  alreadyLeaveTime', alreadyLeaveTime)
 
       // 如果 clockOutPlayer 的 item 在被 clock-out 前出現在 stay，必須從 clockOutPlayer 移除
       const isBackToStay = Boolean(find(detectionData.stay, { cid: player.id }))
@@ -154,14 +167,17 @@ function Detection (props) {
         delete clockInPlayer.current[player.tempId]
       }
 
-      switch (player.type) {
-        case 'anonymous':
-          if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
+      const isAnonymous = mapCardTypeToType(player.cardType) === 'anonymous'
+      const isMember = mapCardTypeToType(player.cardType) === 'member'
+
+      switch (true) {
+        case isAnonymous:
+          if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
             // 執行完 clock-ou API 得到 true
             executeAutoClockOut(player)
           }
           break
-        case 'member':
+        case isMember:
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
             // 執行完 clock-ou API 得到 true
             executeAutoClockOut(player)
@@ -174,11 +190,13 @@ function Detection (props) {
   const setDetectionItemExstingTime = detectionItem => {
     const person = getPersonByType(detectionItem.type, detectionItem)
     const detectionItemTempId = get(detectionItem, 'probableList[0].tempId')
+    const detectionItemCardType = get(person, 'level')
+    const isTempAccount = get(person, 'level') === TEMP_ACCOUNT_CARD_TYPE
     const detectionItemInStayList = find(detectionData['stay'], { tempId: detectionItemTempId })
     const detectionItemTime = new Date(detectionItemInStayList.detectTime).getTime() // 後端傳date，前端轉毫秒
     const detectionItemExistingTime = (new Date().getTime() - detectionItemTime) / 1000
 
-    // console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
+    console.log(detectionItemTempId + '   detectionItemExistingTime', detectionItemExistingTime)
 
     const isDetectItemInSeated = Boolean(
       seatedList.find(seatedItem => seatedItem && (seatedItem.id === person.id || seatedItem.tempId === person.tempId))
@@ -192,6 +210,8 @@ function Detection (props) {
     return {
       person,
       detectionItemTempId,
+      detectionItemCardType,
+      isTempAccount,
       detectionItemExistingTime,
       isDetectItemInSeated,
       isDetectItemInStanding,
@@ -205,10 +225,9 @@ function Detection (props) {
     member: autoSettings['autoClockInMemberSec'],
   }
 
-  const autoClockInByType = (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
-    if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[detectionItem.type]) {
+  const autoClockInWithTriggerTimeByType = (detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType) => {
+    if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[mapCardTypeToType(detectionItemCardType)]) {
       executeAutoClockIn(event, detectionItem)
-
       const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
       const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
       const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
@@ -217,21 +236,27 @@ function Detection (props) {
     }
   }
 
-  const executeAutoClockInByClockState = async (detectionItem, detectionItemExistingTime, detectionItemTempId) => {
+  const executeAutoClockInByClockState = async (
+    detectionItem,
+    detectionItemExistingTime,
+    detectionItemTempId,
+    detectionItemCardType,
+    isTempAccount
+  ) => {
     switch (clockState) {
       case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
-        if (detectionItem.type === 'anonymous') {
-          await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+        if (detectionItem.type === 'anonymous' || isTempAccount) {
+          await autoClockInWithTriggerTimeByType(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType)
         }
 
         break
       case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
-        if (detectionItem.type === 'member') {
-          await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+        if (detectionItem.type === 'member' && !isTempAccount) {
+          await autoClockInWithTriggerTimeByType(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType)
         }
         break
       case CLOCK_STATUS.AUTO_CLOCK:
-        await autoClockInByType(detectionItem, detectionItemExistingTime, detectionItemTempId)
+        await autoClockInWithTriggerTimeByType(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType)
         break
     }
   }
@@ -243,6 +268,7 @@ function Detection (props) {
         {detectionData.detectionList.map(detectionItem => {
           const {
             detectionItemTempId,
+            detectionItemCardType,
             detectionItemExistingTime,
             isAlreadyClockIn,
             isDetectItemInSeated,
@@ -250,7 +276,7 @@ function Detection (props) {
           } = setDetectionItemExstingTime(detectionItem)
 
           if (!isAlreadyClockIn && !isDetectItemInSeated && !isDetectItemInStanding) {
-            executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId)
+            executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType)
           }
         })}
 
@@ -300,6 +326,8 @@ function Detection (props) {
             const {
               person,
               detectionItemTempId,
+              detectionItemCardType,
+              isTempAccount,
               detectionItemExistingTime,
               isDetectItemInSeated,
               isDetectItemInStanding,
@@ -313,12 +341,12 @@ function Detection (props) {
               case isDetectItemInStanding:
                 return null
               case isAutoClockIn && !isAlreadyClockIn:
-                executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId)
-                if (clockState === CLOCK_STATUS.AUTO_MEMBER_CLOCK && detectionItem.type === 'member') return null
-                if (clockState === CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK && detectionItem.type === 'anonymous') return null
+                executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType, isTempAccount)
+                if (clockState === CLOCK_STATUS.AUTO_MEMBER_CLOCK && detectionItem.type === 'member' && !isTempAccount) return null
+                if (clockState === CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK && (detectionItem.type === 'anonymous' || isTempAccount)) return null
+
                 break
             }
-
             return (
               <div
                 key={index}
