@@ -920,8 +920,7 @@ function Settings (props) {
                                 onChange={e => setFieldValue(field.name, e.target.options[e.target.selectedIndex].value)}
                               >
                                 <option value='0'>0</option>
-                                <option value='1'>1</option>
-                                <option value='2'>2</option>
+                                <option value='99'>99</option>
                               </Form.Select>
                             )}
                           />

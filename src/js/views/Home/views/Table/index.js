@@ -99,7 +99,7 @@ function Table (props) {
     },
   }
 
-  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop']
+  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop', 'overage', 'overallWinner']
   let clockOutPoutEnquiryValue = {}
   const clockOutValue = {
     playTypeNumber: '',
@@ -109,6 +109,7 @@ function Table (props) {
     drop: '',
     overage: '',
     overallWinner: '',
+    praValue: 0,
   }
 
   const { path, params } = match
@@ -134,15 +135,19 @@ function Table (props) {
   const openClockInModal = () => setIsClockInModalOpened(true)
   const closeClockInModal = () => setIsClockInModalOpened(false)
   const openClockInErrorModal = () => setIsClockInErrorModalOpened(true)
+  const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
   const initializeIsOverride = () => setIsOverride(false)
   const initializePraValue = () => setPraValue(0)
-  const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
-  const closeClockInErrorModal = () => setIsClockInErrorModalOpened(false)
   const stopDetecting = () => setIsStopDetect(true)
   const keepDetecting = () => setIsStopDetect(false)
 
+  const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
   const closeClockOutErrorModal = () => {
-    closeClockInErrorModal()
+    const isNotClockIn = clockErrorMessage.indexOf('Not clocked in') !== -1
+
+    if (isNotClockIn) removeItemFromListByNotClockIn()
+
+    setIsClockOutErrorModalOpened(false)
     setIsOverride(false)
   }
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
@@ -544,6 +549,7 @@ function Table (props) {
 
   // Manually clock out
   const onClockOut = async (values, player) => {
+    console.warn('values', values)
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type, cardType })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)
@@ -565,6 +571,8 @@ function Table (props) {
           if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
             errorMessage += '. Please confirm Clock-Out again.'
             TableApi.logOnTable({ tableNumber })
+          } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+            errorMessage += '. The system will remove the player.'
           }
 
           const praMessage = trim(errorMessage.split('pra')[1], '=')
