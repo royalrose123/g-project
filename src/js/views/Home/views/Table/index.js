@@ -32,6 +32,7 @@ import TableApi from '../../../../lib/api/Table'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
+import TEMP_ACCOUNT_CARD_TYPE from '../../../../constants/TempAccountCardType'
 import { setLocalStorageItem } from '../../../../lib/helpers/localStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
 import MISMATCH_FIELD from '../../../../constants/MismatchField'
@@ -80,7 +81,7 @@ function Table (props) {
 
   const clockOutDefaultValue = {
     anonymous: {
-      playTypeNumber: '',
+      playTypeNumber: defaultRecord.anonymousPlayType,
       propPlay: defaultRecord.anonymousPropPlay,
       averageBet: defaultRecord.anonymousAverageBet,
       actualWin: defaultRecord.anonymousActualWin,
@@ -89,7 +90,7 @@ function Table (props) {
       overallWinner: defaultRecord.anonymousWhoWin,
     },
     member: {
-      playTypeNumber: '',
+      playTypeNumber: '', // 目前不需要用到 memeber default 的 playType
       propPlay: defaultRecord.memberPropPlay,
       averageBet: defaultRecord.memberAverageBet,
       actualWin: defaultRecord.memberActualWin,
@@ -99,8 +100,8 @@ function Table (props) {
     },
   }
 
-  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop', 'overage', 'overallWinner']
   let clockOutPoutEnquiryValue = {}
+  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop', 'overage', 'overallWinner']
   const clockOutValue = {
     playTypeNumber: '',
     propPlay: '',
@@ -143,7 +144,7 @@ function Table (props) {
 
   const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
   const closeClockOutErrorModal = () => {
-    const isNotClockIn = clockErrorMessage.indexOf('Not clocked in') !== -1
+    const isNotClockIn = clockErrorMessage.indexOf(ERROR_MESSAGE.NOT_CLOCKED_IN) !== -1
 
     if (isNotClockIn) removeItemFromListByNotClockIn()
 
@@ -151,6 +152,14 @@ function Table (props) {
     setIsOverride(false)
   }
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
+
+  const mapCardTypeToType = cardType => {
+    if (cardType === TEMP_ACCOUNT_CARD_TYPE) {
+      return 'anonymous'
+    } else {
+      return 'member'
+    }
+  }
 
   // 設定初始值
   useEffect(() => {
@@ -475,7 +484,6 @@ function Table (props) {
     const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
 
     if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
-
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
     if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect) {
       await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, cardType: player.cardType, tableNumber })
@@ -483,13 +491,16 @@ function Table (props) {
           clockOutFieldList.map(item => {
             set(clockOutPoutEnquiryValue, item, result[item])
           })
-          set(clockOutValue, 'overallWinner', clockOutDefaultValue[player.type]['overallWinner']) // 一開始先填 whoWin default value
+          set(clockOutValue, 'overallWinner', clockOutDefaultValue[mapCardTypeToType(player.cardType)]['overallWinner']) // 一開始先填 whoWin default value
 
           if (result?.praValue) {
             parsePraListToClockOutField(result.praValue).forEach(item => {})
           }
           if (result?.praValue === 1 || result?.praValue === 0) {
             set(clockOutValue, 'playTypeNumber', result['playTypeNumber']) // clock-out value
+          }
+          if (mapCardTypeToType(player.cardType) === 'anonymous') {
+            set(clockOutValue, 'playTypeNumber', clockOutDefaultValue['anonymous']['playTypeNumber']) // clock-out value
           }
         })
         .catch(error => {
@@ -538,10 +549,11 @@ function Table (props) {
 
         if (praMessage) {
           parsePraListToClockOutField(praMessage).forEach(item => {
-            set(clockOutValue, item, clockOutDefaultValue[player.type][item]) // clock-out value
+            set(clockOutValue, item, clockOutDefaultValue[mapCardTypeToType(player.cardType)][item]) // clock-out value
           })
         } else {
           stopDetecting()
+          removeItemFromListByManualClockOut(player.id)
           setAutoClockOutErrorMessage(error.response.data.data)
         }
       })
@@ -549,7 +561,6 @@ function Table (props) {
 
   // Manually clock out
   const onClockOut = async (values, player) => {
-    console.warn('values', values)
     await GameApi.clockOut({ id: memberId, ...values, tableNumber, type, cardType })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)
