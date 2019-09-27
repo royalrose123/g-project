@@ -87,6 +87,23 @@ class Setting {
     )
     return service.callApi()
   }
+
+  static checkTableStatus ({ tableNumber }) {
+    const service = new Service(
+      {
+        url: '/check-table',
+        method: 'GET',
+        params: {
+          tableNumber,
+        },
+      },
+      {
+        denormalizer: Denormalizer.CheckTableStatus,
+        // normalizer: Normalizer.GetTableList,
+      }
+    )
+    return service.callApi()
+  }
 }
 
 export default Setting

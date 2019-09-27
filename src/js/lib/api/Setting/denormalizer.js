@@ -30,6 +30,12 @@ class Denormalizer {
       tableName: tableNumber,
     }
   }
+
+  static CheckTableStatus ({ tableNumber }) {
+    return {
+      tableName: tableNumber,
+    }
+  }
 }
 
 export default Denormalizer
