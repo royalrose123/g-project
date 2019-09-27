@@ -88,12 +88,12 @@ const changeClockStateModalText = {
 
 const changeTableModalText = {
   manualClockOut: {
-    state: 'manualClockOut',
+    state: 'hasManualClockOutPlayer',
     title: 'Please manually clock-out first',
     description: `Please manually clock-out all manually clocked-in players`,
   },
   autoClockOut: {
-    state: 'autoClockOut',
+    state: 'hasAutoClockOutPlayer',
     title: 'The system will clear the "Table"',
     description: `Changing table will clock-out all players`,
   },
@@ -128,6 +128,7 @@ function Settings (props) {
   const [changeTableModalTextPack, setChangeTableModalTextPack] = useState({})
   const [isChangeTableModalOpened, setIsChangeTableModalOpened] = useState(false)
   const [isClockOutAllModalOpened, setClockOutAllModalOpened] = useState(false)
+  const [isCheckTableModalOpened, setIsCheckTableModalOpened] = useState(false)
   const [clockOutError, setClockOutError] = useState('')
 
   const onTabItemClick = event => setCurrentTab(event.currentTarget.dataset.for)
@@ -137,6 +138,18 @@ function Settings (props) {
   const closeChangeTableModal = () => setIsChangeTableModalOpened(false)
   const openClockOutAllModal = () => setClockOutAllModalOpened(true)
   const closeClockOutAllModal = () => setClockOutAllModalOpened(false)
+  const openCheckTableModal = () => setIsCheckTableModalOpened(true)
+
+  const closeCheckTableModal = async () => {
+    const result = await SettingsApi.getTableList({})
+
+    await setTableList(
+      result.tableList.sort(function (a, b) {
+        return a.tableName > b.tableName ? 1 : -1
+      })
+    )
+    setIsCheckTableModalOpened(false)
+  }
 
   useEffect(() => {
     if (tableList.length > 0) {
@@ -202,9 +215,15 @@ function Settings (props) {
     await clearTableBySave(formikValues)
   }
 
-  const setTableListActiveStatus = (setTableList, tableList, selectedTableName, tableNumber) => {
+  const setTableListActiveStatus = async (setTableList, tableList, selectedTableName, tableNumber) => {
+    const result = await SettingsApi.getTableList({})
+
+    const newTableList = result.tableList.sort(function (a, b) {
+      return a.tableName > b.tableName ? 1 : -1
+    })
+
     setTableList(
-      tableList.map(tableItem => {
+      newTableList.map(tableItem => {
         if (tableItem.tableName === 'Please select table') {
           return tableItem
         } else if (tableItem.tableName === selectedTableName) {
@@ -260,7 +279,6 @@ function Settings (props) {
 
     await GameApi.clockOutAll({ memberIdList, tableNumber })
       .then(async result => {
-        console.warn('result 11111', result)
         await SettingsApi.postSettingDetail({
           systemSettings: formikValues.systemSettings,
           autoSettings: formikValues.autoSettings,
@@ -275,7 +293,6 @@ function Settings (props) {
         await removeAllClockOutPlayer()
       })
       .catch(error => {
-        console.warn('error.response 22222', error.response)
         let errorMessage = error.response.data.data
         errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
@@ -295,42 +312,48 @@ function Settings (props) {
     const selectedTableName = event.target.value
     setChangeTableName(event.target.value)
 
-    //  seatedList / standingList 有人的話，判斷是被 auto 或 manual clock-in
-    let isSomeOneManualClockedIn = false
-    let isSomeOneAutoClockedIn = false
+    SettingsApi.checkTableStatus({ tableNumber: selectedTableName })
+      .then(async result => {
+        //  seatedList / standingList 有人的話，判斷是被 auto 或 manual clock-in
+        let isSomeOneManualClockedIn = false
+        let isSomeOneAutoClockedIn = false
 
-    await seatedList.forEach(item => {
-      if (item) {
-        if (item?.isAuto) {
-          isSomeOneAutoClockedIn = true
+        await seatedList.forEach(item => {
+          if (item) {
+            if (item?.isAuto) {
+              isSomeOneAutoClockedIn = true
+            } else {
+              isSomeOneManualClockedIn = true
+            }
+          }
+        })
+
+        await standingList.forEach(item => {
+          if (item) {
+            if (item?.isAuto) {
+              isSomeOneAutoClockedIn = true
+            } else {
+              isSomeOneManualClockedIn = true
+            }
+          }
+        })
+
+        if (isSomeOneManualClockedIn) {
+          setChangeTableModalTextPack(changeTableModalText['manualClockOut'])
+          openChangeTableModal()
+        } else if (isSomeOneAutoClockedIn) {
+          setChangeTableModalTextPack(changeTableModalText['autoClockOut'])
+          openChangeTableModal()
         } else {
-          isSomeOneManualClockedIn = true
+          await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
+          await clearLocalStorageItem()
+          setLocalStorageItem('tableNumber', selectedTableName)
+          changeTableNumber(selectedTableName)
         }
-      }
-    })
-
-    await standingList.forEach(item => {
-      if (item) {
-        if (item?.isAuto) {
-          isSomeOneAutoClockedIn = true
-        } else {
-          isSomeOneManualClockedIn = true
-        }
-      }
-    })
-
-    if (isSomeOneManualClockedIn) {
-      setChangeTableModalTextPack(changeTableModalText['manualClockOut'])
-      openChangeTableModal()
-    } else if (isSomeOneAutoClockedIn) {
-      setChangeTableModalTextPack(changeTableModalText['autoClockOut'])
-      openChangeTableModal()
-    } else {
-      await setTableListActiveStatus(setTableList, tableList, selectedTableName, tableNumber)
-      await clearLocalStorageItem()
-      setLocalStorageItem('tableNumber', selectedTableName)
-      changeTableNumber(selectedTableName)
-    }
+      })
+      .catch(() => {
+        openCheckTableModal()
+      })
   }
 
   // batch clock-out by change table
@@ -339,11 +362,16 @@ function Settings (props) {
 
     await GameApi.clockOutAll({ memberIdList, tableNumber })
       .then(async result => {
-        await setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
-        changeTableNumber(changeTableName)
+        setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
+        clearLocalStorageItem()
         setLocalStorageItem('tableNumber', changeTableName)
 
-        await closeChangeTableModal()
+        changeTableNumber(changeTableName)
+        removeAllFromSeated()
+        removeAllFromStanding()
+        removeAllClockOutPlayer()
+
+        closeChangeTableModal()
       })
       .catch(error => {
         let errorMessage = error.response.data.data
@@ -378,6 +406,7 @@ function Settings (props) {
           .required('Duration must be entered'),
       }),
       defaultRecord: Yup.object().shape({
+        // memberPlayType: Yup.number(),
         memberPropPlay: Yup.string().test(
           'more-than-api',
           'Amounnt cannot be larger than proportion of games',
@@ -393,7 +422,7 @@ function Settings (props) {
   }
 
   const renderModal = values =>
-    (isChangeTableModalOpened || isChangeClockStateModalOpened || isClockOutAllModalOpened) && (
+    (isChangeTableModalOpened || isChangeClockStateModalOpened || isClockOutAllModalOpened || isCheckTableModalOpened) && (
       <>
         {/* change clock state and clock-in / out to Dynamiq / Log popup */}
         <Modal
@@ -434,7 +463,7 @@ function Settings (props) {
             <Button
               type='button'
               className={cx('home-settings-change-table-modal__action')}
-              isInvisible={changeTableModalTextPack.state === 'autoClockOut'}
+              isInvisible={changeTableModalTextPack.state === 'hasAutoClockOutPlayer'}
               size={'md'}
               onClick={closeChangeTableModal}
             >
@@ -444,7 +473,7 @@ function Settings (props) {
               type='button'
               className={cx('home-settings-change-table-modal__action')}
               isFilled={false}
-              isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
+              isInvisible={changeTableModalTextPack.state === 'hasManualClockOutPlayer'}
               size={'md'}
               onClick={closeChangeTableModal}
             >
@@ -453,7 +482,7 @@ function Settings (props) {
             <Button
               type='button'
               className={cx('home-settings-change-table-modal__action')}
-              isInvisible={changeTableModalTextPack.state === 'manualClockOut'}
+              isInvisible={changeTableModalTextPack.state === 'hasManualClockOutPlayer'}
               size={'md'}
               onClick={() => clearTableByChangeTable()}
             >
@@ -476,6 +505,25 @@ function Settings (props) {
           </Modal.Body>
           <Modal.Footer>
             <Button type='button' className={cx('home-settings-change-table-modal__action')} size={'md'} onClick={closeClockOutAllModal}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        {/* change table if table already in use */}
+        <Modal
+          className={cx('home-settings-change-table-modal')}
+          isClosable={false}
+          shouldCloseOnOverlayClick={false}
+          isOpened={isCheckTableModalOpened}
+        >
+          <Modal.Header>
+            <div className={cx('home-settings-change-table-modal__header')}>{`Change Table Error`}</div>
+          </Modal.Header>
+          <Modal.Body>
+            <div className={cx('home-settings-change-table-modal__body')}>{`Table already in use. Please select another table.`}</div>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button type='button' className={cx('home-settings-change-table-modal__action')} size={'md'} onClick={closeCheckTableModal}>
               OK
             </Button>
           </Modal.Footer>
@@ -915,6 +963,17 @@ function Settings (props) {
                           <Field
                             name='defaultRecord.memberPlayType'
                             render={({ field }) => (
+                              <Form.Input // 目前只用 anonymous playTypeNumber
+                                isFocused={lastFocusField === field.name}
+                                onFocus={event => setLastFocusField(field.name)}
+                                disabled
+                                {...field}
+                              />
+                            )}
+                          />
+                          {/* <Field
+                            name='defaultRecord.memberPlayType'
+                            render={({ field }) => (
                               <Form.Select
                                 value={values.defaultRecord.memberPlayType}
                                 onChange={e => setFieldValue(field.name, e.target.options[e.target.selectedIndex].value)}
@@ -923,7 +982,7 @@ function Settings (props) {
                                 <option value='99'>99</option>
                               </Form.Select>
                             )}
-                          />
+                          /> */}
                         </Form.Column>
                       </Form.Row>
                       <Form.Row align='top'>
@@ -1046,6 +1105,12 @@ function Settings (props) {
                         </Form.Column>
                         <Form.Column size='md'>
                           <Field
+                            name='defaultRecord.anonymousPlayType'
+                            render={({ field }) => (
+                              <Form.Input isFocused={lastFocusField === field.name} onFocus={event => setLastFocusField(field.name)} {...field} />
+                            )}
+                          />
+                          {/* <Field
                             name='defaultRecord.anonymousPlayType'
                             render={({ field }) => (
                               <Form.Select
