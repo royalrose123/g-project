@@ -895,6 +895,7 @@ function Settings (props) {
                                   }}
                                   checked={memberAutomatic || values.autoSettings.autoClockMember}
                                   readOnly
+                                  disabled
                                 >
                                   Active
                                 </Form.Checkbox>

@@ -11,12 +11,13 @@ const cx = classnames.bind(styles)
 export const propTypes = {
   checked: PropTypes.bool,
   className: PropTypes.string,
+  disabled: PropTypes.func,
 }
 
 function Icon (props) {
-  const { checked, className, ...restProps } = props
+  const { checked, className, disabled, ...restProps } = props
 
-  return <span className={cx('home-form-checkbox-icon', className)} data-is-checked={checked} {...restProps} />
+  return <span className={cx('home-form-checkbox-icon', className)} data-is-checked={checked} data-is-disabled={disabled} {...restProps} />
 }
 
 Icon.propTypes = propTypes

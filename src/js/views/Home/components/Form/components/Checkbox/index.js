@@ -20,15 +20,16 @@ export const propTypes = {
   checked: PropTypes.bool,
   className: PropTypes.string,
   children: PropTypes.any,
+  disabled: PropTypes.func,
 }
 
 function Checkbox (props) {
-  const { checked, className, children, ...restProps } = props
+  const { checked, className, children, disabled, ...restProps } = props
   return (
     <label className={cx('home-form-checkbox')} role='checkbox'>
       <span className={cx('home-form-checkbox_inner')}>
-        <Input checked={checked} {...restProps} />
-        <Icon checked={checked} />
+        <Input checked={checked} {...restProps} disabled={disabled} />
+        <Icon checked={checked} disabled={disabled} />
       </span>
       {children && <Label>{children}</Label>}
     </label>

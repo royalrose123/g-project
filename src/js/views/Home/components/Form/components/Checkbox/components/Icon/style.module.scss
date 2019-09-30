@@ -34,13 +34,7 @@ $checkbox-size: 16px;
     }
   }
 
-  // &[data-is-disabled="true"] {
-  //   cursor: not-allowed;
-  //   background-color: $gray-lighter;
-  //   border-color: $gray-light;
-
-  //   &:after {
-  //     border-color: $gray;
-  //   }
-  // }
+  &[data-is-disabled="true"] {
+    background-color: #ccc;
+  }
 }
