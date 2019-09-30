@@ -20,7 +20,7 @@ export const propTypes = {
   checked: PropTypes.bool,
   className: PropTypes.string,
   children: PropTypes.any,
-  disabled: PropTypes.func,
+  disabled: PropTypes.bool,
 }
 
 function Checkbox (props) {

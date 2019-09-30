@@ -11,7 +11,7 @@ const cx = classnames.bind(styles)
 export const propTypes = {
   checked: PropTypes.bool,
   className: PropTypes.string,
-  disabled: PropTypes.func,
+  disabled: PropTypes.bool,
 }
 
 function Icon (props) {
