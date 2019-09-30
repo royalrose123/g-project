@@ -149,6 +149,7 @@ function Table (props) {
     if (isNotClockIn) removeItemFromListByNotClockIn()
 
     setIsClockOutErrorModalOpened(false)
+    initializePraValue()
     setIsOverride(false)
   }
   const initializeCurrentDetectionItem = () => setCurrentDetectionItem(null)
@@ -200,19 +201,19 @@ function Table (props) {
   // 判斷座標是否在seated中
   const getSeatedCoordinate = async person => {
     const cameraId = trim(person.cameraId, tableNumber) // Ex: Table-0813-A => A
-    const personXCoordinate = person.rect[0] / cameraProportion.x // 換算為網格上的比例的 x
-    const personYCoordinate = person.rect[1] / cameraProportion.y // 換算為網格上的比例的 y
-    const personWidth = person.rect[2] / cameraProportion.x // 換算為網格上的比例的 width
-    const personHeight = person.rect[3] / cameraProportion.y // 換算為網格上的比例的 height
+    const personXCoordinate = person.rect[0] / cameraProportion.x // 換算為 grid 的 x
+    const personYCoordinate = person.rect[1] / cameraProportion.y // 換算為 grid的 y
+    const personWidth = person.rect[2] / cameraProportion.x // 換算為 grid 的 width
+    const personHeight = person.rect[3] / cameraProportion.y // 換算為 grid 的 height
     const personMidPoint = [personXCoordinate + personWidth / 2, personYCoordinate + personHeight / 2] // FR 座標為辨識綠框的左上角，但以中心點判斷較為精準
 
     const seatedIndex = await Number(
       findKey(seatedCoordinate[cameraId], seated => {
         return (
-          personMidPoint[0] >= seated.leftTop[0] && // 中心點的x大於位子的左上角x座標
-          personMidPoint[0] <= seated.rightBottom[0] && // 中心點的x小於位子的右下角x座標
-          personMidPoint[1] >= seated.leftTop[1] && // 中心點的y大於位子的左上角y座標
-          personMidPoint[1] <= seated.rightBottom[1] // 中心點的y小於位子的右下角y座標
+          personMidPoint[0] >= seated.topLeft[0] && // 中心點的x大於位子的左上角x座標
+          personMidPoint[0] <= seated.bottomRight[0] && // 中心點的x小於位子的右下角x座標
+          personMidPoint[1] >= seated.topLeft[1] && // 中心點的y大於位子的左上角y座標
+          personMidPoint[1] <= seated.bottomRight[1] // 中心點的y小於位子的右下角y座標
         )
       })
     )
