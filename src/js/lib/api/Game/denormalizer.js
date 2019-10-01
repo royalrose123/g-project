@@ -47,6 +47,7 @@ class Denormalizer {
     type,
     cardType,
     praValue,
+    seatNumber,
   }) {
     return {
       cid: String(id),
@@ -66,6 +67,7 @@ class Denormalizer {
       type,
       ctc: cardType,
       pra: Number(praValue),
+      seatNo: seatNumber,
     }
   }
 

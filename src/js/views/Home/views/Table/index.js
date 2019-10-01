@@ -221,13 +221,13 @@ function Table (props) {
     return { isInSeatedPlace, seatedIndex }
   }
 
-  const addSeatedItemToListByAutoClockIn = (tempId, apiId, image, type, cardType, seatedIndex, seatNumber) => {
+  const addSeatedItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, seatedIndex, seatNumber) => {
     // For Refresh - SeatedList local storage
     const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
-    addSeatItem(newSeatedItem, seatedIndex)
-    setLocalStorageItem('seatedList', newSeatedList)
+    await addSeatItem(newSeatedItem, seatedIndex)
+    await setLocalStorageItem('seatedList', newSeatedList)
   }
 
   const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, standingIndex, seatNumber) => {
@@ -243,7 +243,7 @@ function Table (props) {
   const executeAutoClockIn = async (event, detectionItem) => {
     // 從 detectionItem 的 probableList 挑出 similarity 最高者
     // 解構成 frond-end key
-    const person = getPersonByType(detectionItem.type, detectionItem)
+    const person = await getPersonByType(detectionItem.type, detectionItem)
     const newPerson = {
       ...person,
       identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
@@ -259,7 +259,9 @@ function Table (props) {
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
     const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
+    // Genting App standing 座位
     const standingIndex = await findIndex(standingList, item => item === undefined)
+
     // Dynamiq GTT 實際座位
     let seatNumber = (await seatedIndex) + 1
     if (!isInSeatedPlace) {
@@ -272,13 +274,13 @@ function Table (props) {
       // 並以取得的 id 放進 seat / standing list 中
 
       await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
-        .then(result => {
+        .then(async result => {
           const apiId = result
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
           } else {
-            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -297,13 +299,13 @@ function Table (props) {
       // 立刻關掉 modal
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
-        .then(result => {
+        .then(async result => {
           const apiId = result
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
           } else {
-            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -321,14 +323,14 @@ function Table (props) {
       // 即為荷官辨識出該會員，使用資料庫中原有的 id card
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
-        .then(result => {
+        .then(async result => {
           const apiId = result
           image = compareImage
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
           } else {
-            addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -529,7 +531,15 @@ function Table (props) {
     }
     if (isEmpty(clockOutPoutEnquiryValue)) return // 如果 enquiry 失敗就不執行 clock-out
 
-    await GameApi.clockOut({ id: player.id, tempId: player.tempId, ...clockOutValue, tableNumber, type: player.type, cardType: player.cardType })
+    await GameApi.clockOut({
+      id: player.id,
+      tempId: player.tempId,
+      ...clockOutValue,
+      tableNumber,
+      type: player.type,
+      cardType: player.cardType,
+      seatNumber: player.seatNumber,
+    })
       .then(result => {
         const isSeated = player.seatedIndex >= 0
 
@@ -579,6 +589,7 @@ function Table (props) {
       tableNumber,
       type,
       cardType,
+      seatNumber: playerInSeatedList ? playerInSeatedList.seatNumber : playerInStandingList.seatNumber,
     })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)
@@ -661,6 +672,7 @@ function Table (props) {
       tableNumber,
       type,
       cardType,
+      seatNumber: playerInSeatedList ? playerInSeatedList.seatNumber : playerInStandingList.seatNumber,
     })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)

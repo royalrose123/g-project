@@ -257,6 +257,7 @@ function Settings (props) {
           cid: item.id,
           level: item.cardType,
           type: item.type,
+          seatNo: item.seatNumber,
         }
       }
 
@@ -271,6 +272,7 @@ function Settings (props) {
           cid: item.id,
           level: item.cardType,
           type: item.type,
+          seatNo: item.seatNumber,
         }
       }
 

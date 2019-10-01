@@ -225,14 +225,14 @@ function Detection (props) {
     member: autoSettings['autoClockInMemberSec'],
   }
 
-  const autoClockInWithTriggerTimeByType = (detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType) => {
+  const autoClockInWithTriggerTimeByType = async (detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType) => {
     if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[mapCardTypeToType(detectionItemCardType)]) {
-      executeAutoClockIn(event, detectionItem)
+      await executeAutoClockIn(event, detectionItem)
       const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
       const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
       const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
 
-      if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = true
+      if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = await true
     }
   }
 

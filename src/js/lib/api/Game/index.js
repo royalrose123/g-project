@@ -83,6 +83,7 @@ class Game {
     type,
     cardType,
     praValue,
+    seatNumber,
   }) {
     const service = new Service(
       {
@@ -106,6 +107,7 @@ class Game {
           type,
           cardType,
           praValue,
+          seatNumber,
         },
       },
       {
