@@ -16,7 +16,7 @@ class Chart {
       },
       {
         denormalizer: Denormalizer.GetChartDataByType,
-        normalizer: Normalizer.chartDataByType,
+        normalizer: Normalizer.ChartDataByType,
       }
     )
 

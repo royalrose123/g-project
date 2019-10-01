@@ -1,0 +1,11 @@
+.chart-form-radio-group {
+  // padding: 15px 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+
+  > [role="radio"] {
+    &:not(:last-of-type) {
+      margin-right: 7px;
+    }
+  }
+}

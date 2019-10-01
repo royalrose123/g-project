@@ -1,9 +1,9 @@
 // import Service from '../service'
 
 class Normalizer {
-  static chartDataByType ({ data }) {
+  static ChartDataByType (payload) {
     return {
-      chartData: data,
+      payload: payload.map(data => ({ ...data, time: data.time.map(date => date.split(' ')[1]) })), // 將日期 2019/09/15 23:00:00 轉換成 23:00:00
     }
   }
 }

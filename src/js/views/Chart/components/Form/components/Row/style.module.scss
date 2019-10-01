@@ -1,0 +1,17 @@
+.chart-form-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &:not(:last-of-type) {
+    margin-bottom: 20px;
+  }
+
+  &[data-align="top"] {
+    align-items: flex-start;
+  }
+
+  &[data-justify="end"] {
+    justify-content: flex-end;
+  }
+}

@@ -1,0 +1,15 @@
+.chart-menu-link {
+  // padding: 0 30px;
+  margin: 0 15px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+  color: $gray-white;
+  border-bottom: 2px solid transparent;
+  text-transform: uppercase;
+
+  &--active {
+    color: $color-primary;
+    border-color: $color-primary;
+  }
+}

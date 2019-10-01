@@ -1,0 +1,11 @@
+.chart-form-checkbox-group {
+  padding: 15px 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+
+  > [role="checkbox"] {
+    &:not(:last-of-type) {
+      margin-right: 30px;
+    }
+  }
+}

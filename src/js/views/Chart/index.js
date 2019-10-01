@@ -1,14 +1,13 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import classnames from 'classnames/bind'
 import { Switch, Route, Redirect } from 'react-router-dom'
 import Loadable from 'react-loadable'
-import classnames from 'classnames/bind'
 
 // Components
-// import Svg from '../../components/Svg'
-import Clock from '../../components/Clock'
-import Layout from '../../components/Layout'
-import Menu from '../../components/Menu'
+import Clock from './components/Clock'
+import Layout from './components/Layout'
+import Menu from './components/Menu'
 
 // Modules
 
@@ -20,6 +19,7 @@ import styles from './style.module.scss'
 
 // Variables / Functions
 const cx = classnames.bind(styles)
+
 const loading = () => null
 const Cpu = Loadable({ loader: () => import('./views/Cpu'), loading })
 const Gpu = Loadable({ loader: () => import('./views/Gpu'), loading })
@@ -27,7 +27,7 @@ const Memory = Loadable({ loader: () => import('./views/Memory'), loading })
 
 const navigations = [
   {
-    path: 'cpu',
+    path: ['cpu'],
     name: 'Cpu',
     component: Cpu,
   },
@@ -42,7 +42,6 @@ const navigations = [
     component: Memory,
   },
 ]
-
 const defaultNavigation = navigations[0]
 
 export const propTypes = {
@@ -58,11 +57,9 @@ function Chart (props) {
         <Clock />
         <Menu>
           {navigations.map(({ path, name, icon, component }, index) => (
-            // TODO: 暫時做成按下 Menu Icon 之後會 full screen，再按一次取消 full screen
             <Menu.Item key={index}>
               <Menu.Link to={`${match.url}/${findStaticPath(path)}`} disabled={component === null}>
-                {/* <Svg className={cx('chart-link-icon')} {...icon} /> */}
-                <span className={cx('chart-link-text')}>{name}</span>
+                <span className={cx('chart__menu-link-text')}>{name}</span>
               </Menu.Link>
             </Menu.Item>
           ))}

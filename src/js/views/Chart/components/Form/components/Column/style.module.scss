@@ -1,0 +1,19 @@
+.chart-form-column {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  &[data-size="sm"] {
+    width: 128px;
+  }
+
+  &[data-size="md"] {
+    width: 180px;
+  }
+
+  &[data-size="lg"] {
+    width: 220px;
+  }
+}
