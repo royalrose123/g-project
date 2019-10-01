@@ -31,6 +31,7 @@ class Denormalizer {
 
   static ClockOut ({
     id,
+    tempId,
     playTypeNumber,
     propPlay,
     averageBet,
@@ -49,6 +50,7 @@ class Denormalizer {
   }) {
     return {
       cid: String(id),
+      tempId,
       ptn: playTypeNumber?.length === 0 ? null : Number(playTypeNumber),
       pgp: propPlay?.length === 0 ? null : Number(propPlay),
       abt: averageBet?.length === 0 ? null : Number(averageBet),

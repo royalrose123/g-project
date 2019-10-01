@@ -4,7 +4,7 @@ import Normalizer from './normalizer'
 import Service from '../service'
 
 class Member {
-  static fetchMemberDetailByIdWithType ({ id, type, cardType, tableNumber }) {
+  static fetchMemberDetailByIdWithType ({ id, type, cardType, tableNumber, seatNumber }) {
     const service = new Service(
       {
         url: '/get-clockoutInfo', // 由後端判斷 clock in/out member/anonymous into Dynamiq 是否被勾選，傳回對應 API 的 response
@@ -14,6 +14,7 @@ class Member {
           type,
           cardType,
           tableNumber,
+          seatNumber,
         },
       },
       {

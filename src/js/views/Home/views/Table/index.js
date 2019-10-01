@@ -180,7 +180,7 @@ function Table (props) {
     setSelectedPlaceIndex(index)
     // 如果位置已經有人，打開 detail
     if (typeof place === 'object') {
-      history.push(`${match.url}/${place.type}/${place.cardType}/${place.id}`)
+      history.push(`${match.url}/${place.type}/${place.cardType}/${place.seatNumber}/${place.id}`)
       return
     }
 
@@ -487,7 +487,13 @@ function Table (props) {
     if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
     if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect) {
-      await MemberApi.fetchMemberDetailByIdWithType({ id: player.id, type: player.type, cardType: player.cardType, tableNumber })
+      await MemberApi.fetchMemberDetailByIdWithType({
+        id: player.id,
+        type: player.type,
+        cardType: player.cardType,
+        tableNumber,
+        seatNumber: player.seatNumber,
+      })
         .then(result => {
           clockOutFieldList.map(item => {
             set(clockOutPoutEnquiryValue, item, result[item])
@@ -523,7 +529,7 @@ function Table (props) {
     }
     if (isEmpty(clockOutPoutEnquiryValue)) return // 如果 enquiry 失敗就不執行 clock-out
 
-    await GameApi.clockOut({ id: player.id, ...clockOutValue, tableNumber, type: player.type, cardType: player.cardType })
+    await GameApi.clockOut({ id: player.id, tempId: player.tempId, ...clockOutValue, tableNumber, type: player.type, cardType: player.cardType })
       .then(result => {
         const isSeated = player.seatedIndex >= 0
 
@@ -562,7 +568,18 @@ function Table (props) {
 
   // Manually clock out
   const onClockOut = async (values, player) => {
-    await GameApi.clockOut({ id: memberId, ...values, tableNumber, type, cardType })
+    // 從 seatedList / standingList 拿 tempId
+    const playerInSeatedList = find(seatedList, { id: memberId })
+    const playerInStandingList = find(standingList, { id: memberId })
+
+    await GameApi.clockOut({
+      id: memberId,
+      tempId: playerInSeatedList ? playerInSeatedList.tempId : playerInStandingList.tempId,
+      ...values,
+      tableNumber,
+      type,
+      cardType,
+    })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)
 
@@ -623,7 +640,8 @@ function Table (props) {
             setIsOverride(!isNotPermittedMessage)
           }
 
-          setClockErrorMessage(errorMessage)
+          // 如果 error message 不是由 msg 組成，直接回傳整個 error message
+          setClockErrorMessage(error.response.data.data)
           openClockOutErrorModal()
         }
       })
@@ -632,7 +650,18 @@ function Table (props) {
   const confirmOverride = async () => {
     set(overrideValue, 'praValue', praValue)
 
-    await GameApi.clockOut({ id: memberId, ...overrideValue, tableNumber, type, cardType })
+    // 從 seatedList / standingList 拿 tempId
+    const playerInSeatedList = find(seatedList, { id: memberId })
+    const playerInStandingList = find(standingList, { id: memberId })
+
+    await GameApi.clockOut({
+      id: memberId,
+      tempId: playerInSeatedList ? playerInSeatedList.tempId : playerInStandingList.tempId,
+      ...overrideValue,
+      tableNumber,
+      type,
+      cardType,
+    })
       .then(result => {
         removeItemFromListByManualClockOut(memberId)
 

@@ -7,7 +7,7 @@
     "start": "FR_SERVER_IP_PORT='192.168.100.34:450' API_URL='https://10.1.1.19/api/v1' LOG_ON_ID='1' LOG_ON_PASSWORD='1' TEMP_ACCOUNT='TEMP' node scripts/start.js",
     "build:ci": "FR_SERVER_IP_PORT='192.168.100.34:450' API_URL='https://10.1.1.19/api/v1' LOG_ON_ID='1' LOG_ON_PASSWORD='1' TEMP_ACCOUNT='TEMP' node scripts/build.js",
     "build:uat": "FR_SERVER_IP_PORT='' API_URL='https://localhost:20443/api/v1' LOG_ON_ID='1' LOG_ON_PASSWORD='1' TEMP_ACCOUNT='FRAN' node scripts/build.js",
-    "build:prod": "FR_SERVER_IP_PORT='192.168.43.183:450' API_URL='https://192.168.43.183/api/v1' LOG_ON_ID='DYFR' LOG_ON_PASSWORD='1' TEMP_ACCOUNT='FRAN' node scripts/build.js",
+    "build:prod": "FR_SERVER_IP_PORT='localhost:450' API_URL='https://localhost/api/v1' LOG_ON_ID='DYFR' LOG_ON_PASSWORD='1' TEMP_ACCOUNT='FRAN' node scripts/build.js",
     "test": "node scripts/test.js"
   },
   "dependencies": {

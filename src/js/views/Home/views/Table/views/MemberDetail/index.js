@@ -56,6 +56,18 @@ export const propTypes = {
   removeItemFromList: PropTypes.func,
 }
 
+const memberDetailModalText = {
+  'Not clocked in': {
+    state: ERROR_MESSAGE.NOT_CLOCKED_IN,
+    title: 'Member Enquiry Error',
+    description: `Not clocked in. Please click "OK", and the player will be removed`,
+  },
+  others: {
+    title: 'Member Enquiry Error',
+    description: ``,
+  },
+}
+
 function MemberDetail (props) {
   const {
     history,
@@ -73,16 +85,27 @@ function MemberDetail (props) {
     removeItemFromList,
   } = props
   const { path, params } = match
-  const { memberId: id, type, cardType } = params
+  const { memberId: id, type, cardType, seatNumber } = params
 
   const [currentTab, setCurrentTab] = useState(TABS.BETTING_RECORD)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberImage, setMemberImage] = useState('')
   const [isEnquiryErrorModalOpened, setIEnquiryErrorModalOpened] = useState(false)
+  const [memberEnquiryErrorMessage, setMemberEnquiryErrorMessage] = useState({})
 
   const openEnquiryErrorModal = () => setIEnquiryErrorModalOpened(true)
+  const closeEnquiryErrorModal = () => {
+    setIEnquiryErrorModalOpened(false)
+    history.push(findStaticPath(path))
+  }
 
-  const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, { id, type, cardType, tableNumber })
+  const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, {
+    id,
+    type,
+    cardType,
+    tableNumber,
+    seatNumber,
+  })
 
   const initialValues = {
     playTypeNumber: detail?.playTypeNumber,
@@ -109,6 +132,7 @@ function MemberDetail (props) {
 
       const standingItemImage = find(standingList, { id: detail.id })
       const seatedItemImage = find(seatedList, { id: detail.id })
+
       if (standingItemImage) {
         setMemberImage(standingItemImage.image)
       } else if (seatedItemImage) {
@@ -119,18 +143,32 @@ function MemberDetail (props) {
 
   if (isLoaded) detail.image = memberImage
 
-  // Not Log-On 時自動 Log-On
+  // 處理 POUT enquiry error
   useEffect(() => {
     if (error) {
       let errorMessage = error.response.data.data
       if (errorMessage) {
+        // 如果 error message 是由 msg 組成，回傳 msg 後的字串
         errorMessage = trim(errorMessage.split('msg')[1], '}:"')
-      }
-      if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-        TableApi.logOnTable({ tableNumber })
-        window.location.reload(false)
-      }
-      if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+
+        if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+          // Not Log-On 時自動 Log-On
+          TableApi.logOnTable({ tableNumber })
+          window.location.reload(false)
+        } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+          // Not Clocked-in 時，pop-up 後從 seated / standing 移除
+          setMemberEnquiryErrorMessage(memberDetailModalText[ERROR_MESSAGE.NOT_CLOCKED_IN])
+          openEnquiryErrorModal()
+        } else if (errorMessage) {
+          // 其他 error pop-up 後從 seated / standing 移除
+          set(memberDetailModalText, 'others.description', errorMessage)
+          setMemberEnquiryErrorMessage(memberDetailModalText['others'])
+          openEnquiryErrorModal()
+        }
+      } else {
+        // 如果 error message 不是由 msg 組成，直接回傳整個 error message
+        set(memberDetailModalText, 'others.description', errorMessage)
+        setMemberEnquiryErrorMessage(memberDetailModalText['others'])
         openEnquiryErrorModal()
       }
     }
@@ -158,17 +196,17 @@ function MemberDetail (props) {
           isOpened={isEnquiryErrorModalOpened}
         >
           <Modal.Header>
-            <div className={cx('home-member-detail-error-modal__header')}>{`${trim(error.response.data.data.split('msg')[1], '}:"')}`}</div>
+            <div className={cx('home-member-detail-error-modal__header')}>{memberEnquiryErrorMessage.title}</div>
           </Modal.Header>
           <Modal.Body>
-            <div className={cx('home-member-detail-error-modal__body')}>{`Click "OK", and the player will be removed`}</div>
+            <div className={cx('home-member-detail-error-modal__body')}>{memberEnquiryErrorMessage.description}</div>
           </Modal.Body>
           <Modal.Footer>
             <Button
               type='button'
               className={cx('home-member-detail-error-modal__action')}
               size={'md'}
-              onClick={removeItemFromList}
+              onClick={memberEnquiryErrorMessage.state === ERROR_MESSAGE.NOT_CLOCKED_IN ? removeItemFromList : closeEnquiryErrorModal}
               isInvisible={isOverride}
             >
               OK

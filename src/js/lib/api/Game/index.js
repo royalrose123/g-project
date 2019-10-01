@@ -67,6 +67,7 @@ class Game {
 
   static clockOut ({
     id,
+    tempId,
     playTypeNumber,
     propPlay,
     averageBet,
@@ -89,6 +90,7 @@ class Game {
         method: 'POST',
         data: {
           id, // requierd
+          tempId,
           playTypeNumber,
           propPlay,
           averageBet,

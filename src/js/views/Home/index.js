@@ -35,7 +35,7 @@ const Table = Loadable({ loader: () => import('./views/Table'), loading })
 
 const navigations = [
   {
-    path: ['table', 'table/:type/:memberId', 'table/:type/:cardType/:memberId'],
+    path: ['table', 'table/:type/:memberId', 'table/:type/:cardType/:seatNumber/:memberId'],
     name: 'Table',
     icon: {
       data:
