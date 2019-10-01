@@ -94,20 +94,18 @@ function Memory (props) {
         <Form.Row />
       </Form.Group>
       {chartData.map((data, index) => (
-        <div key={index}>
-          <ChartResult
-            // key={index}
-            category={remove(keys(data), item => item !== 'time')}
-            chartType={chartType}
-            chartNumber={index}
-            data={{
-              xdata: data.time,
-              ydata: {
-                ...data,
-              },
-            }}
-          />
-        </div>
+        <ChartResult
+          key={index}
+          category={remove(keys(data), item => item !== 'time')}
+          chartType={chartType}
+          chartNumber={index}
+          data={{
+            xdata: data.time,
+            ydata: {
+              ...data,
+            },
+          }}
+        />
       ))}
     </div>
   )

@@ -50,11 +50,9 @@ function Cpu (props) {
 
     await ChartApi.getChartDataByType({ chartDate, chartType })
       .then(result => {
-        console.log('result 0000000', result)
         setChartData(result.payload)
       })
       .catch(error => {
-        console.log('error.response', error.response)
         const isNoData = error.response?.data.data === 'file not found'
 
         if (isNoData) {
@@ -96,20 +94,20 @@ function Cpu (props) {
         <Form.Row />
       </Form.Group>
       {chartData.map((data, index) => (
-        <div key={index}>
-          <ChartResult
-            // key={index}
-            category={remove(keys(data), item => item !== 'time')}
-            chartType={chartType}
-            chartNumber={index}
-            data={{
-              xdata: data.time,
-              ydata: {
-                ...data,
-              },
-            }}
-          />
-        </div>
+        // <div key={index}>
+        <ChartResult
+          key={index}
+          category={remove(keys(data), item => item !== 'time')}
+          chartType={chartType}
+          chartNumber={index}
+          data={{
+            xdata: data.time,
+            ydata: {
+              ...data,
+            },
+          }}
+        />
+        // </div>
       ))}
     </div>
   )

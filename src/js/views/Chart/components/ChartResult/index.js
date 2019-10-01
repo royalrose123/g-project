@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
-// import classnames from 'classnames/bind'
+import classnames from 'classnames/bind'
 import { keys, remove } from 'lodash'
 
 import echarts from 'echarts/lib/echarts'
@@ -18,10 +18,10 @@ import 'echarts/lib/component/markLine'
 // Lib MISC
 
 // Style
-// import styles from './style.module.scss'
+import styles from './style.module.scss'
 
 // Variables / Functions
-// const cx = classnames.bind(styles)
+const cx = classnames.bind(styles)
 
 export const propTypes = {
   // prop: PropTypes.any,
@@ -33,6 +33,8 @@ export const propTypes = {
 function ChartResult (props) {
   const { data, chartType, chartNumber } = props
   const isFirstRender = useRef(true)
+
+  const hasData = typeof data.xdata !== 'undefined'
 
   useEffect(() => {
     if (!isFirstRender.current && data) {
@@ -102,7 +104,14 @@ function ChartResult (props) {
     return () => {}
   }, [data, chartType, chartNumber])
 
-  return <div id={`chart-view-${chartType}${chartNumber}`} style={{ width: '100%', height: 500, backgroundColor: '#fff', margin: '16px 0' }} />
+  return (
+    <div className={cx('chart-view')}>
+      <div id={`chart-view-${chartType}${chartNumber}`} style={{ width: '100%', height: 500, backgroundColor: '#fff', margin: '16px 0' }} />
+      <p className={cx('chart-view__title')} data-is-invisible={hasData}>
+        Select date to generate chart
+      </p>
+    </div>
+  )
 }
 
 ChartResult.propTypes = propTypes

@@ -26,7 +26,7 @@ export const propTypes = {
 function Gpu (props) {
   const { match } = props
   const [chartDate, setChartDate] = useState('')
-  const [chartData, setChartData] = useState([{}, {}])
+  const [chartData, setChartData] = useState([{}, {}]) // Gpu 目前有兩張圖
   const [modalErrorMessage, setModalErrorMessage] = useState('')
   const [isErrorModalOpend, setIsErrorModalOpend] = useState(false)
   const openErrorModal = () => setIsErrorModalOpend(true)
@@ -94,7 +94,6 @@ function Gpu (props) {
         <Form.Row />
       </Form.Group>
       {chartData.map((data, index) => (
-        // <div key={index}>
         <ChartResult
           key={index}
           category={remove(keys(data), item => item !== 'time')}
@@ -107,7 +106,6 @@ function Gpu (props) {
             },
           }}
         />
-        // </div>
       ))}
     </div>
   )

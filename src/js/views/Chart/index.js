@@ -27,7 +27,7 @@ const Memory = Loadable({ loader: () => import('./views/Memory'), loading })
 
 const navigations = [
   {
-    path: ['cpu'],
+    path: 'cpu',
     name: 'Cpu',
     component: Cpu,
   },
