@@ -114,7 +114,7 @@ function Table (props) {
   }
 
   const { path, params } = match
-  let { memberId, type, cardType } = params
+  let { memberId, type, cardType, seatNumber } = params
 
   const isDetailVisible = typeof memberId === 'string'
   const [isSelectedPlaceStanding, setIsSelectedPlaceStanding] = useState(null)
@@ -253,8 +253,8 @@ function Table (props) {
       cardType: detectionItem.probableList[0].level,
     }
 
-    let { id, image } = await newPerson
-    const { tempId, name, compareImage, memberCard, identify, type, cardType } = newPerson
+    let { id, image } = await person
+    const { tempId, name, memberCard, identify, type, cardType } = newPerson
 
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
     const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
@@ -275,12 +275,12 @@ function Table (props) {
 
       await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
         .then(async result => {
-          const apiId = result
+          const { cid: apiId, pic: apiImage } = result
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
           } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -300,12 +300,12 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
         .then(async result => {
-          const apiId = result
+          const { cid: apiId, pic: apiImage } = result
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
           } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -324,13 +324,12 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
         .then(async result => {
-          const apiId = result
-          image = compareImage
+          const { cid: apiId, pic: apiImage } = result
 
           if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, image, type, cardType, seatedIndex, seatNumber)
+            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
           } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, image, type, cardType, standingIndex, seatNumber)
+            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
           }
         })
         .catch(error => {
@@ -376,7 +375,7 @@ function Table (props) {
   // Manually clock-in
   const onManuallyClockIn = async (event, person) => {
     let { id, image } = person
-    const { tempId, name, compareImage, memberCard, identify, type, cardType } = person
+    const { tempId, name, memberCard, identify, type, cardType } = person
 
     // Dynamiq GTT 實際座位
     let seatNumber = selectedPlaceIndex + 1
@@ -390,8 +389,9 @@ function Table (props) {
       // 並以取得的 id 放進 seat / standing list 中
       await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
         .then(result => {
-          const id = result
-          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
+          const { cid: apiId, pic: apiImage } = result
+
+          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup
@@ -414,8 +414,9 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
         .then(result => {
-          const id = result
-          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
+          const { cid: apiId, pic: apiImage } = result
+
+          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup
@@ -437,9 +438,9 @@ function Table (props) {
       // 圖片改用資料庫中的照片
       await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
         .then(result => {
-          const id = result
-          image = compareImage
-          addItemToListByManualClockIn(tempId, id, image, type, cardType, seatNumber)
+          const { cid: apiId, pic: apiImage } = result
+
+          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
         })
         .catch(error => {
           // 如果有 error 就跳出 popup
@@ -458,11 +459,11 @@ function Table (props) {
     }
   }
 
-  const removeItemFromListByManualClockOut = palyerId => {
-    const isPlayerInStanding = findIndex(standingList, { id: palyerId }) !== -1
+  const removeItemFromListByClockOut = seatNumber => {
+    const isPlayerInStanding = findIndex(standingList, { seatNumber: Number(seatNumber) }) !== -1
 
-    const indexInStadingList = findIndex(standingList, { id: palyerId }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-    const indexInSeatedList = findIndex(seatedList, { id: palyerId })
+    const indexInStadingList = findIndex(standingList, { seatNumber: Number(seatNumber) }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+    const indexInSeatedList = findIndex(seatedList, { seatNumber: Number(seatNumber) })
 
     if (isPlayerInStanding) {
       // For Refresh - StandingList local storage
@@ -483,8 +484,8 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async player => {
-    const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
-    const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
+    const isPlayerInStanding = Boolean(find(standingList, { seatNumber: player.seatNumber }))
+    const isPlayerInSeated = Boolean(find(seatedList, { seatNumber: player.seatNumber }))
 
     if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
@@ -520,11 +521,11 @@ function Table (props) {
             // 如果 not log-on，自動 log-on
             TableApi.logOnTable({ tableNumber })
           } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
-            removeItemFromListByManualClockOut(player.id)
+            removeItemFromListByClockOut(player.seatNumber)
           } else {
             clockOutPoutEnquiryValue = {}
             stopDetecting()
-            removeItemFromListByManualClockOut(player.id)
+            removeItemFromListByClockOut(player.seatNumber)
             setAutoClockOutErrorMessage(error.response.data.data)
           }
         })
@@ -570,7 +571,7 @@ function Table (props) {
           })
         } else {
           stopDetecting()
-          removeItemFromListByManualClockOut(player.id)
+          removeItemFromListByClockOut(player.seatNumber)
           setAutoClockOutErrorMessage(error.response.data.data)
         }
       })
@@ -579,8 +580,8 @@ function Table (props) {
   // Manually clock out
   const onClockOut = async (values, player) => {
     // 從 seatedList / standingList 拿 tempId
-    const playerInSeatedList = find(seatedList, { id: memberId })
-    const playerInStandingList = find(standingList, { id: memberId })
+    const playerInSeatedList = await find(seatedList, { seatNumber: Number(seatNumber) })
+    const playerInStandingList = await find(standingList, { seatNumber: Number(seatNumber) })
 
     await GameApi.clockOut({
       id: memberId,
@@ -592,7 +593,7 @@ function Table (props) {
       seatNumber: playerInSeatedList ? playerInSeatedList.seatNumber : playerInStandingList.seatNumber,
     })
       .then(result => {
-        removeItemFromListByManualClockOut(memberId)
+        removeItemFromListByClockOut(seatNumber)
 
         initializeIsSelectedPlaceStanding()
         initializeSelectedPlaceIndex()
@@ -662,8 +663,8 @@ function Table (props) {
     set(overrideValue, 'praValue', praValue)
 
     // 從 seatedList / standingList 拿 tempId
-    const playerInSeatedList = find(seatedList, { id: memberId })
-    const playerInStandingList = find(standingList, { id: memberId })
+    const playerInSeatedList = find(seatedList, { seatNumber: Number(seatNumber) })
+    const playerInStandingList = find(standingList, { seatNumber: Number(seatNumber) })
 
     await GameApi.clockOut({
       id: memberId,
@@ -675,7 +676,7 @@ function Table (props) {
       seatNumber: playerInSeatedList ? playerInSeatedList.seatNumber : playerInStandingList.seatNumber,
     })
       .then(result => {
-        removeItemFromListByManualClockOut(memberId)
+        removeItemFromListByClockOut(seatNumber)
 
         closeClockOutErrorModal()
         initializeIsOverride()
@@ -723,7 +724,7 @@ function Table (props) {
   }
 
   const removeItemFromListByNotClockIn = () => {
-    removeItemFromListByManualClockOut(memberId)
+    removeItemFromListByClockOut(seatNumber)
 
     initializeIsSelectedPlaceStanding()
     initializeSelectedPlaceIndex()
