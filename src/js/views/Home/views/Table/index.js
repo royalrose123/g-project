@@ -145,8 +145,9 @@ function Table (props) {
   const openClockOutErrorModal = () => setIsClockOutErrorModalOpened(true)
   const closeClockOutErrorModal = () => {
     const isNotClockIn = clockErrorMessage.indexOf(ERROR_MESSAGE.NOT_CLOCKED_IN) !== -1
+    const isVacant = clockErrorMessage.indexOf(ERROR_MESSAGE.SEATED_IS_VACANT) !== -1
 
-    if (isNotClockIn) removeItemFromListByNotClockIn()
+    if (isNotClockIn || isVacant) removeItemFromListByNotClockIn()
 
     setIsClockOutErrorModalOpened(false)
     initializePraValue()
@@ -265,6 +266,7 @@ function Table (props) {
     // Dynamiq GTT 實際座位
     let seatNumber = (await seatedIndex) + 1
     if (!isInSeatedPlace) {
+    if (!isInSeatedPlace || isSomeoneSeated) {
       seatNumber = (await standingIndex) + TOTAL_SEAT + 1
     }
 
@@ -522,6 +524,8 @@ function Table (props) {
             TableApi.logOnTable({ tableNumber })
           } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
             removeItemFromListByClockOut(player.seatNumber)
+          } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
+            removeItemFromListByClockOut(player.seatNumber)
           } else {
             clockOutPoutEnquiryValue = {}
             stopDetecting()
@@ -608,52 +612,71 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-Out again.'
-            TableApi.logOnTable({ tableNumber })
-          } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
-            errorMessage += '. The system will remove the player.'
+          if (errorMessage) {
+            // 如果 error message 是由 msg 組成，回傳 msg 後的字串
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              // 如果 not log-on，自動 log-on
+              errorMessage += '. Please confirm Clock-Out again.'
+              TableApi.logOnTable({ tableNumber })
+            } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+              errorMessage += '. The system will remove the player.'
+            } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
+              errorMessage += '. The system will remove the player.'
+            }
+
+            const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+            const praMessage = parsePraListToBitValues(praErrorValue).join()
+            console.log('praMessage', praMessage)
+
+            const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+            const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
+            const isOverrideMessage = praMessage.indexOf('Override') !== -1
+            const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
+            console.log('isOverrideMessage', isOverrideMessage)
+
+            switch (true) {
+              case isNotPermittedMessage:
+                // not permitted
+                setIsOverride(!isNotPermittedMessage)
+                break
+              case isMismatchMessage:
+                // mismatch override
+                const mismatchMessage = errorMessage.split(' mismatch,')[0]
+                const mismatchField = MISMATCH_FIELD[mismatchMessage]
+
+                clockOutFieldList.map(item => {
+                  set(clockOutValue, item, values[item])
+                })
+
+                set(clockOutValue, mismatchField, 1)
+
+                setOverrideValue(clockOutValue)
+                setIsOverride(isMismatchMessage)
+                break
+              case isPraErrorValue && isOverrideMessage:
+                // pra override
+                clockOutFieldList.map(item => {
+                  set(clockOutValue, item, values[item])
+                })
+
+                errorMessage = parsePraListToBitValues(praErrorValue)
+
+                setOverrideValue(clockOutValue)
+                setIsOverride(isOverrideMessage)
+                setPraValue(praErrorValue)
+
+                break
+              case isPraErrorValue && !isOverrideMessage:
+                // pra message
+                errorMessage = parsePraListToBitValues(praErrorValue).join(', ') + ', needs to be filled.'
+                break
+            }
+            setClockErrorMessage(errorMessage)
+          } else {
+            // 如果 error message 不是由 msg 組成，直接回傳整個 error message
+            setClockErrorMessage(error.response.data.data)
           }
 
-          const praMessage = trim(errorMessage.split('pra')[1], '=')
-
-          if (praMessage) {
-            errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
-          }
-
-          const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
-          const isOverrideMessage = errorMessage.indexOf('override') !== -1
-          const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
-
-          if (isMismatchMessage) {
-            // mismatch override
-            const mismatchMessage = errorMessage.split(' mismatch,')[0]
-            const mismatchField = MISMATCH_FIELD[mismatchMessage]
-
-            clockOutFieldList.map(item => {
-              set(clockOutValue, item, values[item])
-            })
-
-            set(clockOutValue, mismatchField, 1)
-
-            setOverrideValue(clockOutValue)
-            setIsOverride(isMismatchMessage)
-          } else if (isOverrideMessage) {
-            // pra override
-            clockOutFieldList.map(item => {
-              set(clockOutValue, item, values[item])
-            })
-
-            setOverrideValue(clockOutValue)
-            setIsOverride(isOverrideMessage)
-            setPraValue(praMessage)
-          } else if (isNotPermittedMessage) {
-            setIsOverride(!isNotPermittedMessage)
-          }
-
-          // 如果 error message 不是由 msg 組成，直接回傳整個 error message
-          setClockErrorMessage(error.response.data.data)
           openClockOutErrorModal()
         }
       })
@@ -661,7 +684,6 @@ function Table (props) {
 
   const confirmOverride = async () => {
     set(overrideValue, 'praValue', praValue)
-
     // 從 seatedList / standingList 拿 tempId
     const playerInSeatedList = find(seatedList, { seatNumber: Number(seatNumber) })
     const playerInStandingList = find(standingList, { seatNumber: Number(seatNumber) })
@@ -693,32 +715,46 @@ function Table (props) {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          const praMessage = trim(errorMessage.split('pra')[1], '=')
+          if (errorMessage) {
+            // 如果 error message 是由 msg 組成，回傳 msg 後的字串
+            const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+            const praMessage = parsePraListToBitValues(praErrorValue).join()
 
-          if (praMessage) {
-            errorMessage = parsePraListToBitValues(praMessage).join(', ') + ', needs to be filled.'
+            const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+            const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
+            const isOverrideMessage = praMessage.indexOf('Override') !== -1
+            const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
+
+            switch (true) {
+              case isNotPermittedMessage:
+                // not permitted
+                setIsOverride(!isNotPermittedMessage)
+                break
+              case isMismatchMessage:
+                // mismatch
+                const mismatchMessage = errorMessage.split(' mismatch,')[0]
+                const mismatchField = MISMATCH_FIELD[mismatchMessage]
+
+                set(overrideValue, mismatchField, 1)
+                setIsOverride(isMismatchMessage)
+                break
+              case isPraErrorValue && isOverrideMessage:
+                // pra override
+                errorMessage = parsePraListToBitValues(praErrorValue)
+
+                setIsOverride(isOverrideMessage)
+                setPraValue(praErrorValue)
+                break
+              case isPraErrorValue && !isOverrideMessage:
+                // pra message
+                errorMessage = parsePraListToBitValues(praErrorValue).join(', ') + ', needs to be filled.'
+                break
+            }
+            setClockErrorMessage(errorMessage)
+          } else {
+            // 如果 error message 不是由 msg 組成，直接回傳整個 error message
+            setClockErrorMessage(error.response.data.data)
           }
-
-          const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
-          const isOverrideMessage = errorMessage.indexOf('override') !== -1
-          const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
-
-          if (isMismatchMessage) {
-            // mismatch override
-            const mismatchMessage = errorMessage.split(' mismatch,')[0]
-            const mismatchField = MISMATCH_FIELD[mismatchMessage]
-
-            set(overrideValue, mismatchField, 1)
-            setIsOverride(isMismatchMessage)
-          } else if (isOverrideMessage) {
-            // pra override
-            setIsOverride(isOverrideMessage)
-            setPraValue(praMessage)
-          } else if (isNotPermittedMessage) {
-            setIsOverride(!isNotPermittedMessage)
-          }
-
-          setClockErrorMessage(errorMessage)
         }
       })
   }

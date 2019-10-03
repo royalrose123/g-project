@@ -56,18 +56,6 @@ export const propTypes = {
   removeItemFromList: PropTypes.func,
 }
 
-const memberDetailModalText = {
-  'Not clocked in': {
-    state: ERROR_MESSAGE.NOT_CLOCKED_IN,
-    title: 'Member Enquiry Error',
-    description: `Not clocked in. Please click "OK", and the player will be removed`,
-  },
-  others: {
-    title: 'Member Enquiry Error',
-    description: ``,
-  },
-}
-
 function MemberDetail (props) {
   const {
     history,
@@ -94,10 +82,10 @@ function MemberDetail (props) {
   const [memberEnquiryErrorMessage, setMemberEnquiryErrorMessage] = useState({})
 
   const openEnquiryErrorModal = () => setIEnquiryErrorModalOpened(true)
-  const closeEnquiryErrorModal = () => {
-    setIEnquiryErrorModalOpened(false)
-    history.push(findStaticPath(path))
-  }
+  // const closeEnquiryErrorModal = () => {
+  //   setIEnquiryErrorModalOpened(false)
+  //   history.push(findStaticPath(path))
+  // }
 
   const { isLoaded, error, response: detail } = useFetcher(null, MemberApi.fetchMemberDetailByIdWithType, {
     id,
@@ -147,9 +135,9 @@ function MemberDetail (props) {
   useEffect(() => {
     if (error) {
       let errorMessage = error.response.data.data
+      errorMessage = trim(errorMessage.split('msg')[1], '}:"')
       if (errorMessage) {
         // 如果 error message 是由 msg 組成，回傳 msg 後的字串
-        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
         if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
           // Not Log-On 時自動 Log-On
@@ -157,18 +145,20 @@ function MemberDetail (props) {
           window.location.reload(false)
         } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
           // Not Clocked-in 時，pop-up 後從 seated / standing 移除
-          setMemberEnquiryErrorMessage(memberDetailModalText[ERROR_MESSAGE.NOT_CLOCKED_IN])
+          setMemberEnquiryErrorMessage('Not clocked in. Please click "OK", and the player will be removed')
+          openEnquiryErrorModal()
+        } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
+          // Not Clocked-in 時，pop-up 後從 seated / standing 移除
+          setMemberEnquiryErrorMessage('The indicated seat is vacant. Please click "OK", and the player will be removed')
           openEnquiryErrorModal()
         } else if (errorMessage) {
           // 其他 error pop-up 後從 seated / standing 移除
-          set(memberDetailModalText, 'others.description', errorMessage)
-          setMemberEnquiryErrorMessage(memberDetailModalText['others'])
+          setMemberEnquiryErrorMessage(errorMessage)
           openEnquiryErrorModal()
         }
       } else {
         // 如果 error message 不是由 msg 組成，直接回傳整個 error message
-        set(memberDetailModalText, 'others.description', errorMessage)
-        setMemberEnquiryErrorMessage(memberDetailModalText['others'])
+        setMemberEnquiryErrorMessage(error.response.data.data)
         openEnquiryErrorModal()
       }
     }
@@ -196,17 +186,17 @@ function MemberDetail (props) {
           isOpened={isEnquiryErrorModalOpened}
         >
           <Modal.Header>
-            <div className={cx('home-member-detail-error-modal__header')}>{memberEnquiryErrorMessage.title}</div>
+            <div className={cx('home-member-detail-error-modal__header')}>{'Member Enquiry Error'}</div>
           </Modal.Header>
           <Modal.Body>
-            <div className={cx('home-member-detail-error-modal__body')}>{memberEnquiryErrorMessage.description}</div>
+            <div className={cx('home-member-detail-error-modal__body')}>{memberEnquiryErrorMessage}</div>
           </Modal.Body>
           <Modal.Footer>
             <Button
               type='button'
               className={cx('home-member-detail-error-modal__action')}
               size={'md'}
-              onClick={memberEnquiryErrorMessage.state === ERROR_MESSAGE.NOT_CLOCKED_IN ? removeItemFromList : closeEnquiryErrorModal}
+              onClick={removeItemFromList}
               isInvisible={isOverride}
             >
               OK

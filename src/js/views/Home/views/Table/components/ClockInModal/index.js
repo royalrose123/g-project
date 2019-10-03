@@ -24,7 +24,6 @@ const MODE = {
   CLOCK_IN: 'CLOCK_IN',
   SWIPE_MEMBER_CARD: 'SWIPE_MEMBER_CARD',
 }
-// const MEMBER_MATCH_PERCENT = 80
 
 export const propTypes = {
   detectionItem: PropTypes.shape({
@@ -133,7 +132,7 @@ function ClockInModal (props) {
                   // 濾掉自己
                   .filter(probableItem => probableItem.id)
                   // 濾出相似度高於 80% 的結果
-                  .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThan(matchPercent)) // show 出 probableList 中 similarity 大於 matchPercent 的 item
+                  .filter(probableItem => new BigNumber(probableItem.similarity).isGreaterThanOrEqualTo(matchPercent)) // show 出 probableList 中 similarity 大於 matchPercent 的 item
                   .map((probableItem, index) => (
                     // Auto anonymous clock in 時需自動setSelectedPerson
                     <div key={index} className={cx('home-table-clock-in-modal__probable-item')}>
@@ -148,6 +147,7 @@ function ClockInModal (props) {
                             identify: probableItem.id, // member identify 給 id
                             type: PERSON_TYPE.MEMBER,
                             compareImage: probableItem.image,
+                            cardType: probableItem.level,
                           })
                         }}
                         renderFooter={() => <div className={cx('home-table-clock-in-modal__similarity')}>{probableItem.similarity}</div>}

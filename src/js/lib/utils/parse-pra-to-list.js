@@ -2,8 +2,8 @@ const praForErrorMessage = {
   1: 'Play type',
   2: 'Average bet',
   4: 'Actual win/loss',
-  8: 'Average too small override is defined',
-  16: 'Average too big override is defined',
+  8: 'Average bet is too small. Override?',
+  16: 'Average bet is too big. Override?',
   32: 'Proportion of games played',
   64: 'Average cash bet too small override',
   128: 'Average cash bet too big override',
@@ -32,8 +32,8 @@ const praForClockOutValues = {
   8192: '', // clock-out values 目前用不到, 'Override rejection of a ratin session not wholly contained in the open time of the gaming table',
 }
 
-const parsePraToList = (pra, result = []) => {
-  if (pra === 0) return result
+const parsePraToList = (pra = 0, result = []) => {
+  if (pra <= 0) return result
 
   let powNumber = 0
 

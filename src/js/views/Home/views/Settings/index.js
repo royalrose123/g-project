@@ -218,7 +218,6 @@ function Settings (props) {
   }
 
   const saveByConfirmModal = async formikValues => {
-    setFormikValueByConfirmModal(formikValues)
     await clearTableBySave(formikValues)
     closeConfirmModal()
   }
@@ -289,12 +288,7 @@ function Settings (props) {
 
     await GameApi.clockOutAll({ memberIdList, tableNumber })
       .then(async result => {
-        await SettingsApi.postSettingDetail({
-          systemSettings: formikValues.systemSettings,
-          autoSettings: formikValues.autoSettings,
-          defaultRecord: formikValues.defaultRecord,
-        })
-        // await closeConfirmModal()
+        await setFormikValueByConfirmModal(formikValues)
 
         await removeLocalStorageItem('seatedList')
         await removeAllFromSeated()
