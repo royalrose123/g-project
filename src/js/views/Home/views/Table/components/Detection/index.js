@@ -21,6 +21,7 @@ import { selectors as settingSelectors } from '../../../../../../lib/redux/modul
 import DeviceApi from '../../../../../../lib/api/Device'
 import { selectors as seatedSelectors } from '../../../../../../lib/redux/modules/seated'
 import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
+import { getLocalStorageItem } from '../../../../../../lib/helpers/localStorage'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
@@ -159,12 +160,34 @@ function Detection (props) {
       }
 
       // 如果被 clock-out 就 removeClockOutPlayer 跟 delete clockInPlayer
-      const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
-      const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
+      const localStorageStandingList = getLocalStorageItem('standingList')
+      const localStorageSeatedList = getLocalStorageItem('seatedList')
+
+      const isPlayerInStanding = Boolean(find(localStorageStandingList, { id: player.id }))
+      const isPlayerInSeated = Boolean(find(localStorageSeatedList, { id: player.id }))
 
       if (!isPlayerInStanding && !isPlayerInSeated) {
         setTimeout(() => removeClockOutPlayer(player), 10)
         delete clockInPlayer.current[player.tempId]
+      }
+
+      const isTempAccount = get(player, 'cardType') === TEMP_ACCOUNT_CARD_TYPE
+
+      switch (clockState) {
+        case CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK:
+          if (player.type === 'member' && !isTempAccount) {
+            setTimeout(() => removeClockOutPlayer(player), 10)
+          }
+
+          break
+        case CLOCK_STATUS.AUTO_MEMBER_CLOCK:
+          if (player.type === 'anonymous' || isTempAccount) {
+            setTimeout(() => removeClockOutPlayer(player), 10)
+          }
+          break
+        case CLOCK_STATUS.AUTO_CLOCK:
+          setTimeout(() => removeClockOutPlayer(player), 10)
+          break
       }
 
       const isAnonymous = mapCardTypeToType(player.cardType) === 'anonymous'
