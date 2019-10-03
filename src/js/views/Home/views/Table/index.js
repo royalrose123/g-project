@@ -87,7 +87,7 @@ function Table (props) {
       actualWin: defaultRecord.anonymousActualWin,
       drop: defaultRecord.anonymousDrop,
       overage: defaultRecord.anonymousOverage,
-      overallWinner: defaultRecord.anonymousWhoWin,
+      whoWin: defaultRecord.anonymousWhoWin,
     },
     member: {
       playTypeNumber: '', // 目前不需要用到 memeber default 的 playType
@@ -96,12 +96,12 @@ function Table (props) {
       actualWin: defaultRecord.memberActualWin,
       drop: defaultRecord.memberDrop,
       overage: defaultRecord.memberOverage,
-      overallWinner: defaultRecord.memberWhoWin,
+      whoWin: defaultRecord.memberWhoWin,
     },
   }
 
   let clockOutPoutEnquiryValue = {}
-  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop', 'overage', 'overallWinner']
+  const clockOutFieldList = ['playTypeNumber', 'propPlay', 'averageBet', 'actualWin', 'drop', 'overage', 'whoWin']
   const clockOutValue = {
     playTypeNumber: '',
     propPlay: '',
@@ -109,7 +109,7 @@ function Table (props) {
     actualWin: '',
     drop: '',
     overage: '',
-    overallWinner: '',
+    whoWin: '',
     praValue: 0,
   }
 
@@ -503,7 +503,7 @@ function Table (props) {
           clockOutFieldList.map(item => {
             set(clockOutPoutEnquiryValue, item, result[item])
           })
-          set(clockOutValue, 'overallWinner', clockOutDefaultValue[mapCardTypeToType(player.cardType)]['overallWinner']) // 一開始先填 whoWin default value
+          set(clockOutValue, 'whoWin', clockOutDefaultValue[mapCardTypeToType(player.cardType)]['whoWin']) // 一開始先填 whoWin default value
 
           if (result?.praValue) {
             parsePraListToClockOutField(result.praValue).forEach(item => {})

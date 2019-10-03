@@ -111,7 +111,7 @@ function Settings (props) {
 
   const { isLoaded, response: detail } = useFetcher(null, SettingsApi.fetchSettingDetail, { tableNumber })
   const { response: tableListTemp } = useFetcher(null, SettingsApi.getTableList, {})
-  // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
+  // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'whoWin')
   const [currentTab, setCurrentTab] = useState(TABS.SYSTEM_SETTINGS)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
   const [memberAutomatic, setMemberAutomatic] = useState(false)
@@ -1088,20 +1088,20 @@ function Settings (props) {
                             render={({ field }) => (
                               <Form.Radio.Group name={field.name}>
                                 <Form.Radio
-                                  value='player'
+                                  value='WW'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.defaultRecord.memberWhoWin === 'player'}
+                                  checked={values.defaultRecord.memberWhoWin === 'WW'}
                                   readOnly
                                 >
-                                  Player
+                                  WW
                                 </Form.Radio>
                                 <Form.Radio
-                                  value='dealer'
+                                  value='WL'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.defaultRecord.memberWhoWin === 'dealer'}
+                                  checked={values.defaultRecord.memberWhoWin === 'WL'}
                                   readOnly
                                 >
-                                  Dealer
+                                  WL
                                 </Form.Radio>
                               </Form.Radio.Group>
                             )}
@@ -1227,20 +1227,20 @@ function Settings (props) {
                             render={({ field }) => (
                               <Form.Radio.Group name={field.name}>
                                 <Form.Radio
-                                  value='player'
+                                  value='WW'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.defaultRecord.anonymousWhoWin === 'player'}
+                                  checked={values.defaultRecord.anonymousWhoWin === 'WW'}
                                   readOnly
                                 >
-                                  Player
+                                  WW
                                 </Form.Radio>
                                 <Form.Radio
-                                  value='dealer'
+                                  value='WL'
                                   onClick={event => setFieldValue(field.name, event.target.value)}
-                                  checked={values.defaultRecord.anonymousWhoWin === 'dealer'}
+                                  checked={values.defaultRecord.anonymousWhoWin === 'WL'}
                                   readOnly
                                 >
-                                  Dealer
+                                  WL
                                 </Form.Radio>
                               </Form.Radio.Group>
                             )}

@@ -99,14 +99,14 @@ function MemberDetail (props) {
     playTypeNumber: detail?.playTypeNumber,
     propPlay: '',
     averageBet: '',
-    overallWinner: 'player',
+    whoWin: 'WW',
     actualWin: '',
     drop: '',
     overage: '',
     tableName: '',
   }
 
-  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'overallWinner')
+  const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'whoWin')
 
   useEffect(() => {
     if (isLoaded) {
@@ -400,28 +400,28 @@ function MemberDetail (props) {
 
                             <Form.Row>
                               <Form.Column size='sm'>
-                                <Form.Label>Overall Winner</Form.Label>
+                                <Form.Label>Who Win</Form.Label>
                               </Form.Column>
                               <Form.Column size='md'>
                                 <Field
-                                  name='overallWinner'
+                                  name='whoWin'
                                   render={({ field }) => (
                                     <Form.Radio.Group name={field.name}>
                                       <Form.Radio
-                                        value='player'
+                                        value='WW'
                                         onClick={event => setFieldValue(field.name, event.target.value)}
-                                        checked={values.overallWinner === 'player'}
+                                        checked={values.whoWin === 'WW'}
                                         readOnly
                                       >
-                                        Player
+                                        WW
                                       </Form.Radio>
                                       <Form.Radio
-                                        value='dealer'
+                                        value='WL'
                                         onClick={event => setFieldValue(field.name, event.target.value)}
-                                        checked={values.overallWinner === 'dealer'}
+                                        checked={values.whoWin === 'WL'}
                                         readOnly
                                       >
-                                        Dealer
+                                        WL
                                       </Form.Radio>
                                     </Form.Radio.Group>
                                   )}

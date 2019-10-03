@@ -79,7 +79,7 @@ class Game {
     averageBetOverride,
     actualWinOverride,
     tableNumber,
-    overallWinner,
+    whoWin,
     type,
     cardType,
     praValue,
@@ -95,7 +95,7 @@ class Game {
           playTypeNumber,
           propPlay,
           averageBet,
-          overallWinner,
+          whoWin,
           actualWin, // requierd
           drop,
           overage,
