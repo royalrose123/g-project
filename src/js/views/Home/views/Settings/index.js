@@ -114,8 +114,6 @@ function Settings (props) {
   // const inputableKeys = Object.keys(initialValues).filter(key => key !== 'playTypeNumber' && key !== 'whoWin')
   const [currentTab, setCurrentTab] = useState(TABS.SYSTEM_SETTINGS)
   const [lastFocusField, setLastFocusField] = useState('actualWin')
-  const [memberAutomatic, setMemberAutomatic] = useState(false)
-  const [anonymousAutomatic, setAnonymousAutomatic] = useState(false)
   const [previousClockState, setPreviousClockState] = useState('')
   const [previousDynamiqLogStatus, setPreviousDynamiqLogStatus] = useState({})
   const [tableList, setTableList] = useState([])
@@ -344,9 +342,9 @@ function Settings (props) {
 
   const onOptionChange = async event => {
     const selectedTableName = event.target.value
-    setChangeTableName(event.target.value)
+    await setChangeTableName(event.target.value)
 
-    SettingsApi.checkTableStatus({ tableNumber: selectedTableName })
+    await SettingsApi.checkTableStatus({ tableNumber: selectedTableName })
       .then(async result => {
         const { isSomeOneManualClockedIn, isSomeOneAutoClockedIn } = await checkPlayerInList()
 
@@ -375,8 +373,8 @@ function Settings (props) {
     await GameApi.clockOutAll({ memberIdList, tableNumber })
       .then(async result => {
         setTableListActiveStatus(setTableList, tableList, changeTableName, tableNumber)
-        clearLocalStorageItem()
-        setLocalStorageItem('tableNumber', changeTableName)
+        await clearLocalStorageItem()
+        await setLocalStorageItem('tableNumber', changeTableName)
 
         changeTableNumber(changeTableName)
         removeAllFromSeated()
@@ -887,9 +885,9 @@ function Settings (props) {
                                 <Form.Checkbox
                                   onChange={event => {
                                     setFieldValue(field.name, event.target.checked)
-                                    setMemberAutomatic(event.target.checked)
+                                    // setMemberAutomatic(event.target.checked)
                                   }}
-                                  checked={memberAutomatic || values.autoSettings.autoClockMember}
+                                  checked={values.autoSettings.autoClockMember}
                                   readOnly
                                   disabled
                                 >
@@ -951,9 +949,9 @@ function Settings (props) {
                                 <Form.Checkbox
                                   onChange={event => {
                                     setFieldValue(field.name, event.target.checked)
-                                    setAnonymousAutomatic(event.target.checked)
+                                    // setAnonymousAutomatic(event.target.checked)
                                   }}
-                                  checked={anonymousAutomatic || values.autoSettings.autoClockAnonymous}
+                                  checked={values.autoSettings.autoClockAnonymous}
                                   readOnly
                                 >
                                   Active

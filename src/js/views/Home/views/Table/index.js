@@ -626,13 +626,11 @@ function Table (props) {
 
             const praErrorValue = trim(errorMessage.split('pra')[1], '=')
             const praMessage = parsePraListToBitValues(praErrorValue).join()
-            console.log('praMessage', praMessage)
 
             const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
             const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
             const isOverrideMessage = praMessage.indexOf('Override') !== -1
             const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
-            console.log('isOverrideMessage', isOverrideMessage)
 
             switch (true) {
               case isNotPermittedMessage:
@@ -788,8 +786,8 @@ function Table (props) {
           </Modal.Header>
           <Modal.Body>
             <div className={cx('home-detection-stop-modal__body')}>
-              {`There has been an error during auto clock-out, please check the error log. `}
-              <p>{`Error : ${autoClockOutErrorMessage}`}</p>
+              {`There has been an error during auto clock-out. Please check the error log. `}
+              <p>{autoClockOutErrorMessage}</p>
             </div>
           </Modal.Body>
           <Modal.Footer>
