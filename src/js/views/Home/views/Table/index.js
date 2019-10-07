@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex, trim, findKey, set, isEmpty, find } from 'lodash'
+import { findIndex, trim, findKey, set, isEmpty, find, isNumber } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -33,7 +33,7 @@ import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
 import TEMP_ACCOUNT_CARD_TYPE from '../../../../constants/TempAccountCardType'
-import { setLocalStorageItem } from '../../../../lib/helpers/localStorage'
+import { setLocalStorageItem, getLocalStorageItem } from '../../../../lib/helpers/localStorage'
 import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
 import MISMATCH_FIELD from '../../../../constants/MismatchField'
 import ERROR_MESSAGE from '../../../../constants/ErrorMessage'
@@ -130,6 +130,11 @@ function Table (props) {
   const [isStopDetect, setIsStopDetect] = useState(false)
   const [autoClockOutErrorMessage, setAutoClockOutErrorMessage] = useState('')
 
+  const numberInUsed = useRef()
+  const initialNumberInUsed = () => {
+    numberInUsed.current = null
+  }
+
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -175,6 +180,7 @@ function Table (props) {
     document.documentElement.style.setProperty('--person-width', person.width)
     document.documentElement.style.setProperty('--person-height', person.height)
   })
+
   // Seat, Standing
   const onPlaceClick = (event, { index, place, isStanding }) => {
     setIsSelectedPlaceStanding(isStanding)
@@ -227,8 +233,8 @@ function Table (props) {
     const newSeatedItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newSeatedList = seatedList.map((item, index) => (index === seatedIndex ? newSeatedItem : item))
 
-    await addSeatItem(newSeatedItem, seatedIndex)
     await setLocalStorageItem('seatedList', newSeatedList)
+    await addSeatItem(newSeatedItem, seatedIndex)
   }
 
   const addStadingItemToListByAutoClockIn = async (tempId, apiId, image, type, cardType, standingIndex, seatNumber) => {
@@ -236,8 +242,8 @@ function Table (props) {
     const newStandingItem = { tempId: String(tempId), id: String(apiId), image, isAuto: true, type, cardType, seatNumber }
     const newStandingList = standingList.map((item, index) => (index === standingIndex ? newStandingItem : item))
 
-    await addStandingItem(newStandingItem, standingIndex)
     await setLocalStorageItem('standingList', newStandingList)
+    await addStandingItem(newStandingItem, standingIndex)
   }
 
   // Automatically clock-in
@@ -260,12 +266,19 @@ function Table (props) {
     const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
     const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
+    // let fromIndex = numberInUsed.current
+    if (isNumber(numberInUsed.current)) {
+      numberInUsed.current++
+    } else {
+      numberInUsed.current = 0
+    }
+
     // Genting App standing 座位
-    const standingIndex = await findIndex(standingList, item => item === undefined)
+    const standingIndex = await findIndex(standingList, item => item === undefined, numberInUsed.current)
+    numberInUsed.current = standingIndex
 
     // Dynamiq GTT 實際座位
     let seatNumber = (await seatedIndex) + 1
-    if (!isInSeatedPlace) {
     if (!isInSeatedPlace || isSomeoneSeated) {
       seatNumber = (await standingIndex) + TOTAL_SEAT + 1
     }
@@ -279,6 +292,8 @@ function Table (props) {
         .then(async result => {
           const { cid: apiId, pic: apiImage } = result
 
+          await initialNumberInUsed()
+
           if (isInSeatedPlace && !isSomeoneSeated) {
             await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
           } else {
@@ -288,6 +303,8 @@ function Table (props) {
         .catch(error => {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          initialNumberInUsed()
 
           // 如果 not log-on，自動 log-on
           if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
@@ -328,6 +345,8 @@ function Table (props) {
         .then(async result => {
           const { cid: apiId, pic: apiImage } = result
 
+          await initialNumberInUsed()
+
           if (isInSeatedPlace && !isSomeoneSeated) {
             await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
           } else {
@@ -337,6 +356,8 @@ function Table (props) {
         .catch(error => {
           let errorMessage = error.response.data.data
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+          initialNumberInUsed()
 
           // 如果 not log-on，自動 log-on
           if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
@@ -358,15 +379,15 @@ function Table (props) {
       const newStandingItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newStandingList = standingList.map((item, index) => (index === selectedPlaceIndex ? newStandingItem : item))
 
-      addStandingItem(newStandingItem, selectedPlaceIndex)
       setLocalStorageItem('standingList', newStandingList)
+      addStandingItem(newStandingItem, selectedPlaceIndex)
     } else {
       // For Refresh - SeatedList local storage
       const newSeatedItem = { tempId: String(tempId), id: String(id), image, isAuto: false, type, cardType, seatNumber }
       const newSeatedList = seatedList.map((item, index) => (index === selectedPlaceIndex ? newSeatedItem : item))
 
-      addSeatItem(newSeatedItem, selectedPlaceIndex)
       setLocalStorageItem('seatedList', newSeatedList)
+      addSeatItem(newSeatedItem, selectedPlaceIndex)
     }
 
     closeClockInModal()
@@ -461,37 +482,47 @@ function Table (props) {
     }
   }
 
-  const removeItemFromListByClockOut = seatNumber => {
-    const isPlayerInStanding = findIndex(standingList, { seatNumber: Number(seatNumber) }) !== -1
+  const removeItemFromListByClockOut = async seatNumber => {
+    // re-render 會造成 redux 的值變回舊的，所以直接取 localStorage 值以確保是最新的值
+    const localStorageStandingList = getLocalStorageItem('standingList')
+    const localStorageSeatedList = getLocalStorageItem('seatedList')
 
-    const indexInStadingList = findIndex(standingList, { seatNumber: Number(seatNumber) }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
-    const indexInSeatedList = findIndex(seatedList, { seatNumber: Number(seatNumber) })
+    const isPlayerInStanding = findIndex(localStorageStandingList, { seatNumber: Number(seatNumber) }) !== -1
+    const isPlayerInSeated = findIndex(localStorageSeatedList, { seatNumber: Number(seatNumber) }) !== -1
+
+    const indexInStadingList = findIndex(localStorageStandingList, { seatNumber: Number(seatNumber) }) // manual clock-out 時，不能用 selectedPlaceIndex，因為 refresh 會不見
+    const indexInSeatedList = findIndex(localStorageSeatedList, { seatNumber: Number(seatNumber) })
 
     if (isPlayerInStanding) {
       // For Refresh - StandingList local storage
-      const newStandingList = standingList.map((item, index) => (index === indexInStadingList ? undefined : item))
+      const newStandingList = await localStorageStandingList.map((item, index) => (index === indexInStadingList ? undefined : item))
+      await setLocalStorageItem('standingList', newStandingList)
 
-      setLocalStorageItem('standingList', newStandingList)
-
-      removeStandingItem(indexInStadingList)
-    } else {
+      await removeStandingItem(indexInStadingList)
+    } else if (isPlayerInSeated) {
       // For Refresh - SeatedList local storage
-      const newSeatedList = seatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
+      const newSeatedList = await localStorageSeatedList.map((item, index) => (index === indexInSeatedList ? undefined : item))
 
-      setLocalStorageItem('seatedList', newSeatedList)
+      await setLocalStorageItem('seatedList', newSeatedList)
 
-      removeSeatItem(indexInSeatedList)
+      await removeSeatItem(indexInSeatedList)
     }
   }
 
   // Auto clock out
   const executeAutoClockOut = async player => {
-    const isPlayerInStanding = Boolean(find(standingList, { seatNumber: player.seatNumber }))
-    const isPlayerInSeated = Boolean(find(seatedList, { seatNumber: player.seatNumber }))
+    // re-render 會造成 redux 的值變回舊的，所以直接取 localStorage 值以確保是最新的值
+    const localStorageStandingList = getLocalStorageItem('standingList')
+    const localStorageSeatedList = getLocalStorageItem('seatedList')
 
-    if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
+    const isPlayerInStanding = await Boolean(find(localStorageStandingList, { seatNumber: player.seatNumber }))
+    const isPlayerInSeated = await Boolean(find(localStorageSeatedList, { seatNumber: player.seatNumber }))
+
+    if (!isPlayerInStanding && !isPlayerInSeated) return false
+
+    // if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
     // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
-    if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect) {
+    if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect && (isPlayerInStanding || isPlayerInSeated)) {
       await MemberApi.fetchMemberDetailByIdWithType({
         id: player.id,
         type: player.type,
@@ -532,53 +563,62 @@ function Table (props) {
             removeItemFromListByClockOut(player.seatNumber)
             setAutoClockOutErrorMessage(error.response.data.data)
           }
+          return false
         })
     }
-    if (isEmpty(clockOutPoutEnquiryValue)) return // 如果 enquiry 失敗就不執行 clock-out
 
-    await GameApi.clockOut({
-      id: player.id,
-      tempId: player.tempId,
-      ...clockOutValue,
-      tableNumber,
-      type: player.type,
-      cardType: player.cardType,
-      seatNumber: player.seatNumber,
-    })
-      .then(result => {
-        const isSeated = player.seatedIndex >= 0
+    if (!isEmpty(clockOutPoutEnquiryValue) && !isPlayerInStanding && !isPlayerInSeated) return false
 
-        if (isSeated) {
-          // For Refresh - SeatedList local storage
-          const newSeatedList = seatedList.map((item, index) => (index === player.seatedIndex ? undefined : item))
-
-          setLocalStorageItem('seatedList', newSeatedList)
-          removeSeatItem(player.seatedIndex)
-        } else {
-          // For Refresh - StandingList local storage
-          const newStandingList = standingList.map((item, index) => (index === player.standingIndex ? undefined : item))
-
-          setLocalStorageItem('standingList', newStandingList)
-          removeStandingItem(player.standingIndex)
-        }
-        return result && true
+    if (!isEmpty(clockOutPoutEnquiryValue) && (isPlayerInStanding || isPlayerInSeated)) {
+      //  return // 如果 enquiry 失敗就不執行 clock-out
+      await GameApi.clockOut({
+        id: player.id,
+        tempId: player.tempId,
+        ...clockOutValue,
+        tableNumber,
+        type: player.type,
+        cardType: player.cardType,
+        seatNumber: player.seatNumber,
       })
-      .catch(error => {
-        let errorMessage = error.response.data.data
-        errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+        .then(async result => {
+          return result && true
+        })
+        .catch(error => {
+          if (error?.response?.data) {
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-        const praMessage = trim(errorMessage.split('pra')[1], '=')
+            const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+            const praMessage = parsePraListToBitValues(praErrorValue).join()
 
-        if (praMessage) {
-          parsePraListToClockOutField(praMessage).forEach(item => {
-            set(clockOutValue, item, clockOutDefaultValue[mapCardTypeToType(player.cardType)][item]) // clock-out value
-          })
-        } else {
-          stopDetecting()
-          removeItemFromListByClockOut(player.seatNumber)
-          setAutoClockOutErrorMessage(error.response.data.data)
-        }
-      })
+            const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+            const isOverrideMessage = praMessage.indexOf('Override') !== -1
+
+            if (isPraErrorValue && !isOverrideMessage) {
+              parsePraListToClockOutField(praErrorValue).forEach(item => {
+                set(clockOutValue, item, clockOutDefaultValue[mapCardTypeToType(player.cardType)][item]) // clock-out value
+              })
+            } else {
+              stopDetecting()
+              removeItemFromListByClockOut(player.seatNumber)
+
+              if (errorMessage) {
+                if (isPraErrorValue) {
+                  errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${parsePraListToBitValues(praErrorValue)}`
+                  setAutoClockOutErrorMessage(errorMessage)
+                } else {
+                  errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${errorMessage}`
+                  setAutoClockOutErrorMessage(errorMessage)
+                }
+              } else {
+                errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${error.response.data.data}`
+                setAutoClockOutErrorMessage(errorMessage)
+              }
+            }
+          }
+          return false
+        })
+    }
   }
 
   // Manually clock out
@@ -657,7 +697,7 @@ function Table (props) {
                   set(clockOutValue, item, values[item])
                 })
 
-                errorMessage = parsePraListToBitValues(praErrorValue)
+                errorMessage = parsePraListToBitValues(praErrorValue).join()
 
                 setOverrideValue(clockOutValue)
                 setIsOverride(isOverrideMessage)
@@ -714,6 +754,19 @@ function Table (props) {
           errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
           if (errorMessage) {
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              // 如果 not log-on，自動 log-on
+              errorMessage += '. Please confirm Clock-Out again.'
+              setIsOverride(false)
+              TableApi.logOnTable({ tableNumber })
+            } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+              errorMessage += '. The system will remove the player.'
+              setIsOverride(false)
+            } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
+              errorMessage += '. The system will remove the player.'
+              setIsOverride(false)
+            }
+
             // 如果 error message 是由 msg 組成，回傳 msg 後的字串
             const praErrorValue = trim(errorMessage.split('pra')[1], '=')
             const praMessage = parsePraListToBitValues(praErrorValue).join()

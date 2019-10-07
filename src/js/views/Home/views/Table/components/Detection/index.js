@@ -19,9 +19,9 @@ import { selectors as settingSelectors } from '../../../../../../lib/redux/modul
 
 // Lib MISC
 import DeviceApi from '../../../../../../lib/api/Device'
-import { selectors as seatedSelectors } from '../../../../../../lib/redux/modules/seated'
-import { selectors as standingSelectors } from '../../../../../../lib/redux/modules/standing'
-import { getLocalStorageItem } from '../../../../../../lib/helpers/localStorage'
+import { selectors as seatedSelectors, operations as seatedOperations } from '../../../../../../lib/redux/modules/seated'
+import { selectors as standingSelectors, operations as standingOperations } from '../../../../../../lib/redux/modules/standing'
+import { setLocalStorageItemPromise, getLocalStorageItem } from '../../../../../../lib/helpers/localStorage'
 import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
@@ -48,6 +48,8 @@ export const propTypes = {
   clockOutPlayer: PropTypes.array,
   addClockOutPlayer: PropTypes.func,
   removeClockOutPlayer: PropTypes.func,
+  removeSeatedItem: PropTypes.func,
+  removeStandingItem: PropTypes.func,
 }
 
 function Detection (props) {
@@ -65,10 +67,13 @@ function Detection (props) {
     clockOutPlayer,
     addClockOutPlayer,
     removeClockOutPlayer,
+    removeSeatedItem,
+    removeStandingItem,
   } = props
 
   const [detectionData, setDetectionData] = useState({})
   const clockInPlayer = useRef({})
+  const isAutoClockingOutRef = useRef(false)
   // console.log('clockInPlayer', clockInPlayer.current)
   // console.log('detectionData.leave', detectionData.leave)
   // console.log('clockOutPlayer', clockOutPlayer)
@@ -160,17 +165,10 @@ function Detection (props) {
       }
 
       // 如果被 clock-out 就 removeClockOutPlayer 跟 delete clockInPlayer
-      const localStorageStandingList = getLocalStorageItem('standingList')
-      const localStorageSeatedList = getLocalStorageItem('seatedList')
+      const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
+      const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
 
-      const isPlayerInStanding = Boolean(find(localStorageStandingList, { id: player.id }))
-      const isPlayerInSeated = Boolean(find(localStorageSeatedList, { id: player.id }))
-
-      if (!isPlayerInStanding && !isPlayerInSeated) {
-        setTimeout(() => removeClockOutPlayer(player), 10)
-        delete clockInPlayer.current[player.tempId]
-      }
-
+      // 如果 autoMember / autoAnonymous 時把 anonymous / member 加進 leave 名單時要移除
       const isTempAccount = get(player, 'cardType') === TEMP_ACCOUNT_CARD_TYPE
 
       switch (clockState) {
@@ -195,15 +193,59 @@ function Detection (props) {
 
       switch (true) {
         case isAnonymous:
-          if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec) {
+          if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec && (isPlayerInStanding || isPlayerInSeated)) {
             // 執行完 clock-ou API 得到 true
-            executeAutoClockOut(player)
+            if (!isAutoClockingOutRef.current) {
+              isAutoClockingOutRef.current = true
+
+              executeAutoClockOut(player).then(async result => {
+                const isSeated = player.seatedIndex >= 0
+
+                if (isSeated) {
+                  // For Refresh - SteatedList local storage
+                  const localStorageSeatedList = getLocalStorageItem('seatedList')
+
+                  const newSeatedList = await localStorageSeatedList.map((item, index) =>
+                    item?.seatNumber === player?.seatNumber ? undefined : item
+                  )
+
+                  // 先 set localStorage 再異動 redux 的值
+                  setLocalStorageItemPromise('seatedList', newSeatedList).then(async result => {
+                    await removeSeatedItem(player.seatedIndex)
+                    await setTimeout(() => {
+                      removeClockOutPlayer(player)
+                      isAutoClockingOutRef.current = false
+                    }, 10)
+                    delete clockInPlayer.current[player.tempId]
+                  })
+                } else {
+                  // For Refresh - StandingList local storage
+                  const localStorageStandingList = getLocalStorageItem('standingList')
+
+                  const newStandingList = await localStorageStandingList.map((item, index) =>
+                    item?.seatNumber === player?.seatNumber ? undefined : item
+                  )
+
+                  setLocalStorageItemPromise('standingList', newStandingList).then(async result => {
+                    await removeStandingItem(player.standingIndex)
+                    await setTimeout(() => {
+                      removeClockOutPlayer(player)
+                      isAutoClockingOutRef.current = false
+                    }, 10)
+                    delete clockInPlayer.current[player.tempId]
+                  })
+                }
+              })
+            }
           }
           break
         case isMember:
-          if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec) {
+          if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec && (isPlayerInStanding || isPlayerInSeated)) {
             // 執行完 clock-ou API 得到 true
-            executeAutoClockOut(player)
+            if (!isAutoClockingOutRef.current) {
+              // startAutoClockingOut()
+              executeAutoClockOut(player)
+            }
           }
           break
       }
@@ -413,6 +455,8 @@ const mapStateToProps = (state, props) => {
 const mapDispatchToProps = {
   addClockOutPlayer: tableOperations.addClockOutPlayer,
   removeClockOutPlayer: tableOperations.removeClockOutPlayer,
+  removeSeatedItem: seatedOperations.removeItemFromList,
+  removeStandingItem: standingOperations.removeItemFromList,
 }
 
 export default connect(
