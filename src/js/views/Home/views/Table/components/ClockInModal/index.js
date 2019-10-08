@@ -68,6 +68,7 @@ function ClockInModal (props) {
 
   const [mode, setMode] = useState(MODE.CLOCK_IN)
   const [selectedPerson, setSelectedPerson] = useState(null)
+  const [isFirstClockIn, setIsFirstClockIn] = useState(true)
   const shouldRenderContent = detectionItem !== null
   const person = shouldRenderContent ? getPersonByType(detectionItem.type, detectionItem, matchPercent) : {}
   // 打開時給預設值
@@ -201,7 +202,20 @@ function ClockInModal (props) {
       >
         Swipe Membercard
       </Button>
-      <Button className={cx('home-table-clock-in-modal__action')} type='button' onClick={event => onClockIn(event, selectedPerson)}>
+      <Button
+        className={cx('home-table-clock-in-modal__action')}
+        type='button'
+        disabled={!isFirstClockIn}
+        onClick={event => {
+          // 點完 clock-in 後 disabled 掉
+          if (isFirstClockIn) {
+            setIsFirstClockIn(false)
+            onClockIn(event, selectedPerson).then(result => {
+              setIsFirstClockIn(true)
+            })
+          }
+        }}
+      >
         Confirm Clock-In
       </Button>
     </Modal.Footer>

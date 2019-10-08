@@ -385,89 +385,98 @@ function Table (props) {
 
   // Manually clock-in
   const onManuallyClockIn = async (event, person) => {
-    let { id, image } = person
-    const { tempId, name, memberCard, identify, type, cardType } = person
+    let manualClockInPromise = new Promise(async (resolve, reject) => {
+      let { id, image } = person
+      const { tempId, name, memberCard, identify, type, cardType } = person
 
-    // Dynamiq GTT 實際座位
-    let seatNumber = selectedPlaceIndex + 1
-    if (isSelectedPlaceStanding) {
-      seatNumber += TOTAL_SEAT
-    }
+      // Dynamiq GTT 實際座位
+      let seatNumber = selectedPlaceIndex + 1
+      if (isSelectedPlaceStanding) {
+        seatNumber += TOTAL_SEAT
+      }
 
-    if (identify === PERSON_TYPE.ANONYMOUS) {
-      // 若是 anonymous
-      // 即自動建立臨時帳號
-      // 並以取得的 id 放進 seat / standing list 中
-      await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
-        .then(result => {
-          const { cid: apiId, pic: apiImage } = result
+      if (identify === PERSON_TYPE.ANONYMOUS) {
+        // 若是 anonymous
+        // 即自動建立臨時帳號
+        // 並以取得的 id 放進 seat / standing list 中
+        await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
-        })
-        .catch(error => {
-          // 如果有 error 就跳出 popup
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+            addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
+            await resolve(result)
+          })
+          .catch(async error => {
+            // 如果有 error 就跳出 popup
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
 
-          setClockErrorMessage(errorMessage)
-          openClockInErrorModal()
-        })
-    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
-      // 若是 member card
-      // 即為會員，使用荷官輸入的 member card
-      // 立刻關掉 modal
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
-        .then(result => {
-          const { cid: apiId, pic: apiImage } = result
+            setClockErrorMessage(errorMessage)
+            openClockInErrorModal()
+            await reject(error.response)
+          })
+      } else if (identify === PERSON_TYPE.MEMBER_CARD) {
+        // 若是 member card
+        // 即為會員，使用荷官輸入的 member card
+        // 立刻關掉 modal
+        // 圖片改用資料庫中的照片
+        await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
-        })
-        .catch(error => {
-          // 如果有 error 就跳出 popup
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+            addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
+            await resolve(result)
+          })
+          .catch(async error => {
+            // 如果有 error 就跳出 popup
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
 
-          setClockErrorMessage(errorMessage)
-          openClockInErrorModal()
-        })
-    } else {
-      // 若不是 anonymous 或者 member card
-      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
-        .then(result => {
-          const { cid: apiId, pic: apiImage } = result
+            setClockErrorMessage(errorMessage)
+            openClockInErrorModal()
+            await reject(error.response)
+          })
+      } else {
+        // 若不是 anonymous 或者 member card
+        // 即為荷官辨識出該會員，使用資料庫中原有的 id card
+        // 圖片改用資料庫中的照片
+        await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-          addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
-        })
-        .catch(error => {
-          // 如果有 error 就跳出 popup
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+            addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
+            await resolve(result)
+          })
+          .catch(async error => {
+            // 如果有 error 就跳出 popup
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
 
-          setClockErrorMessage(errorMessage)
-          openClockInErrorModal()
-        })
-    }
+            setClockErrorMessage(errorMessage)
+            openClockInErrorModal()
+            await reject(error.response)
+          })
+      }
+    })
+    return manualClockInPromise
   }
 
   const removeItemFromListByClockOut = async seatNumber => {
