@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import { findIndex, trim, findKey, set, isEmpty, find, isNumber } from 'lodash'
+import { findIndex, trim, findKey, set, isEmpty, find } from 'lodash'
 
 // Components
 import ClockInModal from './components/ClockInModal'
@@ -130,11 +130,6 @@ function Table (props) {
   const [isStopDetect, setIsStopDetect] = useState(false)
   const [autoClockOutErrorMessage, setAutoClockOutErrorMessage] = useState('')
 
-  const numberInUsed = useRef()
-  const initialNumberInUsed = () => {
-    numberInUsed.current = null
-  }
-
   // private methods
   const initializeIsSelectedPlaceStanding = () => setIsSelectedPlaceStanding(null)
   const initializeSelectedPlaceIndex = () => setSelectedPlaceIndex(null)
@@ -248,124 +243,117 @@ function Table (props) {
 
   // Automatically clock-in
   const executeAutoClockIn = async (event, detectionItem) => {
-    // 從 detectionItem 的 probableList 挑出 similarity 最高者
-    // 解構成 frond-end key
-    const person = await getPersonByType(detectionItem.type, detectionItem)
-    const newPerson = {
-      ...person,
-      identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
-      rect: detectionItem.rect,
-      cameraId: detectionItem.cameraId,
-      type: detectionItem.type,
-      cardType: detectionItem.probableList[0].level,
-    }
+    let autoClockInPromise = new Promise(async (resolve, reject) => {
+      // 從 detectionItem 的 probableList 挑出 similarity 最高者
+      // 解構成 frond-end key
+      const person = await getPersonByType(detectionItem.type, detectionItem)
+      const newPerson = {
+        ...person,
+        identify: detectionItem.type === PERSON_TYPE.MEMBER ? person.id : detectionItem.type === PERSON_TYPE.ANONYMOUS && PERSON_TYPE.ANONYMOUS,
+        rect: detectionItem.rect,
+        cameraId: detectionItem.cameraId,
+        type: detectionItem.type,
+        cardType: detectionItem.probableList[0].level,
+      }
 
-    let { id, image } = await person
-    const { tempId, name, memberCard, identify, type, cardType } = newPerson
+      let { id, image } = await person
+      const { tempId, name, memberCard, identify, type, cardType } = newPerson
 
-    const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
-    const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
+      const { isInSeatedPlace, seatedIndex } = await getSeatedCoordinate(newPerson)
+      const isSomeoneSeated = typeof seatedList[seatedIndex] === 'object'
 
-    // let fromIndex = numberInUsed.current
-    if (isNumber(numberInUsed.current)) {
-      numberInUsed.current++
-    } else {
-      numberInUsed.current = 0
-    }
+      // Genting App standing 座位
+      const standingIndex = await findIndex(standingList, item => item === undefined)
 
-    // Genting App standing 座位
-    const standingIndex = await findIndex(standingList, item => item === undefined, numberInUsed.current)
-    numberInUsed.current = standingIndex
+      // Dynamiq GTT 實際座位
+      let seatNumber = (await seatedIndex) + 1
+      if (!isInSeatedPlace || isSomeoneSeated) {
+        seatNumber = (await standingIndex) + TOTAL_SEAT + 1
+      }
 
-    // Dynamiq GTT 實際座位
-    let seatNumber = (await seatedIndex) + 1
-    if (!isInSeatedPlace || isSomeoneSeated) {
-      seatNumber = (await standingIndex) + TOTAL_SEAT + 1
-    }
+      if (identify === PERSON_TYPE.ANONYMOUS) {
+        // 若是 anonymous
+        // 即自動建立臨時帳號
+        // 並以取得的 id 放進 seat / standing list 中
 
-    if (identify === PERSON_TYPE.ANONYMOUS) {
-      // 若是 anonymous
-      // 即自動建立臨時帳號
-      // 並以取得的 id 放進 seat / standing list 中
+        await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-      await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
-        .then(async result => {
-          const { cid: apiId, pic: apiImage } = result
+            if (isInSeatedPlace && !isSomeoneSeated) {
+              await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
+            } else {
+              await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
+            }
+            await resolve(result)
+          })
+          .catch(async error => {
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          await initialNumberInUsed()
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
+            await reject(error.response)
+          })
+      } else if (identify === PERSON_TYPE.MEMBER_CARD) {
+        // 若是 member card
+        // 即為會員，使用荷官輸入的 member card
+        // 立刻關掉 modal
+        // 圖片改用資料庫中的照片
+        await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-          if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
-          } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
-          }
-        })
-        .catch(error => {
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+            if (isInSeatedPlace && !isSomeoneSeated) {
+              await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
+            } else {
+              await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
+            }
+            await resolve(result)
+          })
+          .catch(async error => {
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          initialNumberInUsed()
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
+            await reject(error.response)
+          })
+      } else {
+        // 若不是 anonymous 或者 member card
+        // 即為荷官辨識出該會員，使用資料庫中原有的 id card
+        // 圖片改用資料庫中的照片
+        await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
+          .then(async result => {
+            const { cid: apiId, pic: apiImage } = result
 
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
-        })
-    } else if (identify === PERSON_TYPE.MEMBER_CARD) {
-      // 若是 member card
-      // 即為會員，使用荷官輸入的 member card
-      // 立刻關掉 modal
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
-        .then(async result => {
-          const { cid: apiId, pic: apiImage } = result
+            if (isInSeatedPlace && !isSomeoneSeated) {
+              await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
+            } else {
+              await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
+            }
+            await resolve(result)
+          })
+          .catch(async error => {
+            let errorMessage = error.response.data.data
+            errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-          if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
-          } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
-          }
-        })
-        .catch(error => {
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
-
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
-        })
-    } else {
-      // 若不是 anonymous 或者 member card
-      // 即為荷官辨識出該會員，使用資料庫中原有的 id card
-      // 圖片改用資料庫中的照片
-      await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
-        .then(async result => {
-          const { cid: apiId, pic: apiImage } = result
-
-          await initialNumberInUsed()
-
-          if (isInSeatedPlace && !isSomeoneSeated) {
-            await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
-          } else {
-            await addStadingItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, standingIndex, seatNumber)
-          }
-        })
-        .catch(error => {
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
-
-          initialNumberInUsed()
-
-          // 如果 not log-on，自動 log-on
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            errorMessage += '. Please confirm Clock-In again.'
-            TableApi.logOnTable({ tableNumber })
-          }
-        })
-    }
+            // 如果 not log-on，自動 log-on
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              errorMessage += '. Please confirm Clock-In again.'
+              TableApi.logOnTable({ tableNumber })
+            }
+            await reject(error.response)
+          })
+      }
+    })
+    return autoClockInPromise
   }
 
   // ClockInModal
@@ -511,7 +499,7 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async player => {
-    let newPromise = new Promise(async (resolve, reject) => {
+    let autoClockOutPromise = new Promise(async (resolve, reject) => {
       // re-render 會造成 redux 的值變回舊的，所以直接取 localStorage 值以確保是最新的值
       const localStorageStandingList = getLocalStorageItem('standingList')
       const localStorageSeatedList = getLocalStorageItem('seatedList')
@@ -620,7 +608,7 @@ function Table (props) {
           })
       }
     })
-    return newPromise
+    return autoClockOutPromise
   }
 
   // Manually clock out

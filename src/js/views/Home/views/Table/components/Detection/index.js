@@ -73,7 +73,14 @@ function Detection (props) {
 
   const [detectionData, setDetectionData] = useState({})
   const clockInPlayer = useRef({})
+  const isAutoClockingInRef = useRef(false)
   const isAutoClockingOutRef = useRef(false)
+
+  const startAutoClockingIn = () => (isAutoClockingInRef.current = true)
+  const stopAutoClockingIn = () => (isAutoClockingInRef.current = false)
+  const startAutoClockingOut = () => (isAutoClockingOutRef.current = true)
+  const stopAutoClockingOut = () => (isAutoClockingOutRef.current = false)
+
   // console.log('clockInPlayer', clockInPlayer.current)
   // console.log('detectionData.leave', detectionData.leave)
   // console.log('clockOutPlayer', clockOutPlayer)
@@ -196,7 +203,7 @@ function Detection (props) {
           if (alreadyLeaveTime >= autoSettings.autoClockOutAnonymousSec && (isPlayerInStanding || isPlayerInSeated)) {
             // 執行完 clock-ou API 得到 true
             if (!isAutoClockingOutRef.current) {
-              isAutoClockingOutRef.current = true
+              startAutoClockingOut()
 
               executeAutoClockOut(player)
                 .then(async result => {
@@ -214,7 +221,7 @@ function Detection (props) {
                       await removeSeatedItem(player.seatedIndex)
                       await setTimeout(() => {
                         removeClockOutPlayer(player)
-                        isAutoClockingOutRef.current = false
+                        stopAutoClockingOut()
                       }, 10)
                       delete clockInPlayer.current[player.tempId]
                     })
@@ -230,7 +237,7 @@ function Detection (props) {
                       await removeStandingItem(player.standingIndex)
                       await setTimeout(() => {
                         removeClockOutPlayer(player)
-                        isAutoClockingOutRef.current = false
+                        stopAutoClockingOut()
                       }, 10)
                       delete clockInPlayer.current[player.tempId]
                     })
@@ -238,7 +245,7 @@ function Detection (props) {
                 })
                 .catch(error => {
                   console.warn('detection error', error)
-                  isAutoClockingOutRef.current = false
+                  stopAutoClockingOut()
                 })
             }
           }
@@ -337,13 +344,17 @@ function Detection (props) {
   }
 
   const autoClockInWithTriggerTimeByType = async (detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType) => {
-    if (detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[mapCardTypeToType(detectionItemCardType)]) {
-      await executeAutoClockIn(event, detectionItem)
-      const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
-      const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
-      const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
+    if (!isAutoClockingInRef.current && detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[mapCardTypeToType(detectionItemCardType)]) {
+      startAutoClockingIn()
+      await executeAutoClockIn(event, detectionItem).then(async result => {
+        console.log('auto clock in result', result)
+        const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
+        const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
+        const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
 
-      if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = await true
+        if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = await true
+        await stopAutoClockingIn()
+      })
     }
   }
 
