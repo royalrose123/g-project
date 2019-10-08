@@ -297,7 +297,17 @@ function ClockInModal (props) {
           <div className={cx('home-member-detail-error-modal__body')}>{clockErrorMessage}</div>
         </Modal.Body>
         <Modal.Footer>
-          <Button type='button' className={cx('home-member-detail-error-modal__action')} size={'md'} onClick={closeClockInErrorModal}>
+          <Button
+            type='button'
+            className={cx('home-member-detail-error-modal__action')}
+            size={'md'}
+            onClick={() => {
+              setIsFirstClockIn(true)
+              closeClockInErrorModal()
+              // 如果是 anonymous 直接關掉 clock-in popup
+              if (detectionItem.type === PERSON_TYPE.ANONYMOUS) onClose()
+            }}
+          >
             OK
           </Button>
         </Modal.Footer>
