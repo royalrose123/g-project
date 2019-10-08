@@ -198,44 +198,48 @@ function Detection (props) {
             if (!isAutoClockingOutRef.current) {
               isAutoClockingOutRef.current = true
 
-              executeAutoClockOut(player).then(async result => {
-                const isSeated = player.seatedIndex >= 0
+              executeAutoClockOut(player)
+                .then(async result => {
+                  const isSeated = player.seatedIndex >= 0
+                  if (isSeated) {
+                    // For Refresh - SteatedList local storage
+                    const localStorageSeatedList = getLocalStorageItem('seatedList')
 
-                if (isSeated) {
-                  // For Refresh - SteatedList local storage
-                  const localStorageSeatedList = getLocalStorageItem('seatedList')
+                    const newSeatedList = await localStorageSeatedList.map((item, index) =>
+                      item?.seatNumber === player?.seatNumber ? undefined : item
+                    )
 
-                  const newSeatedList = await localStorageSeatedList.map((item, index) =>
-                    item?.seatNumber === player?.seatNumber ? undefined : item
-                  )
+                    // 先 set localStorage 再異動 redux 的值
+                    setLocalStorageItemPromise('seatedList', newSeatedList).then(async result => {
+                      await removeSeatedItem(player.seatedIndex)
+                      await setTimeout(() => {
+                        removeClockOutPlayer(player)
+                        isAutoClockingOutRef.current = false
+                      }, 10)
+                      delete clockInPlayer.current[player.tempId]
+                    })
+                  } else {
+                    // For Refresh - StandingList local storage
+                    const localStorageStandingList = getLocalStorageItem('standingList')
 
-                  // 先 set localStorage 再異動 redux 的值
-                  setLocalStorageItemPromise('seatedList', newSeatedList).then(async result => {
-                    await removeSeatedItem(player.seatedIndex)
-                    await setTimeout(() => {
-                      removeClockOutPlayer(player)
-                      isAutoClockingOutRef.current = false
-                    }, 10)
-                    delete clockInPlayer.current[player.tempId]
-                  })
-                } else {
-                  // For Refresh - StandingList local storage
-                  const localStorageStandingList = getLocalStorageItem('standingList')
+                    const newStandingList = await localStorageStandingList.map((item, index) =>
+                      item?.seatNumber === player?.seatNumber ? undefined : item
+                    )
 
-                  const newStandingList = await localStorageStandingList.map((item, index) =>
-                    item?.seatNumber === player?.seatNumber ? undefined : item
-                  )
-
-                  setLocalStorageItemPromise('standingList', newStandingList).then(async result => {
-                    await removeStandingItem(player.standingIndex)
-                    await setTimeout(() => {
-                      removeClockOutPlayer(player)
-                      isAutoClockingOutRef.current = false
-                    }, 10)
-                    delete clockInPlayer.current[player.tempId]
-                  })
-                }
-              })
+                    setLocalStorageItemPromise('standingList', newStandingList).then(async result => {
+                      await removeStandingItem(player.standingIndex)
+                      await setTimeout(() => {
+                        removeClockOutPlayer(player)
+                        isAutoClockingOutRef.current = false
+                      }, 10)
+                      delete clockInPlayer.current[player.tempId]
+                    })
+                  }
+                })
+                .catch(error => {
+                  console.warn('detection error', error)
+                  isAutoClockingOutRef.current = false
+                })
             }
           }
           break
@@ -243,8 +247,50 @@ function Detection (props) {
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec && (isPlayerInStanding || isPlayerInSeated)) {
             // 執行完 clock-ou API 得到 true
             if (!isAutoClockingOutRef.current) {
-              // startAutoClockingOut()
+              isAutoClockingOutRef.current = true
+
               executeAutoClockOut(player)
+                .then(async result => {
+                  const isSeated = player.seatedIndex >= 0
+                  if (isSeated) {
+                    // For Refresh - SteatedList local storage
+                    const localStorageSeatedList = getLocalStorageItem('seatedList')
+
+                    const newSeatedList = await localStorageSeatedList.map((item, index) =>
+                      item?.seatNumber === player?.seatNumber ? undefined : item
+                    )
+
+                    // 先 set localStorage 再異動 redux 的值
+                    setLocalStorageItemPromise('seatedList', newSeatedList).then(async result => {
+                      await removeSeatedItem(player.seatedIndex)
+                      await setTimeout(() => {
+                        removeClockOutPlayer(player)
+                        isAutoClockingOutRef.current = false
+                      }, 10)
+                      delete clockInPlayer.current[player.tempId]
+                    })
+                  } else {
+                    // For Refresh - StandingList local storage
+                    const localStorageStandingList = getLocalStorageItem('standingList')
+
+                    const newStandingList = await localStorageStandingList.map((item, index) =>
+                      item?.seatNumber === player?.seatNumber ? undefined : item
+                    )
+
+                    setLocalStorageItemPromise('standingList', newStandingList).then(async result => {
+                      await removeStandingItem(player.standingIndex)
+                      await setTimeout(() => {
+                        removeClockOutPlayer(player)
+                        isAutoClockingOutRef.current = false
+                      }, 10)
+                      delete clockInPlayer.current[player.tempId]
+                    })
+                  }
+                })
+                .catch(error => {
+                  console.warn('detection error', error)
+                  isAutoClockingOutRef.current = false
+                })
             }
           }
           break

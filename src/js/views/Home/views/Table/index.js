@@ -511,114 +511,116 @@ function Table (props) {
 
   // Auto clock out
   const executeAutoClockOut = async player => {
-    // re-render 會造成 redux 的值變回舊的，所以直接取 localStorage 值以確保是最新的值
-    const localStorageStandingList = getLocalStorageItem('standingList')
-    const localStorageSeatedList = getLocalStorageItem('seatedList')
+    let newPromise = new Promise(async (resolve, reject) => {
+      // re-render 會造成 redux 的值變回舊的，所以直接取 localStorage 值以確保是最新的值
+      const localStorageStandingList = getLocalStorageItem('standingList')
+      const localStorageSeatedList = getLocalStorageItem('seatedList')
 
-    const isPlayerInStanding = await Boolean(find(localStorageStandingList, { seatNumber: player.seatNumber }))
-    const isPlayerInSeated = await Boolean(find(localStorageSeatedList, { seatNumber: player.seatNumber }))
+      const isPlayerInStanding = await Boolean(find(localStorageStandingList, { seatNumber: player.seatNumber }))
+      const isPlayerInSeated = await Boolean(find(localStorageSeatedList, { seatNumber: player.seatNumber }))
 
-    if (!isPlayerInStanding && !isPlayerInSeated) return false
+      if (!isPlayerInStanding && !isPlayerInSeated) return false // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
 
-    // if (!isPlayerInStanding && !isPlayerInSeated) return // 執行 Redux remove item 時會 re-render，所以做此判斷以避免重複 call enquiry 跟 clock-out APIs
-    // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
-    if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect && (isPlayerInStanding || isPlayerInSeated)) {
-      await MemberApi.fetchMemberDetailByIdWithType({
-        id: player.id,
-        type: player.type,
-        cardType: player.cardType,
-        tableNumber,
-        seatNumber: player.seatNumber,
-      })
-        .then(result => {
-          clockOutFieldList.map(item => {
-            set(clockOutPoutEnquiryValue, item, result[item])
+      // auto clock-out 時，如果 praValue 不等於 0，pra 對應的 field 就填入 default 的值，否則為空字串
+      if (isEmpty(clockOutPoutEnquiryValue) && !isStopDetect && (isPlayerInStanding || isPlayerInSeated)) {
+        await MemberApi.fetchMemberDetailByIdWithType({
+          id: player.id,
+          type: player.type,
+          cardType: player.cardType,
+          tableNumber,
+          seatNumber: player.seatNumber,
+        })
+          .then(result => {
+            clockOutFieldList.map(item => {
+              set(clockOutPoutEnquiryValue, item, result[item])
+            })
+            set(clockOutValue, 'whoWin', clockOutDefaultValue[mapCardTypeToType(player.cardType)]['whoWin']) // 一開始先填 whoWin default value
+
+            if (result?.praValue) {
+              parsePraListToClockOutField(result.praValue).forEach(item => {})
+            }
+            if (result?.praValue === 1 || result?.praValue === 0) {
+              set(clockOutValue, 'playTypeNumber', result['playTypeNumber']) // clock-out value
+            }
+            if (mapCardTypeToType(player.cardType) === 'anonymous') {
+              set(clockOutValue, 'playTypeNumber', clockOutDefaultValue['anonymous']['playTypeNumber']) // clock-out value
+            }
           })
-          set(clockOutValue, 'whoWin', clockOutDefaultValue[mapCardTypeToType(player.cardType)]['whoWin']) // 一開始先填 whoWin default value
-
-          if (result?.praValue) {
-            parsePraListToClockOutField(result.praValue).forEach(item => {})
-          }
-          if (result?.praValue === 1 || result?.praValue === 0) {
-            set(clockOutValue, 'playTypeNumber', result['playTypeNumber']) // clock-out value
-          }
-          if (mapCardTypeToType(player.cardType) === 'anonymous') {
-            set(clockOutValue, 'playTypeNumber', clockOutDefaultValue['anonymous']['playTypeNumber']) // clock-out value
-          }
-        })
-        .catch(error => {
-          let errorMessage = error.response.data.data
-          errorMessage = trim(errorMessage.split('msg')[1], '}:"')
-
-          if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
-            // 如果 not log-on，自動 log-on
-            TableApi.logOnTable({ tableNumber })
-          } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
-            removeItemFromListByClockOut(player.seatNumber)
-          } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
-            removeItemFromListByClockOut(player.seatNumber)
-          } else {
-            clockOutPoutEnquiryValue = {}
-            stopDetecting()
-            removeItemFromListByClockOut(player.seatNumber)
-            setAutoClockOutErrorMessage(error.response.data.data)
-          }
-          return false
-        })
-    }
-
-    if (!isEmpty(clockOutPoutEnquiryValue) && !isPlayerInStanding && !isPlayerInSeated) return false
-
-    if (!isEmpty(clockOutPoutEnquiryValue) && (isPlayerInStanding || isPlayerInSeated)) {
-      //  return // 如果 enquiry 失敗就不執行 clock-out
-      await GameApi.clockOut({
-        id: player.id,
-        tempId: player.tempId,
-        ...clockOutValue,
-        tableNumber,
-        type: player.type,
-        cardType: player.cardType,
-        seatNumber: player.seatNumber,
-      })
-        .then(async result => {
-          return result && true
-        })
-        .catch(error => {
-          if (error?.response?.data) {
+          .catch(error => {
             let errorMessage = error.response.data.data
             errorMessage = trim(errorMessage.split('msg')[1], '}:"')
 
-            const praErrorValue = trim(errorMessage.split('pra')[1], '=')
-            const praMessage = parsePraListToBitValues(praErrorValue).join()
-
-            const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
-            const isOverrideMessage = praMessage.indexOf('Override') !== -1
-
-            if (isPraErrorValue && !isOverrideMessage) {
-              parsePraListToClockOutField(praErrorValue).forEach(item => {
-                set(clockOutValue, item, clockOutDefaultValue[mapCardTypeToType(player.cardType)][item]) // clock-out value
-              })
+            if (errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON) {
+              // 如果 not log-on，自動 log-on
+              TableApi.logOnTable({ tableNumber })
+            } else if (errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN) {
+              removeItemFromListByClockOut(player.seatNumber)
+            } else if (errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT) {
+              removeItemFromListByClockOut(player.seatNumber)
             } else {
+              clockOutPoutEnquiryValue = {}
               stopDetecting()
               removeItemFromListByClockOut(player.seatNumber)
+              setAutoClockOutErrorMessage(error.response.data.data)
+            }
+            reject(error.response)
+          })
+      }
 
-              if (errorMessage) {
-                if (isPraErrorValue) {
-                  errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${parsePraListToBitValues(praErrorValue)}`
-                  setAutoClockOutErrorMessage(errorMessage)
+      if (!isEmpty(clockOutPoutEnquiryValue) && !isPlayerInStanding && !isPlayerInSeated) return false
+
+      if (!isEmpty(clockOutPoutEnquiryValue) && (isPlayerInStanding || isPlayerInSeated)) {
+        // 如果 enquiry 失敗就不執行 clock-out
+        await GameApi.clockOut({
+          id: player.id,
+          tempId: player.tempId,
+          ...clockOutValue,
+          tableNumber,
+          type: player.type,
+          cardType: player.cardType,
+          seatNumber: player.seatNumber,
+        })
+          .then(async result => {
+            resolve(result)
+          })
+          .catch(error => {
+            if (error?.response?.data) {
+              let errorMessage = error.response.data.data
+              errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+              const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+              const praMessage = parsePraListToBitValues(praErrorValue).join()
+
+              const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+              const isOverrideMessage = praMessage.indexOf('Override') !== -1
+
+              if (isPraErrorValue && !isOverrideMessage) {
+                parsePraListToClockOutField(praErrorValue).forEach(item => {
+                  set(clockOutValue, item, clockOutDefaultValue[mapCardTypeToType(player.cardType)][item]) // clock-out value
+                })
+              } else {
+                stopDetecting()
+                removeItemFromListByClockOut(player.seatNumber)
+
+                if (errorMessage) {
+                  if (isPraErrorValue) {
+                    errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${parsePraListToBitValues(praErrorValue)}`
+                    setAutoClockOutErrorMessage(errorMessage)
+                  } else {
+                    errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${errorMessage}`
+                    setAutoClockOutErrorMessage(errorMessage)
+                  }
                 } else {
-                  errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${errorMessage}`
+                  errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${error.response.data.data}`
                   setAutoClockOutErrorMessage(errorMessage)
                 }
-              } else {
-                errorMessage = `CID:  ${player.id}, Seat No: ${player.seatNumber}, Error: ${error.response.data.data}`
-                setAutoClockOutErrorMessage(errorMessage)
               }
             }
-          }
-          return false
-        })
-    }
+            reject(error.response)
+          })
+      }
+    })
+    return newPromise
   }
 
   // Manually clock out
