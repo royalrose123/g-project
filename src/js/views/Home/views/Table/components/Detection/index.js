@@ -6,7 +6,7 @@ import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
-import { get, find, findIndex, uniqBy } from 'lodash'
+import { get, find, findIndex, uniqBy, trim } from 'lodash'
 
 // Components
 import Person from '../Person'
@@ -26,6 +26,8 @@ import getPersonByType from '../../../../../../lib/helpers/get-person-by-type'
 import personSVG from '../../../../../../../assets/images/icons/person.svg'
 import CLOCK_STATUS from '../../../../../../constants/ClockStatus'
 import TEMP_ACCOUNT_CARD_TYPE from '../../../../../../constants/TempAccountCardType'
+import ERROR_MESSAGE from '../../../../../../constants/ErrorMessage'
+import { parsePraListToBitValues } from '../../../../../../lib/utils/parse-pra-to-list'
 
 // Style
 import styles from './style.module.scss'
@@ -244,8 +246,74 @@ function Detection (props) {
                   }
                 })
                 .catch(error => {
-                  console.warn('detection error', error)
-                  stopAutoClockingOut()
+                  let errorMessage = error.data.data
+                  errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+                  if (errorMessage) {
+                    const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+                    const praMessage = parsePraListToBitValues(praErrorValue).join()
+
+                    const isNotLogOn = errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON
+                    const isNotClockIn = errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN
+                    const isVacant = errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT
+
+                    const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+                    const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
+                    const isOverrideMessage = praMessage.indexOf('Override') !== -1
+                    const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
+
+                    switch (true) {
+                      case isNotLogOn:
+                        // not log on
+                        stopAutoClockingOut()
+                        break
+                      case isNotClockIn:
+                        // not clock in
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                        break
+                      case isVacant:
+                        // seat is vacant
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                        break
+                      case isNotPermittedMessage:
+                        // not permitted
+                        stopAutoClockingOut()
+                        break
+                      case isMismatchMessage:
+                        // mismatch override
+                        stopAutoClockingOut()
+                        break
+                      case isPraErrorValue && isOverrideMessage:
+                        // pra override
+                        stopAutoClockingOut()
+                        break
+                      case isPraErrorValue && !isOverrideMessage:
+                        // pra message
+                        stopAutoClockingOut()
+                        break
+                      default:
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                    }
+                  } else {
+                    // 如果 error message 不是由 msg 組成，直接回傳 removeClockOutPlayer
+                    setTimeout(() => {
+                      removeClockOutPlayer(player)
+                    }, 10)
+                    delete clockInPlayer.current[player.tempId]
+                    stopAutoClockingOut()
+                  }
                 })
             }
           }
@@ -346,15 +414,19 @@ function Detection (props) {
   const autoClockInWithTriggerTimeByType = async (detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType) => {
     if (!isAutoClockingInRef.current && detectionItemExistingTime >= AUTO_CLOCK_IN_SECOND[mapCardTypeToType(detectionItemCardType)]) {
       startAutoClockingIn()
-      await executeAutoClockIn(event, detectionItem).then(async result => {
-        console.log('auto clock in result', result)
-        const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
-        const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
-        const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
+      await executeAutoClockIn(event, detectionItem)
+        .then(async result => {
+          const isPlayerInStanding = Boolean(find(standingList, { id: detectionItem.id }))
+          const isPlayerInSeated = Boolean(find(seatedList, { id: detectionItem.id }))
+          const isPlayerClockIn = isPlayerInStanding || isPlayerInSeated
 
-        if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = await true
-        await stopAutoClockingIn()
-      })
+          if (isPlayerClockIn) clockInPlayer.current[detectionItemTempId] = await true
+          await stopAutoClockingIn()
+        })
+        .catch(async error => {
+          console.log('error.response', error.response)
+          await stopAutoClockingIn()
+        })
     }
   }
 
