@@ -10,10 +10,19 @@
   }
 
   &[data-size="md"] {
-    width: 150px;
+    width: 180px;
   }
 
   &[data-size="lg"] {
     width: 220px;
   }
+}
+
+.home-camera-setting-column {
+  justify-content: flex-start;
+  margin-right: 8px;
+}
+
+.home-camera-chosen-coordinate-column {
+  width: 280px;
 }

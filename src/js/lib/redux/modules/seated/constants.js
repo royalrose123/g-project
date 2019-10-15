@@ -1,4 +1,5 @@
-export const MODULE_NAME = 'seated'
+import TOTAL_SEAT from '../../../../constants/TotalSeat'
 
-export const COUNT = 7
+export const MODULE_NAME = 'seated'
+export const COUNT = TOTAL_SEAT
 export const SIZE = '53px'

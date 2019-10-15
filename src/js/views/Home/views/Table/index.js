@@ -29,14 +29,16 @@ import { selectors as settingSelectors } from '../../../../lib/redux/modules/set
 import GameApi from '../../../../lib/api/Game'
 import MemberApi from '../../../../lib/api/Member'
 import TableApi from '../../../../lib/api/Table'
+import CoordinateApi from '../../../../lib/api/Coordinate'
+import useFetcher from '../../../../lib/effects/useFetcher'
 import findStaticPath from '../../../../lib/utils/find-static-path'
 import getPersonByType from '../../../../lib/helpers/get-person-by-type'
 import CLOCK_STATUS from '../../../../constants/ClockStatus'
 import TEMP_ACCOUNT_CARD_TYPE from '../../../../constants/TempAccountCardType'
 import { setLocalStorageItem, getLocalStorageItem } from '../../../../lib/helpers/localStorage'
-import { seatedCoordinate, cameraProportion } from '../../../../constants/SeatedCoordinate'
 import MISMATCH_FIELD from '../../../../constants/MismatchField'
 import ERROR_MESSAGE from '../../../../constants/ErrorMessage'
+import TOTAL_SEAT from '../../../../constants/TotalSeat'
 import { parsePraListToBitValues, parsePraListToClockOutField } from '../../../../lib/utils/parse-pra-to-list'
 
 // Style
@@ -46,7 +48,6 @@ import styles from './style.module.scss'
 import PERSON_TYPE from '../../../../constants/PersonType'
 const cx = classnames.bind(styles)
 const person = { width: '130px', height: '170px' }
-const TOTAL_SEAT = 7
 
 export const propTypes = {
   match: PropTypes.object,
@@ -78,6 +79,8 @@ function Table (props) {
     systemSettings,
     defaultRecord,
   } = props
+
+  const { response: coordinateDetail } = useFetcher(null, CoordinateApi.getCoordinate, { tableNumber })
 
   const clockOutDefaultValue = {
     anonymous: {
@@ -202,24 +205,29 @@ function Table (props) {
 
   // 判斷座標是否在seated中
   const getSeatedCoordinate = async person => {
-    const cameraId = trim(person.cameraId, tableNumber) // Ex: Table-0813-A => A
-    const personXCoordinate = person.rect[0] / cameraProportion.x // 換算為 grid 的 x
-    const personYCoordinate = person.rect[1] / cameraProportion.y // 換算為 grid的 y
-    const personWidth = person.rect[2] / cameraProportion.x // 換算為 grid 的 width
-    const personHeight = person.rect[3] / cameraProportion.y // 換算為 grid 的 height
+    const cameraId = `camera${trim(person.cameraId, tableNumber)}` // Ex: Table-0813-A => A
+    const personXCoordinate = person.rect[0] // 換算為 grid 的 x
+    const personYCoordinate = person.rect[1] // 換算為 grid的 y
+    const personWidth = person.rect[2] // 換算為 grid 的 width
+    const personHeight = person.rect[3] // 換算為 grid 的 height
     const personMidPoint = [personXCoordinate + personWidth / 2, personYCoordinate + personHeight / 2] // FR 座標為辨識綠框的左上角，但以中心點判斷較為精準
 
-    const seatedIndex = await Number(
-      findKey(seatedCoordinate[cameraId], seated => {
+    let seatedIndex = await trim(
+      findKey(coordinateDetail[cameraId], seated => {
         return (
-          personMidPoint[0] >= seated.topLeft[0] && // 中心點的x大於位子的左上角x座標
-          personMidPoint[0] <= seated.bottomRight[0] && // 中心點的x小於位子的右下角x座標
-          personMidPoint[1] >= seated.topLeft[1] && // 中心點的y大於位子的左上角y座標
-          personMidPoint[1] <= seated.bottomRight[1] // 中心點的y小於位子的右下角y座標
+          seated.checked &&
+          personMidPoint[0] >= seated.topLeft.x && // 中心點的 x 大於位子的左上角 x 座標
+          personMidPoint[0] <= seated.bottomRight.x && // 中心點的 x 小於位子的右下角 x 座標
+          personMidPoint[1] >= seated.topLeft.y && // 中心點的 y 大於位子的左上角 y 座標
+          personMidPoint[1] <= seated.bottomRight.y // 中心點的 y 小於位子的右下角 y 座標
         )
-      })
+      }),
+      'seat'
     )
+
+    seatedIndex = (await seatedIndex.length) > 0 ? Number(seatedIndex) : undefined // 有符合條件就把 seatedIndex 轉成 number
     const isInSeatedPlace = !isNaN(seatedIndex)
+
     return { isInSeatedPlace, seatedIndex }
   }
 
