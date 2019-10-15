@@ -1,11 +1,12 @@
 import { BigNumber } from 'bignumber.js'
+import LocationHostname from '../../../constants/LocationHostname'
 
 import Service from '../service'
 
 class Normalizer {
   static ProbableItem ({ image, similarity, idcard, peopleId, peopleName, ctc }) {
     return {
-      image,
+      image: `https://${LocationHostname}:450${image}`,
       // 來的時候是小數點，需要乘以一百，再無條件捨去
       similarity: Number(new BigNumber(similarity).multipliedBy(100).integerValue(BigNumber.ROUND_FLOOR)),
       id: idcard,
@@ -22,7 +23,7 @@ class Normalizer {
   static DetectionItem ({ type, faceImage, background, rect, result, dateTime, cameraId }) {
     return {
       type,
-      snapshot: faceImage,
+      snapshot: `https://${LocationHostname}:450${faceImage}`,
       background,
       rect,
       probableList: Normalizer.ProbableList(result),
@@ -40,7 +41,8 @@ class Normalizer {
   }
 
   static CameraItem ({ cameraId, url }) {
-    const serverIp = process.env.FR_SERVER_IP_PORT // 寫在 package.json，npm start/build 時直接注入
+    // const serverIp = process.env.FR_SERVER_IP_PORT // 寫在 package.json，npm start/build 時直接注入
+    const serverIp = `${LocationHostname}:450` // 取得 localhost IP
     return {
       id: cameraId,
       rtspUrl: url,

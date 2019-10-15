@@ -39,6 +39,7 @@ import { setLocalStorageItem, getLocalStorageItem } from '../../../../lib/helper
 import MISMATCH_FIELD from '../../../../constants/MismatchField'
 import ERROR_MESSAGE from '../../../../constants/ErrorMessage'
 import TOTAL_SEAT from '../../../../constants/TotalSeat'
+import LocationHostname from '../../../../constants/LocationHostname'
 import { parsePraListToBitValues, parsePraListToClockOutField } from '../../../../lib/utils/parse-pra-to-list'
 
 // Style
@@ -286,7 +287,9 @@ function Table (props) {
 
         await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -313,7 +316,9 @@ function Table (props) {
         // 圖片改用資料庫中的照片
         await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -339,7 +344,9 @@ function Table (props) {
         // 圖片改用資料庫中的照片
         await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -409,7 +416,9 @@ function Table (props) {
         // 並以取得的 id 放進 seat / standing list 中
         await GameApi.anonymousClockIn({ tempId, name, snapshot: image, tableNumber, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)
@@ -436,7 +445,9 @@ function Table (props) {
         // 圖片改用資料庫中的照片
         await GameApi.memberClockInByMemberCard({ memberCard, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)
@@ -462,7 +473,9 @@ function Table (props) {
         // 圖片改用資料庫中的照片
         await GameApi.memberClockInById({ id, tableNumber, seatNumber, cardType })
           .then(async result => {
-            const { cid: apiId, pic: apiImage } = result
+            const { cid: apiId } = result
+            let { pic: apiImage } = result
+            apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)

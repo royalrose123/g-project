@@ -8,7 +8,10 @@ import isPlainObject from 'lodash/fp/isPlainObject'
 import toCaseKeys, { CASES } from '../utils/to-case-keys'
 import toPredicateValues from '../utils/to-predicate-values'
 
+// import LocationHostname from '../../constants/LocationHostname'
+
 export const defaultNormalizer = response => response
+// const apiURL = `https://${LocationHostname}/api/v1`
 
 class Service {
   constructor (config = {}, { denormalizer = defaultNormalizer, normalizer = defaultNormalizer } = {}) {
@@ -24,6 +27,7 @@ class Service {
 
   static apiConfig = {
     baseURL: process.env.API_URL,
+    // baseURL: apiURL,
   }
 
   static normalizeList (list, normalizer) {
