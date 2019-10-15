@@ -69,6 +69,10 @@ const memberEnquiryModalText = {
     state: 'The indicated seat is vacant',
     description: `The indicated seat is vacant. Please click "OK", and the player will be removed`,
   },
+  OTHERS: {
+    state: 'Others',
+    description: ``,
+  },
 }
 
 function MemberDetail (props) {
@@ -103,6 +107,7 @@ function MemberDetail (props) {
     } else if (memberEnquiryErrorMessage.state === ERROR_MESSAGE.SEATED_IS_VACANT) {
       removeItemFromList()
     } else {
+      history.push(findStaticPath(path))
     }
   }
 
@@ -155,6 +160,7 @@ function MemberDetail (props) {
     if (error) {
       let errorMessage = error.response.data.data
       errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
       if (errorMessage) {
         // 如果 error message 是由 msg 組成，回傳 msg 後的字串
 
@@ -171,13 +177,14 @@ function MemberDetail (props) {
           setMemberEnquiryErrorMessage(memberEnquiryModalText['SEATED_IS_VACANT'])
           openEnquiryErrorModal()
         } else if (errorMessage) {
-          // 其他 error pop-up 後從 seated / standing 移除
-          setMemberEnquiryErrorMessage(errorMessage)
+          // 其他 error pop-up 後，點擊 ok 回到 Table page
+          setMemberEnquiryErrorMessage({ ...memberEnquiryModalText['OTHERS'], description: errorMessage })
           openEnquiryErrorModal()
         }
       } else {
         // 如果 error message 不是由 msg 組成，直接回傳整個 error message
-        setMemberEnquiryErrorMessage(error.response.data.data)
+        // setMemberEnquiryErrorMessage(error.response.data.data)
+        setMemberEnquiryErrorMessage({ ...memberEnquiryModalText['OTHERS'], description: error.response.data.data })
         openEnquiryErrorModal()
       }
     }

@@ -4,7 +4,7 @@ import classnames from 'classnames/bind'
 import * as Yup from 'yup'
 import { connect } from 'react-redux'
 import { Formik, Field, Form as FormikForm } from 'formik'
-import { trim } from 'lodash'
+import { trim, get } from 'lodash'
 
 // Components
 import Button from '../../../../components/Button'
@@ -47,7 +47,7 @@ export function Camera (props) {
   const [selectSeatCoordinate, setSelectSeatCoordinate] = useState({ x: '__', y: '__' })
   const [camera1, setCamera1] = useState({})
   const [camera2, setCamera2] = useState({})
-  const [lastFocusField, setLastFocusField] = useState('actualWin')
+  const [lastFocusField, setLastFocusField] = useState(`${currentTab}.seat0.topLeft.x`)
 
   const initializeSelectSeatCoordinate = () => setSelectSeatCoordinate({ x: '__', y: '__' })
 
@@ -517,31 +517,6 @@ export function Camera (props) {
               {({ validateForm, submitForm, initialValues, values, setFieldValue }) => {
                 return (
                   <FormikForm>
-                    <Keyboard
-                      onPress={key => {
-                        // if (key === keys.ENTER) {
-                        //   const nextFieldIndex = inputableKeys.indexOf(lastFocusField) + 1
-                        //   let nextIndex = nextFieldIndex > inputableKeys.length - 1 ? 0 : nextFieldIndex
-                        // const nextField = inputableKeys[nextIndex]
-                        // nextIndex = nextIndex + (detail.level !== CARD_TYPE.VIP && nextField === 'propPlay' ? 1 : 0)
-                        //   nextIndex++
-
-                        //   setLastFocusField(inputableKeys[nextIndex])
-                        //   return
-                        // }
-
-                        const oldValue = values[lastFocusField]
-                        let newValue = ''
-
-                        if (key === keys.DEL) {
-                          newValue = oldValue.slice(0, -1)
-                        } else {
-                          newValue = `${oldValue}${key}`
-                        }
-
-                        setFieldValue(lastFocusField, newValue)
-                      }}
-                    />
                     <div id={TABS.LIVE_VIEW} data-is-active={currentTab === TABS.LIVE_VIEW} className={cx('home-camera__tabs-panel-item')}>
                       {currentTab === TABS.LIVE_VIEW &&
                         cameraList.map(({ id, websocketUrl, rtspUrl }, index) => (
@@ -594,16 +569,43 @@ export function Camera (props) {
                     </div>
 
                     {currentTab !== TABS.LIVE_VIEW && (
-                      <div className={cx('home-camera__footer')}>
-                        <Form.Row>
-                          <Form.Column className={cx('home-camera-chosen-coordinate-column')}>
-                            <Form.Label>{`Chosen Coordinate x:  ${selectSeatCoordinate.x}, y: ${selectSeatCoordinate.y}`}</Form.Label>
-                          </Form.Column>
-                        </Form.Row>
-                        <Button type='submit' disabled={tableNumber === 'Please select table'}>
-                          Save
-                        </Button>
-                      </div>
+                      <>
+                        <Keyboard
+                          onPress={key => {
+                            // if (key === keys.ENTER) {
+                            //   const nextFieldIndex = inputableKeys.indexOf(lastFocusField) + 1
+                            //   let nextIndex = nextFieldIndex > inputableKeys.length - 1 ? 0 : nextFieldIndex
+                            // const nextField = inputableKeys[nextIndex]
+                            // nextIndex = nextIndex + (detail.level !== CARD_TYPE.VIP && nextField === 'propPlay' ? 1 : 0)
+                            //   nextIndex++
+
+                            //   setLastFocusField(inputableKeys[nextIndex])
+                            //   return
+                            // }
+
+                            const oldValue = get(values, lastFocusField)
+                            let newValue = ''
+
+                            if (key === keys.DEL) {
+                              newValue = oldValue.slice(0, -1)
+                            } else {
+                              newValue = `${oldValue}${key}`
+                            }
+
+                            setFieldValue(lastFocusField, newValue)
+                          }}
+                        />
+                        <div className={cx('home-camera__footer')}>
+                          <Form.Row>
+                            <Form.Column className={cx('home-camera-chosen-coordinate-column')}>
+                              <Form.Label>{`Chosen Coordinate x:  ${selectSeatCoordinate.x}, y: ${selectSeatCoordinate.y}`}</Form.Label>
+                            </Form.Column>
+                          </Form.Row>
+                          <Button type='submit' disabled={tableNumber === 'Please select table'}>
+                            Save
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </FormikForm>
                 )
