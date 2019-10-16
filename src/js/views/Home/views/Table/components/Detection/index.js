@@ -177,6 +177,8 @@ function Detection (props) {
       const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
       const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
 
+      if (!isPlayerInStanding && !isPlayerInSeated) setTimeout(() => removeClockOutPlayer(player), 10)
+
       // 如果 autoMember / autoAnonymous 時把 anonymous / member 加進 leave 名單時要移除
       const isTempAccount = get(player, 'cardType') === TEMP_ACCOUNT_CARD_TYPE
 
@@ -191,9 +193,6 @@ function Detection (props) {
           if (player.type === 'anonymous' || isTempAccount) {
             setTimeout(() => removeClockOutPlayer(player), 10)
           }
-          break
-        case CLOCK_STATUS.AUTO_CLOCK:
-          setTimeout(() => removeClockOutPlayer(player), 10)
           break
       }
 
@@ -322,7 +321,7 @@ function Detection (props) {
           if (alreadyLeaveTime >= autoSettings.autoClockOutMemberSec && (isPlayerInStanding || isPlayerInSeated)) {
             // 執行完 clock-ou API 得到 true
             if (!isAutoClockingOutRef.current) {
-              isAutoClockingOutRef.current = true
+              startAutoClockingOut()
 
               executeAutoClockOut(player)
                 .then(async result => {
@@ -340,7 +339,7 @@ function Detection (props) {
                       await removeSeatedItem(player.seatedIndex)
                       await setTimeout(() => {
                         removeClockOutPlayer(player)
-                        isAutoClockingOutRef.current = false
+                        stopAutoClockingOut()
                       }, 10)
                       delete clockInPlayer.current[player.tempId]
                     })
@@ -356,15 +355,81 @@ function Detection (props) {
                       await removeStandingItem(player.standingIndex)
                       await setTimeout(() => {
                         removeClockOutPlayer(player)
-                        isAutoClockingOutRef.current = false
+                        stopAutoClockingOut()
                       }, 10)
                       delete clockInPlayer.current[player.tempId]
                     })
                   }
                 })
                 .catch(error => {
-                  console.warn('detection error', error)
-                  isAutoClockingOutRef.current = false
+                  let errorMessage = error.data.data
+                  errorMessage = trim(errorMessage.split('msg')[1], '}:"')
+
+                  if (errorMessage) {
+                    const praErrorValue = trim(errorMessage.split('pra')[1], '=')
+                    const praMessage = parsePraListToBitValues(praErrorValue).join()
+
+                    const isNotLogOn = errorMessage === ERROR_MESSAGE.NOT_LOGGED_ON
+                    const isNotClockIn = errorMessage === ERROR_MESSAGE.NOT_CLOCKED_IN
+                    const isVacant = errorMessage === ERROR_MESSAGE.SEATED_IS_VACANT
+
+                    const isPraErrorValue = trim(errorMessage.split('pra')[1], '=') > 0
+                    const isMismatchMessage = errorMessage.indexOf('mismatch') !== -1
+                    const isOverrideMessage = praMessage.indexOf('Override') !== -1
+                    const isNotPermittedMessage = errorMessage.indexOf('not permitted') !== -1
+
+                    switch (true) {
+                      case isNotLogOn:
+                        // not log on
+                        stopAutoClockingOut()
+                        break
+                      case isNotClockIn:
+                        // not clock in
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                        break
+                      case isVacant:
+                        // seat is vacant
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                        break
+                      case isNotPermittedMessage:
+                        // not permitted
+                        stopAutoClockingOut()
+                        break
+                      case isMismatchMessage:
+                        // mismatch override
+                        stopAutoClockingOut()
+                        break
+                      case isPraErrorValue && isOverrideMessage:
+                        // pra override
+                        stopAutoClockingOut()
+                        break
+                      case isPraErrorValue && !isOverrideMessage:
+                        // pra message
+                        stopAutoClockingOut()
+                        break
+                      default:
+                        setTimeout(() => {
+                          removeClockOutPlayer(player)
+                        }, 10)
+                        delete clockInPlayer.current[player.tempId]
+                        stopAutoClockingOut()
+                    }
+                  } else {
+                    // 如果 error message 不是由 msg 組成，直接回傳 removeClockOutPlayer
+                    setTimeout(() => {
+                      removeClockOutPlayer(player)
+                    }, 10)
+                    delete clockInPlayer.current[player.tempId]
+                    stopAutoClockingOut()
+                  }
                 })
             }
           }
@@ -559,7 +624,6 @@ function Detection (props) {
                 />
               </div>
             )
-            //
           })}
         </Carousel>
       </div>
