@@ -10,6 +10,7 @@
 .home-table-detection {
   display: flex;
   align-items: center;
+  overflow: scroll;
   @include size(100%);
 }
 

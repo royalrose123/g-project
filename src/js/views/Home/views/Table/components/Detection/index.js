@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import PropTypes from 'prop-types'
 import { connect } from 'react-redux'
 import classnames from 'classnames/bind'
-import Carousel from 'nuka-carousel'
+// import Carousel from 'nuka-carousel'
 import { BigNumber } from 'bignumber.js'
 import { from, timer } from 'rxjs'
 import { flatMap } from 'rxjs/operators'
@@ -130,6 +130,7 @@ function Detection (props) {
       detectionData.leave.forEach(player => {
         const isLeavePlayerInSeated = Boolean(find(seatedList, { id: player.cid }))
         const isLeavePlayerInStanding = Boolean(find(standingList, { id: player.cid }))
+        // const isInClockOutPlayer = Boolean(find(clockOutPlayer, { id: player.cid }))
 
         switch (true) {
           case isLeavePlayerInSeated:
@@ -140,7 +141,10 @@ function Detection (props) {
               seatedIndex: leavePlayerSeatedIndex,
               detectTime: player.detectTime,
             }
+
+            // if (!isInClockOutPlayer) {
             setTimeout(() => addClockOutPlayer(seatedLeavePlayer), 10)
+            // }
             break
           case isLeavePlayerInStanding:
             const leavePlayerInStandingList = find(standingList, { id: player.cid })
@@ -150,12 +154,15 @@ function Detection (props) {
               detectTime: player.detectTime,
               standingIndex: leavePlayerStandingIndex,
             }
+
+            // if (!isInClockOutPlayer) {
             setTimeout(() => addClockOutPlayer(standingLeavePlayer), 10)
+            // }
             break
         }
       })
     }
-  }, [addClockOutPlayer, clockState, detectionData, seatedList, standingList])
+  }, [addClockOutPlayer, clockOutPlayer, clockState, detectionData, seatedList, standingList])
 
   // 每次 call detection api 都要確認如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
   if (clockOutPlayer.length > 0) {
@@ -177,7 +184,7 @@ function Detection (props) {
       const isPlayerInStanding = Boolean(find(standingList, { id: player.id }))
       const isPlayerInSeated = Boolean(find(seatedList, { id: player.id }))
 
-      if (!isPlayerInStanding && !isPlayerInSeated) setTimeout(() => removeClockOutPlayer(player), 10)
+      if (!isPlayerInStanding && !isPlayerInSeated && !isAutoClockingOutRef.current) setTimeout(() => removeClockOutPlayer(player), 10)
 
       // 如果 autoMember / autoAnonymous 時把 anonymous / member 加進 leave 名單時要移除
       const isTempAccount = get(player, 'cardType') === TEMP_ACCOUNT_CARD_TYPE
@@ -561,26 +568,26 @@ function Detection (props) {
       </>
     )
 
-  const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
-  const itemSpacing = 20
+  // const itemWidth = Number(document.documentElement.style.getPropertyValue('--person-width').replace(/\D/gi, ''))
+  const itemSpacing = 10
   const itemBorder = 30
-  const slideWidth = `${itemWidth + itemSpacing * 2}px`
-  const slideSpacing = -itemSpacing
+  // const slideWidth = `${itemWidth + itemSpacing * 2}px`
+  // const slideSpacing = -itemSpacing
 
-  const renderDetectionCarousel = () =>
-    typeof detectionData['detectionList'] !== 'undefined' &&
-    detectionData.detectionList.length > 0 && (
-      <div className={cx('home-table-detection')}>
-        <Carousel
-          autoGenerateStyleTag={false}
-          withoutControls
-          initialSlideHeight={530}
-          edgeEasing='easeBackOut'
-          slidesToScroll='auto'
-          slideWidth={slideWidth}
-          cellSpacing={slideSpacing}
-          speed={800}
-        >
+  const renderDetectionCarousel = () => {
+    if (typeof detectionData['detectionList'] !== 'undefined' && detectionData.detectionList.length > 0) {
+      return (
+        <div className={cx('home-table-detection')}>
+          {/* <Carousel
+            autoGenerateStyleTag={false}
+            withoutControls
+            initialSlideHeight={530}
+            edgeEasing='easeBackOut'
+            // slidesToScroll='auto'
+            slideWidth={slideWidth}
+            cellSpacing={slideSpacing}
+            speed={800}
+          > */}
           {detectionData.detectionList.map((detectionItem, index) => {
             const {
               person,
@@ -605,6 +612,13 @@ function Detection (props) {
                 if (clockState === CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK && (detectionItem.type === 'anonymous' || isTempAccount)) return null
 
                 break
+
+              // case clockState === CLOCK_STATUS.AUTO_MEMBER_CLOCK && detectionItem.type === 'member' && !isTempAccount:
+              //   executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType, isTempAccount)
+              //   return null
+              // case clockState === CLOCK_STATUS.AUTO_ANONYMOUS_CLOCK && (detectionItem.type === 'anonymous' || isTempAccount):
+              //   executeAutoClockInByClockState(detectionItem, detectionItemExistingTime, detectionItemTempId, detectionItemCardType, isTempAccount)
+              //   return null
             }
             return (
               <div
@@ -625,9 +639,11 @@ function Detection (props) {
               </div>
             )
           })}
-        </Carousel>
-      </div>
-    )
+          {/* </Carousel> */}
+        </div>
+      )
+    }
+  }
 
   return <>{clockState === CLOCK_STATUS.AUTO_CLOCK ? renderAutomaticInfo() : renderDetectionCarousel()}</>
 }
