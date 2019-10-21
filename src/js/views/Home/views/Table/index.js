@@ -290,6 +290,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -319,6 +320,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -347,6 +349,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             if (isInSeatedPlace && !isSomeoneSeated) {
               await addSeatedItemToListByAutoClockIn(tempId, apiId, apiImage, type, cardType, seatedIndex, seatNumber)
@@ -419,6 +422,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)
@@ -448,6 +452,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)
@@ -476,6 +481,7 @@ function Table (props) {
             const { cid: apiId } = result
             let { pic: apiImage } = result
             apiImage = `https://${LocationHostname}:450/photos/${apiImage}`
+            // apiImage = `https://192.168.100.34:450/photos/${apiImage}`
 
             addItemToListByManualClockIn(tempId, apiId, apiImage, type, cardType, seatNumber)
             await resolve(result)

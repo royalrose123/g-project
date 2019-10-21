@@ -6,7 +6,9 @@ import Service from '../service'
 class Normalizer {
   static ProbableItem ({ image, similarity, idcard, peopleId, peopleName, ctc }) {
     return {
+      // image,
       image: `https://${LocationHostname}:450${image}`,
+      // image: `https://192.168.100.34:450${image}`,
       // 來的時候是小數點，需要乘以一百，再無條件捨去
       similarity: Number(new BigNumber(similarity).multipliedBy(100).integerValue(BigNumber.ROUND_FLOOR)),
       id: idcard,
@@ -23,7 +25,9 @@ class Normalizer {
   static DetectionItem ({ type, faceImage, background, rect, result, dateTime, cameraId }) {
     return {
       type,
+      // snapshot: faceImage,
       snapshot: `https://${LocationHostname}:450${faceImage}`,
+      // snapshot: `https://192.168.100.34:450${faceImage}`,
       background,
       rect,
       probableList: Normalizer.ProbableList(result),
