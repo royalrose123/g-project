@@ -47,11 +47,13 @@ export function Camera (props) {
   const [selectSeatCoordinate, setSelectSeatCoordinate] = useState({ x: '__', y: '__' })
   const [camera1, setCamera1] = useState({})
   const [camera2, setCamera2] = useState({})
+  const [player1, setPlayer1] = useState({})
+  const [player2, setPlayer2] = useState({})
   const [lastFocusField, setLastFocusField] = useState(`${currentTab}.seat0.topLeft.x`)
 
   const initializeSelectSeatCoordinate = () => setSelectSeatCoordinate({ x: '__', y: '__' })
 
-  const seatCoordinateList = new Array(TOTAL_SEAT).fill() // new 一個座位總數的座位
+  const seatCoordinateList = new Array(TOTAL_SEAT).fill() // new 一個座位總數的陣列
 
   const onTabItemClick = event => {
     // 切換 tab 時關掉之前的 connect
@@ -265,6 +267,8 @@ export function Camera (props) {
         player.connect()
       })
       setPlayerCameraList(players)
+      setPlayer1(players[0])
+      setPlayer2(players[1])
 
       return () => {
         // 卸載 component 時，需關閉 webscoket 連線
@@ -366,6 +370,10 @@ export function Camera (props) {
   }
 
   const renderCoordinateDetail = (event, values, setFieldValue, currentTab) => {
+    console.warn('player1 11111', player1)
+    console.warn('player1 options 22222', !player1.options.canvas.getContext)
+    console.warn('player2 99999', player2)
+    console.warn('player2 options 888888', !player2.options.canvas.getContext)
     return seatCoordinateList.map((item, index) => {
       const checkBoxFieldName = `${currentTab}.seat${index}.checked`
 
