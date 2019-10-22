@@ -4,13 +4,13 @@ import Normalizer from './normalizer'
 import Service from '../service'
 
 class Chart {
-  static getChartDataByType ({ chartDate, chartType }) {
+  static getChartDataByType ({ chartDateTime, chartType }) {
     const service = new Service(
       {
         url: '/monitor-performance',
         method: 'GET',
         params: {
-          chartDate,
+          chartDateTime,
           chartType,
         },
       },

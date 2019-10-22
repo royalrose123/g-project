@@ -1,7 +1,7 @@
 class Denormalizer {
-  static GetChartDataByType ({ chartDate, chartType }) {
+  static GetChartDataByType ({ chartDateTime, chartType }) {
     return {
-      date: chartDate,
+      date: chartDateTime,
       type: chartType,
     }
   }

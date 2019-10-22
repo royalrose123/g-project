@@ -11,7 +11,8 @@ import Button from '../../../../components/Button'
 
 // Lib MISC
 import ChartApi from '../../../../lib/api/Chart'
-import { DatePicker } from 'antd'
+import { DatePicker, TimePicker } from 'antd'
+import moment from 'moment'
 
 // Style
 import styles from './style.module.scss'
@@ -26,6 +27,7 @@ export const propTypes = {
 function Gpu (props) {
   const { match } = props
   const [chartDate, setChartDate] = useState('')
+  const [chartTime, setChartTime] = useState('2300') // 後端要求預設為 23:00
   const [chartData, setChartData] = useState([{}, {}]) // Gpu 目前有兩張圖
   const [modalErrorMessage, setModalErrorMessage] = useState('')
   const [isErrorModalOpend, setIsErrorModalOpend] = useState(false)
@@ -41,6 +43,10 @@ function Gpu (props) {
     setChartDate(date.replace(/\//g, '')) // 將日期去掉斜線
   }
 
+  const onTimeChange = (event, time, timeString) => {
+    setChartTime(time.replace(/:/g, '')) // 將時間去掉冒號
+  }
+
   const getChartData = async () => {
     if (!chartDate) {
       openErrorModal()
@@ -48,7 +54,9 @@ function Gpu (props) {
       return
     }
 
-    await ChartApi.getChartDataByType({ chartDate, chartType })
+    const chartDateTime = chartDate + chartTime
+
+    await ChartApi.getChartDataByType({ chartDateTime, chartType })
       .then(result => {
         setChartData(result.payload)
       })
@@ -79,11 +87,14 @@ function Gpu (props) {
       </Modal>
       <Form.Group width={300}>
         <Form.Row>
-          <Form.Column size='md'>
-            <Form.Label>Please select date</Form.Label>
+          <Form.Column size='lg'>
+            <Form.Label>Please select Date and Time</Form.Label>
           </Form.Column>
           <Form.Column size='lg'>
             <DatePicker className={cx('chart-content-datepicker')} format={dateFormat} onChange={onDateChange} />
+          </Form.Column>
+          <Form.Column size='md'>
+            <TimePicker defaultValue={moment('23:00', 'HH:mm')} format={'HH:mm'} onChange={onTimeChange} />
           </Form.Column>
           <Form.Column size='md'>
             <Button type='button' className={cx('chart-content__action')} size={'md'} onClick={getChartData}>
