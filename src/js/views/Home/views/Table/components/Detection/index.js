@@ -162,7 +162,7 @@ function Detection (props) {
         }
       })
     }
-  }, [addClockOutPlayer, clockOutPlayer, clockState, detectionData, seatedList, standingList])
+  }, [addClockOutPlayer, clockState, detectionData, seatedList, standingList])
 
   // 每次 call detection api 都要確認如果 clockOutPlayer 的 item 超過 clock-out triggrt time 就 clock-out
   if (clockOutPlayer.length > 0) {
