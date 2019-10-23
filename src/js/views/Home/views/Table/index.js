@@ -206,7 +206,7 @@ function Table (props) {
 
   // 判斷座標是否在seated中
   const getSeatedCoordinate = async person => {
-    const cameraId = `camera${trim(person.cameraId, tableNumber)}` // Ex: Table-0813-A => A
+    const cameraId = `camera${person.cameraId.split(`${tableNumber}-`).join('')}` // Ex: Table-0813-A => A
     const personXCoordinate = person.rect[0] // 換算為 grid 的 x
     const personYCoordinate = person.rect[1] // 換算為 grid的 y
     const personWidth = person.rect[2] // 換算為 grid 的 width
